@@ -1,0 +1,337 @@
+---
+title: "Applied Data Analysis"
+subtitle: "Hello World!"
+author: "Eduard Nežinský, Tomáš Oleš, Ella Sargsyan"
+institute: "Department of Economic Policy"
+date: "2024"
+output:
+  xaringan::moon_reader:
+    css: xaringan-themer.css
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+
+library(xaringanthemer)
+library(emoji)
+library(emojifont)
+
+#See slide on xaringanthemer
+library(xaringanthemer)
+# style_duo_accent(
+# primary_color = "#d19f2a",     # KHP color
+# secondary_color = "#e2c47c",   # KHP light
+style_mono_accent(
+base_color = "#d19f2a",
+header_font_google = google_font("Josefin Sans"),
+text_font_google = google_font("Montserrat", "300", "300i"),
+code_font_google = google_font("Fira Mono")
+)
+
+```
+
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+# Remember to compile
+#xaringan::inf_mr(cast_from = "..")
+#       slideNumberFormat: ""  
+library(tidyverse)
+if (!require("emo")) devtools::install_github("")
+library(emo)
+if (!require("jasmines")) devtools::install_github("djnavarro/jasmines")
+if (!require("mathart")) devtools::install_github("marcusvolz/mathart")
+```
+
+
+
+## Hello world! `r emo::ji('smile')`  
+
+- Office hours: Monday 1PM - 3PM (Please write me before  `r emo::ji('calendar')` )
+
+- Room 4B.40; Old Building
+
+- Contact me: tomas.oles@euba.sk
+---
+
+# Lecturers 
+
+<div class="left">
+  <img src="https://nhf.euba.sk/www_write/images/katedry/khp.png" width="100" height="100">
+  <img src="https://nhf.euba.sk/www_write/files/katedry/khp/profilove_foto/nhf_foto/en.jpg" width="150">
+  <img src="https://nhf.euba.sk/www_write/files/katedry/khp/profilove_foto/nhf_foto/to.jpg" width="150">
+
+</div>
+
+<div class="left">
+  <img src="https://upload.wikimedia.org/wikipedia/en/6/65/CERGE-EI_logo.jpg" width="160" height="100">
+    <img src="https://people.aua.am/files/2024/03/Ella-Sargsyan.jpg" width="190">
+</div>
+
+
+
+---
+
+## Data science
+
+.pull-left-wide[
+- Data science is an exciting discipline that allows you to turn raw data into understanding, insight, and knowledge. 
+
+- We're going to learn to do this in a `tidy` way -- more on that later!
+
+- This is a course on introduction to data science, with an emphasis on statistical thinking.
+]
+
+
+## Econometrics 
+
+.pull-left-wide[
+- Econometrics is a branch of economics that applies statistical and mathematical methods to analyze economic data. 
+
+- We’ll learn how to do this in a structured and methodical way—more details on that as we progress!
+
+- This course provides an introduction to econometrics, with a strong emphasis on statistical and causal design methods for economic analysis.
+]
+
+---
+
+## Course FAQ
+
+.pull-left-wide[
+**Q - What data science background does this course assume?**  
+A - None.
+
+**Q - Is this an intro stat course?**  
+A - While statistics $\ne$ data science or econometrics, they are very closely related and have tremendous of overlap. However this course is *not* your typical college statistics course, but we will have one lecture that will recap the *basic statistical concepts* from your previous stat course. 
+
+**Q - Will we be doing computing?**   
+A - Yes.
+
+**Q - Will we be doing math?**  
+A - Yes, in the second part. 
+
+.pull-left-wide[
+**Q - Is this an intro CS course?**  
+A - No, but many themes are shared.
+
+**Q - What computing language will we learn?**  
+A - R.
+
+**Q: Why not language X?**  
+A: We can discuss that over `r emo::ji("coffee")`.
+]
+]
+
+---
+
+
+# Software
+
+---
+
+```{r echo=FALSE, out.width="75%", fig.align="left"}
+knitr::include_graphics("img/excel.png")
+```
+
+---
+
+```{r echo=FALSE, out.width="50%", fig.align="left"}
+knitr::include_graphics("img/r.png")
+```
+
+---
+
+```{r echo=FALSE, out.width="73%", fig.align="left"}
+knitr::include_graphics("img/rstudio.png")
+```
+
+---
+# Data science and econometrics life cycle
+
+```{r echo=FALSE, out.width="100%", fig.align="left"}
+knitr::include_graphics("img/data-science.png")
+```
+---
+
+```{r echo=FALSE, out.width="85%", fig.align="left"}
+knitr::include_graphics("img/unvotes/unvotes.gif")
+```
+
+---
+
+class: middle
+
+# Let's dive in!
+
+---
+
+background-image: url("img/unvotes/unvotes-01.jpeg")
+
+---
+
+```{r echo=FALSE, out.width="100%"}
+knitr::include_graphics("img/unvotes/unvotes-02.jpeg")
+```
+
+---
+
+```{r echo=FALSE, out.width="100%"}
+knitr::include_graphics("img/unvotes/unvotes-03.jpeg")
+```
+
+---
+
+```{r echo=FALSE, out.width="100%"}
+knitr::include_graphics("img/unvotes/unvotes-04.jpeg")
+```
+
+---
+
+
+```{r echo=FALSE, out.width="100%"}
+knitr::include_graphics("img/unvotes/unvotes-05.jpeg")
+```
+
+---
+
+
+```{r echo=FALSE, out.width="100%"}
+knitr::include_graphics("img/unvotes/unvotes-06.jpeg")
+```
+
+---
+
+
+```{r echo=FALSE, out.width="100%"}
+knitr::include_graphics("img/unvotes/unvotes-07.jpeg")
+```
+
+---
+
+
+```{r echo=FALSE, out.width="90%"}
+knitr::include_graphics("img/unvotes/unvotes-08.jpeg")
+```
+
+---
+
+
+```{r echo=FALSE, out.width="90%"}
+knitr::include_graphics("img/unvotes/unvotes-09.jpeg")
+```
+
+---
+
+```{r echo=FALSE, out.width="90%"}
+knitr::include_graphics("img/unvotes/unvotes-10.jpeg")
+```
+
+---
+
+
+```{r echo=FALSE, out.width="90%"}
+knitr::include_graphics("img/unvotes/unvotes-11.jpeg")
+```
+
+---
+
+```{r echo=FALSE, out.width="90%"}
+knitr::include_graphics("img/unvotes/unvotes-12.jpeg")
+```
+
+---
+
+```{r echo=FALSE, out.width="100%"}
+knitr::include_graphics("img/unvotes/unvotes-13.jpeg")
+```
+
+---
+
+```{r echo=FALSE, out.width="100%"}
+knitr::include_graphics("img/unvotes/unvotes-14.jpeg")
+```
+
+---
+
+.center[
+.large[
+[minecr.shinyapps.io/unvotes](https://minecr.shinyapps.io/unvotes/)
+]
+]
+
+```{r echo=FALSE, out.width="65%"}
+knitr::include_graphics("img/unvotes/unvotes-15.png")
+```
+---
+
+# Organization of the course
+- 1-6 introduction to data science, visialization, tiding, wrangling, probablity and (classification) **Thuesday**
+- 7-12 introduction to econometrics, linear regression, introduction causal research design methods, panel data techniques  **Lecture - Monday; Excercise - Friday**
+
+### Textbooks 
+
+[Wickham, H., Çetinkaya-Rundel, M., Grolemund, G. (2023). R for Data Science. O'Reilly Media, Inc..](https://r4ds.had.co.nz/)
+
+[Gareth, J., Daniela, W., Trevor, H., Robert, T. (2013). An Introduction to Statistical Learning: With Applications in R. Spinger.](https://www.statlearning.com/)
+
+[Wooldridge, Jeffrey M. Introductory Econometrics: A Modern Approach. 5th ed., US, 2012]()
+
+[Angrist, J. D., Pischke, J. S. (2009). Mostly Harmless Econometrics: An Empiricist's Companion. Princeton University Press.]()
+
+
+
+---
+
+## What you will learn?
+
+- Acquire knowledge of modern methods for data research and visualization.
+-	Learn techniques in classification, linear regression, and general data analysis.
+- Gain advanced proficiency in using R for empirical economic research.
+- Understand basic econometric concepts, estimation methods, and hypothesis testing.
+-	Apply standard econometric modeling methods and interpret statistical results using R.
+
+<div>
+
+*“We are what we repeatedly do. Excellence, then, is not an act, but a habit.”*
+ **Aristotle**
+
+---
+
+## Evaluation 
+
+
+**6 credits + CERGE-EI Certificate of Course Econometrics in a Nutshell**
+
+Which is split into two parts:
+
+Quizzes and Assignment (20%), Home Assignments (30%), Final Exam (50%)
+
+**= CERGE-EI Certificate of Course Econometrics in a Nutshell**
+
+**= relatively 60% of Your Final Grade**
+
+
+Quizzes and Home Assignment (50%)
+ 
+Data Science Project with a Presentation (50%)
+
+**= relatively 40% of Your Final Grade**
+
+---
+
+# Quiz 
+Extra Quiz
+Please go to **kahoot.it** and enter provided code. Please enter your **family name** because the quiz is not anonymous in order to give you the **points**. 
+
+---
+
+
+# Sources
+
+- [Data science in a Box](https://datasciencebox.org/)
+
+---
