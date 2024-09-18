@@ -35,11 +35,11 @@ code_font_google = google_font("Fira Mono")
 #xaringan::inf_mr(cast_from = "..")
 #       slideNumberFormat: ""  
 library(tidyverse)
-if (!require("emo")) devtools::install_github("")
+#if (!require("emo")) devtools::install_github("")
 library(emo)
 library(emo)
 library(Tmisc)
-if (!require("dsbox")) devtools::install_github("rstudio-education/dsbox")
+#if (!require("dsbox")) devtools::install_github("rstudio-education/dsbox")
 library(dsbox)
 library(palmerpenguins)
 ```

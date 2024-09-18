@@ -1,0 +1,30 @@
+body {
+  line-height: 1.8; /* Adjust this value as needed */
+}
+
+h2 {
+  margin-bottom: 0.05em;  /* Reduce space below H2 */
+}
+
+h3 {
+  margin-top: 0.15em;   /* Reduce space above H3 */
+}
+
+pre {
+  font-size: 14px; /* Adjust as needed */
+} 
+
+/* Reduce font size for echoed code (code displayed in chunks) */
+.remark-code, code {
+  font-size: 14px;  /* Adjust as needed */
+}
+
+/* Reduce font size for output (printed results) */
+.remark-code-output, pre {
+  font-size: 14px;  /* Adjust as needed */
+}
+
+/* Reduce font size for inline R output */
+.r-inline {
+  font-size: 14px;  /* Adjust as needed */
+}

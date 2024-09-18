@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Applied Data Analysis</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Tomáš Oleš" />
+    <meta name="date" content="2024-01-01" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <script src="libs/htmlwidgets/htmlwidgets.js"></script>
+    <script src="libs/viz/viz.js"></script>
+    <link href="libs/DiagrammeR-styles/styles.css" rel="stylesheet" />
+    <script src="libs/grViz-binding/grViz.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Applied Data Analysis
+]
+.subtitle[
+## Introduction to data visualization
+]
+.author[
+### Tomáš Oleš
+]
+.institute[
+### Department of Economic Policy
+]
+.date[
+### 2024
+]
+
+---
+
+
+
+
+
+
+
+
+## Lecture overview 
+
+.pull-left[ 
+-   Spatial data types 
+  + points, lines, polygons, and rasters
+- Brief introduction to analysis of spatial health data
+- Case example: Lyme disease in New York State
+- Global clustering analysis (Moran’s I)
+- Local clustering analysis (LISA – local Moran’s I)
+]
+
+.pull-right[ 
+&lt;img src="img/image_philadelphia.png" width="40%" style="display: block; margin: auto;" /&gt;
+&lt;br&gt; 
+&lt;img src="img/heat_map.png" width="40%" style="display: block; margin: auto;" /&gt;
+&lt;br&gt; 
+&lt;img src="img/heat_map_no_overlap.png" width="40%" style="display: block; margin: auto;" /&gt;
+
+
+]
+---
+
+## R for spatial analysis
+
+- Wide capabilities and many packages
+  + `sp` framework has formed the backbone of R GIS tools for over a decade
+  + `sf` framework (much more user-friendly and compatible with `tidyverse`!) introduced several years and gradually replacing `sp`
+- Advantages of performing geospatial analysis in R
+  + Statistical computing capabilities and impressive graphics engine makes it adept for spatial analysis and mapping
+  + Command-line interface enables analysis and visualization to be customizable, transparent, and reproducible
+
+
+&lt;img src="img/spsf_downloads.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+---
+## Geospatial data types 
+
+.pull-left[
+Vector data
+&lt;img src="3_week_p_files/figure-html/data-types-1.png" width="504" /&gt;
+]
+
+
+.pull-right[
+Raster data
+- Data stored in a regular grid of cells, e.g. elevation and satellite images
+
+&lt;img src="3_week_p_files/figure-html/unnamed-chunk-6-1.png" width="504" /&gt;
+]
+---
+### Vector data example 
+
+&lt;div style="display: flex;"&gt;
+  
+  &lt;div style="text-align: center;"&gt;
+    &lt;img src="img/points_ex.png" width="200%" /&gt;
+  &lt;/div&gt;
+  &lt;div style="text-align: center;"&gt;
+    &lt;img src="img/lines_ex.png" width="200%" /&gt;
+  &lt;div style="text-align: center;"&gt;
+    &lt;img src="img/poly_ex.png" width="200%" /&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+---
+### Raster data example 
+.pull-left[
+Satellite map
+&lt;img src="img/image_philadelphia.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+.pull-right[
+Land usage
+&lt;img src="img/land_cover_philadelphia.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+
+---
+
+## R spatial data classes (sf)
+
+&lt;img src="img/wkt_multipart.png" width="100%" style="display: block; margin: auto;" /&gt;
+* sf can only handle vector data 
+
+---
+## R spatial objects comprise spatial and data attributes 
+
+
+<div class="grViz html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-076c2a41b7e9a1f47bfd" style="width:100%;height:504px;"></div>
+<script type="application/json" data-for="htmlwidget-076c2a41b7e9a1f47bfd">{"x":{"diagram":"\ndigraph flowchart {\n  \n  graph [layout = dot, rankdir = LR]\n  \n  # Node definitions\n  node [shape = box, style = filled, fillcolor = white, fontsize = 14]\n  \n  A [label = \"sp or sf \n object\"]\n  B [label = \"Spatial\nattributes\"]\n  C [label = \"Geocoordinates\"]\n  D [label = \"Boundaries\"]\n  E [label = \"Projection\"]\n  F [label = \"Data\nattributes \n(data.frame format)\"]\n\n  # Edge definitions\n  A -> B\n  A -> F\n  B -> C\n  B -> D\n  B -> E\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+---
+## Analysis of spatial economic/health data
+
+- Broadly speaking, goal is to assess for spatial patterns of disease risk or economic activity
+
+- Presence of spatial patterns may support specific etiologies or risk factors (e.g., environmental hazards or infectious processes) or spatial lock-in or spillovers of unobserved technology 
+
+- Formal investigation of spatial patterns relies on spatial statistics
+
+---
+
+## Types of spatial patterns
+
+&lt;div style="display: flex; justify-content: space-around;"&gt;
+  
+  &lt;div style="text-align: center;"&gt;
+    &lt;div&gt;&lt;strong&gt;No sp. autocorr. &lt;/strong&gt;&lt;/div&gt;
+    &lt;img src="img/random.png" width="80%" /&gt;
+  &lt;/div&gt;
+
+  &lt;div style="text-align: center;"&gt;
+    &lt;div&gt;&lt;strong&gt;Positive sp. autocorr. &lt;/strong&gt;&lt;/div&gt;
+    &lt;img src="img/non_random_positive.png" width="80%" /&gt;
+  &lt;/div&gt;
+
+  &lt;div style="text-align: center;"&gt;
+    &lt;div&gt;&lt;strong&gt;Negative  sp. autocorr.&lt;/strong&gt;&lt;/div&gt;
+    &lt;img src="img/non_random_negative.png" width="80%" /&gt;
+  &lt;/div&gt;
+
+&lt;/div&gt;
+
+---
+## An example of positive spatial autocorrelation
+
+
+&lt;img src="img/positive_spatial_autocorr.jpg" width="90%" style="display: block; margin: auto;" /&gt;
+
+---
+## Covid incidence (7-d average) 10/4/20
+&lt;img src="img/covid1.png" width="80%" style="display: block; margin: auto;" /&gt;
+---
+## Covid incidence (7-d average) 15/7/20
+&lt;img src="img/covid2.png" width="80%" style="display: block; margin: auto;" /&gt;
+---
+## Covid incidence (7-d average) 14/11/20
+&lt;img src="img/covid3.png" width="80%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Spatial hypothesis testing 
+
+- As a reminder, the goal of spatial statistics is to assess for significant spatial patterns or trends
+
+- There are two broad categories of tests:
+
+ 1. Tests of GLOBAL trends: looks for evidence of spatial heterogeneity across the entire study area 
+
+ 2. Tests of LOCAL trends: able to assess specific clusters 
+ 
+
+---
+
+## Assessing global trends 
+- `\(H_0\)`: constant risk hypothesis – i.e., disease risk is constant throughout space 
+
+  + Disease counts are the same for regions with the same total population at risk
+  
+  + Incidence rates are the same if regions differ by total population at risk
+  
+- `\(Moran's I\)` statistic is a measure of global spatial autocorrelation
+  + If `\(p-value\)` is significant (e.g., `\(p &lt; 0.05\)`): evidence of spatial heterogeneity
+  
+  + If `\(p-value\)` is not significant: fail to reject null hypothesis
+
+---
+## Morans's I 
+.center[
+`\(I = \frac{N}{\sum_{n=1}^2(x_i - \bar{x})^2} \frac {\sum_{i=1}^N \sum_{j=1}^N w_{ij}(x_i-\bar x) (x_j-\bar x)} {\sum_{i=1}^N (w_{ij})}\)`
+]
+
+- Moran’s I is essentially a WEIGHTED COVARIANCE FUNCTION
+ It is LARGE when `\(x_i\)` and `\(x_j\)` are large at the same time
+- How do we pick weights?
+  
+---
+## Different neighbor definition 
+
+&lt;div style="display: flex; justify-content: space-around;"&gt;
+  
+  &lt;div style="text-align: center;"&gt;
+    &lt;div&gt;&lt;strong&gt;Contiguity based &lt;/strong&gt;&lt;/div&gt;
+    &lt;img src="img/contiguity.png" width="80%" /&gt;
+  &lt;/div&gt;
+
+  &lt;div style="text-align: center;"&gt;
+    &lt;div&gt;&lt;strong&gt;Distance based &lt;/strong&gt;&lt;/div&gt;
+    &lt;img src="img/distance.png" width="80%" /&gt;
+  &lt;/div&gt;
+
+  &lt;div style="text-align: center;"&gt;
+    &lt;div&gt;&lt;strong&gt;k-nearest neighbors&lt;/strong&gt;&lt;/div&gt;
+    &lt;img src="img/knearest.png" width="80%" /&gt;
+  &lt;/div&gt;
+
+&lt;/div&gt;
+
+---
+
+## Queen's vs rooks's case contiguity
+
+&lt;img src="img/queen_rook.png" width="100%" style="display: block; margin: auto;" /&gt;
+---
+## Assessing local trends 
+- A local indicator of spatial association (LISA) provides a statistic for each location with an assessment of significance
+
+- It allows for the identification of specific disease clusters 
+
+- Local Moran’s I is an extension of the Moran’s I that is defined for each region i 
+.center[
+`\(I = \frac {x_i - \bar{X}}{S_i^2}\sum_{i=1}^N w_{i,j}(x_j-\bar{X})\)`
+]
+---
+## Local Moran’s I
+
+- Local Moran’s I statistic and measure of significance (pseudo p-value) is calculated for each location (polygon)
+
+- A polygon with a HIGH local Moran’s I value is one with a high disease count/rate that is surrounded by other polygons with a high count/rate
+
+- A polygon with a low value is one with a low disease count/rate that is surrounded by other polygons with a low count/rate
+
+- High-High and Low-Low clusters indicate significant disease hot spots and cold spots, respectively
+
+
+---
+# Sources
+- [Sherrie Xie, Spatial Analysis in R](https://github.com/sherriexie/SpatialAnalysisinR/tree/main)
+
+- [Claudia, Englel, Using Spatial Data with R](https://cengel.github.io/R-spatial/intro.html)
+---
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
