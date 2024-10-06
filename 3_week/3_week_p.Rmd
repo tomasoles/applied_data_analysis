@@ -97,7 +97,7 @@ knitr::include_graphics("img/spsf_downloads.png")
 
 .pull-left[
 Vector data
-```{r data-types, echo=FALSE}
+```{r data-types, echo=FALSE, warning=FALSE}
 # Points
 points_data <- data.frame(x = c(1, 2, 3), y = c(1, 2, 1))
 points_plot <- ggplot(points_data, aes(x, y)) +
@@ -305,13 +305,35 @@ knitr::include_graphics("img/covid3.png")
 ---
 ## Morans's I 
 .center[
-$I = \frac N W \frac {\sum_{i=1}^N \sum_{j=1}^N w_{ij}(x_i-\bar x) (x_j-\bar x)} {\sum_{i=1}^N (x_i-\bar x)^2}$
-
+$I = \frac{N}{\sum_{n=1}^2(x_i - \bar{x})^2} \frac {\sum_{i=1}^N \sum_{j=1}^N w_{ij}(x_i-\bar x) (x_j-\bar x)} {\sum_{i=1}^N (w_{ij})}$
 ]
 
 - Moran’s I is essentially a WEIGHTED COVARIANCE FUNCTION
- It is LARGE when $y_i$ and $y_j$ are large at the same time
- 
+ It is LARGE when $x_i$ and $x_j$ are large at the same time
+- How do we pick weights?
+  
+---
+## Different neighbor definition 
+
+<div style="display: flex; justify-content: space-around;">
+  
+  <div style="text-align: center;">
+    <div><strong>Contiguity based </strong></div>
+    <img src="img/contiguity.png" width="80%" />
+  </div>
+
+  <div style="text-align: center;">
+    <div><strong>Distance based </strong></div>
+    <img src="img/distance.png" width="80%" />
+  </div>
+
+  <div style="text-align: center;">
+    <div><strong>k-nearest neighbors</strong></div>
+    <img src="img/knearest.png" width="80%" />
+  </div>
+
+</div>
+
 ---
 
 ## Queen's vs rooks's case contiguity

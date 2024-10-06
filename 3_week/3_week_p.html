@@ -80,15 +80,6 @@ class: center, middle, inverse, title-slide
 
 .pull-left[
 Vector data
-
-```
-## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
-## ℹ Please use `linewidth` instead.
-## This warning is displayed once every 8 hours.
-## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
-## generated.
-```
-
 &lt;img src="3_week_p_files/figure-html/data-types-1.png" width="504" /&gt;
 ]
 
@@ -138,8 +129,8 @@ Land usage
 ## R spatial objects comprise spatial and data attributes 
 
 
-<div class="grViz html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-f4db740023216c14cad6" style="width:100%;height:504px;"></div>
-<script type="application/json" data-for="htmlwidget-f4db740023216c14cad6">{"x":{"diagram":"\ndigraph flowchart {\n  \n  graph [layout = dot, rankdir = LR]\n  \n  # Node definitions\n  node [shape = box, style = filled, fillcolor = white, fontsize = 14]\n  \n  A [label = \"sp or sf \n object\"]\n  B [label = \"Spatial\nattributes\"]\n  C [label = \"Geocoordinates\"]\n  D [label = \"Boundaries\"]\n  E [label = \"Projection\"]\n  F [label = \"Data\nattributes \n(data.frame format)\"]\n\n  # Edge definitions\n  A -> B\n  A -> F\n  B -> C\n  B -> D\n  B -> E\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div class="grViz html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-f995c7b3a0109f75b152" style="width:100%;height:504px;"></div>
+<script type="application/json" data-for="htmlwidget-f995c7b3a0109f75b152">{"x":{"diagram":"\ndigraph flowchart {\n  \n  graph [layout = dot, rankdir = LR]\n  \n  # Node definitions\n  node [shape = box, style = filled, fillcolor = white, fontsize = 14]\n  \n  A [label = \"sp or sf \n object\"]\n  B [label = \"Spatial\nattributes\"]\n  C [label = \"Geocoordinates\"]\n  D [label = \"Boundaries\"]\n  E [label = \"Projection\"]\n  F [label = \"Data\nattributes \n(data.frame format)\"]\n\n  # Edge definitions\n  A -> B\n  A -> F\n  B -> C\n  B -> D\n  B -> E\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 ---
 ## Analysis of spatial economic/health data
 
@@ -218,13 +209,35 @@ Land usage
 ---
 ## Morans's I 
 .center[
-`\(I = \frac N W \frac {\sum_{i=1}^N \sum_{j=1}^N w_{ij}(x_i-\bar x) (x_j-\bar x)} {\sum_{i=1}^N (x_i-\bar x)^2}\)`
-
+`\(I = \frac{N}{\sum_{n=1}^2(x_i - \bar{x})^2} \frac {\sum_{i=1}^N \sum_{j=1}^N w_{ij}(x_i-\bar x) (x_j-\bar x)} {\sum_{i=1}^N (w_{ij})}\)`
 ]
 
 - Moran’s I is essentially a WEIGHTED COVARIANCE FUNCTION
- It is LARGE when `\(y_i\)` and `\(y_j\)` are large at the same time
- 
+ It is LARGE when `\(x_i\)` and `\(x_j\)` are large at the same time
+- How do we pick weights?
+  
+---
+## Different neighbor definition 
+
+&lt;div style="display: flex; justify-content: space-around;"&gt;
+  
+  &lt;div style="text-align: center;"&gt;
+    &lt;div&gt;&lt;strong&gt;Contiguity based &lt;/strong&gt;&lt;/div&gt;
+    &lt;img src="img/contiguity.png" width="80%" /&gt;
+  &lt;/div&gt;
+
+  &lt;div style="text-align: center;"&gt;
+    &lt;div&gt;&lt;strong&gt;Distance based &lt;/strong&gt;&lt;/div&gt;
+    &lt;img src="img/distance.png" width="80%" /&gt;
+  &lt;/div&gt;
+
+  &lt;div style="text-align: center;"&gt;
+    &lt;div&gt;&lt;strong&gt;k-nearest neighbors&lt;/strong&gt;&lt;/div&gt;
+    &lt;img src="img/knearest.png" width="80%" /&gt;
+  &lt;/div&gt;
+
+&lt;/div&gt;
+
 ---
 
 ## Queen's vs rooks's case contiguity

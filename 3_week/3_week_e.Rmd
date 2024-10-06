@@ -1,7 +1,7 @@
 ---
 title: "Applied Data Analysis"
 subtitle: "Analyzing geospatial data in R"
-author: "Sherrie Xie"
+author: "Sherrie Xie, Tomas Oles"
 date: "2024"
 output: 
   html_document:
@@ -45,7 +45,7 @@ head(pt_sf[,7])         # select column by number
 # We can extract the geometry of philly.tracts with the st_geometry function
 pt_geo <- st_geometry(pt_sf)
 pt_geo
-pt_geo[[1]]        # perimeter coordinates for the first census tract of the sf
+pt_geo[[1]]       # perimeter coordinates for the first census tract of the sf
 pt_sf[1,]  # i.e. Census Tract 94
 
 pt_geo[[2]]        # perimeter coordinates for the second census tract of the sf
@@ -56,7 +56,7 @@ plot(pt_geo)
 
 # The base plot function has some aesthetic options we can use to tweak our plots
 plot(pt_geo, col = "lemonchiffon2")
-plot(pt_geo, lwd = 2, border = "red")
+plot(pt_geo, lwd = 1, border = "red")
 
 ```
 
@@ -68,7 +68,7 @@ Next let's look at an example of line data: streets in Philadelphia with bicycle
 bn_sf <- st_read("data/Bike_Network/Bike_Network.shp")  # read shapefile as an sf object
 class(bn_sf)  # bn.sf is an sf object, which is a subclass of data.frame
 
-# Once again, let's accss the spatial attributes of this sf object with the st_geometry command. 
+# Once again, let's access the spatial attributes of this sf object with the st_geometry command. 
 bn_geo <- st_geometry(bn_sf)
 bn_geo[[2]]  # line segment 2
 bn_sf[2,]
@@ -98,7 +98,7 @@ head(crime)
 plot(st_geometry(crime))
 
 # Let's take a look at offense types and use dplyr to filter by offense_type...
-table(crime$offense_type)
+table(crime$text_general_code)
 homicide <- filter(crime, text_general_code == "Homicide - Criminal")
 fraud <- filter(crime, text_general_code == "Fraud")
 
@@ -108,9 +108,11 @@ class(fraud)
 
 # Plotting homicide and fraud incidents with the base plot function
 plot(st_geometry(homicide))
+plot(st_geometry(fraud))
+
 
 ```
-```{r}
+```{r warning=FALSE}
 # Points by themselves are not very easy to understand. Let's layer them on top of the tract polygons with add = TRUE
 plot(pt_geo)
 plot(st_geometry(fraud), col = "blue", alpha = 0.1, add = TRUE)
@@ -122,7 +124,6 @@ legend("bottomright", legend = c("Fraud", "Homicide"), title = "Offense type:", 
 So far, we have considered point, line, and polygon data, all of which fall under the umbrella of vector data types. Rasters are a distinct GIS data type that we will consider only briefly because they cannot be handled with `sf` methods. We will look at the `volcano` dataset, which gives topographic information for Maunga Whau (a volcano located in Auckland, New Zealand) on a 10m by 10m grid. Because it is a relatively small raster, we can handle `volcano` using base functions. Larger rasters should be handled using the _raster_ package.
 
 ```{r}
-
 library(datasets)
 
 # The volcano dataset is a 87x61 matrix
@@ -336,4 +337,216 @@ plot(st_geometry(lyme),
 legend('topright', legend = map_labels, fill = map_colors, border = "#eeeeee", cex = 0.7)
 ```
 
+# Mapping GDP Fall Due to Trade Sanctions on Russia
 
+The ongoing conflict between Russia and Ukraine has caused significant economic disruptions, particularly through sanctions and changes in trade patterns. One way to analyze these disruptions is through _Input-Output (I-O) analysis_, a method that models the interdependencies between sectors in an economy. By examining _output multipliers_, we can understand how changes in one sector's demand affect the entire economy.
+
+## Input-Output Analysis and Output Multipliers
+
+The core formula used in I-O analysis to compute total output and output multipliers is derived from the _Leontief inverse matrix_. The formula is as follows:
+
+$$
+\mathbf{X} = (\mathbf{I} - \mathbf{A})^{-1} \mathbf{F}
+$$
+
+Where:
+- $\mathbf{X}$ is the _output vector_, representing total output for each sector.
+- $\mathbf{I}$ is the _identity matrix_.
+- $\mathbf{A}$ is the _direct requirements matrix_ (or technical coefficient matrix), representing the inputs required from other sectors to produce one unit of output.
+- $(\mathbf{I} - \mathbf{A})^{-1}$ is the _Leontief inverse matrix_, capturing the total intersectoral dependencies.
+- $\mathbf{F}$ is the _final demand vector_, representing demand for goods and services from external sources (e.g., households, exports).
+
+### Direct Requirements Matrix $\mathbf{A}$
+
+The elements of the _direct requirements matrix_ $\mathbf{A}$ are calculated as:
+
+$$
+A_{ij} = \frac{Z_{ij}}{X_j}
+$$
+
+Where:
+- $Z_{ij}$ is the amount of output from sector $i$ used as input by sector $j$.
+- $X_j$ is the total output of sector $j$.
+
+### Leontief Inverse $(\mathbf{I} - \mathbf{A})^{-1}$
+
+The Leontief inverse matrix accounts for both direct and indirect effects of changes in final demand. It shows how changes in one sector affect the entire economy due to intersectoral linkages.
+
+### Output Multipliers
+
+The _output multipliers_ for sector $j$ represent the total increase in output across all sectors from a unit increase in the final demand of sector $j$. These multipliers are computed by summing the column elements of the Leontief inverse matrix:
+
+$$
+\text{Output Multiplier for Sector } j = \sum_{i} (\mathbf{I} - \mathbf{A})^{-1}_{ij}
+$$
+
+This formula helps quantify how changes in demand for products or services in one sector lead to changes in the overall economic output, showing the ripple effect through the supply chain.
+
+```{r setup, include=TRUE}
+# Load necessary libraries
+library(tidyverse)   # for data wrangling
+library(tmaptools)   # for thematic mapping tools
+library(tmap)        # for creating maps
+library(ggplot2)     # for data visualization
+library(leaflet)     # for interactive maps
+library(sf)          # for handling spatial data
+library(dplyr)       # for data manipulation
+library(raster)      # for working with raster data
+```
+
+## Data Loading
+Note: that the output-output multipliers has already been computed for all economies. 
+
+```{r, warning=FALSE}
+
+# Load the CSV file with header
+GVC_EU <- read.csv("data/outputs_Russia.csv", header = TRUE, sep=",", blank.lines.skip = FALSE)
+
+# Rename the first column to "CNTR_ID"
+names(GVC_EU)[1] <- "CNTR_ID"
+```
+
+## Load Shapefile
+
+```{r, warning=FALSE}
+
+# Load the shapefile for countries
+auxmap <- st_read("data/Countries_SHP1_3mil/CNTR_RG_03M_2016_3035.shp", 
+                  stringsAsFactors = FALSE)
+
+# Display the structure of the shapefile to understand its content
+str(auxmap)
+```
+## Merge Data On Economic Impact with Shapefil
+
+```{r, warning=FALSE}
+# Perform an inner join between the shapefile data and GVC_EU data
+aux_map_data <- inner_join(auxmap, GVC_EU)
+
+```
+
+
+## Visualizing GDP Fall Due to Sanctions
+### Create a Quatile Map
+
+```{r, warning=FALSE}
+# Create a choropleth map based on GDP fall using quantile style
+auxQmap1 <- tm_shape(aux_map_data) +
+  tm_fill(col = "gGDPc",   
+          style = "quantile", 
+          n = 8, 
+          legend.hist = TRUE, 
+          palette = "YlOrRd", 
+          title = "GDP Fall Due to Trade Sanctions on Russia", 
+          alpha = 0.6) +
+  tm_layout(legend.outside = TRUE)
+
+# Set tmap mode to view (interactive map mode)
+tmap_mode("view")
+
+# Display the map with adjusted view
+auxQmap1 + tm_view(set.view = c(7, 51, 4), text.size.variable = TRUE)
+
+# Return to current mode
+#tmap_mode(current.mode)
+
+```
+
+
+
+## Hierarchical Clustering Style
+
+```{r, warning=FALSE}
+# Create a choropleth map using hierarchical clustering style for a different view
+auxQmap2 <- tm_shape(aux_map_data) +
+  tm_fill(col = "gGDPc",   
+          style = "hclust", 
+          n = 8, 
+          legend.hist = TRUE, 
+          palette = "YlOrRd", 
+          title = "GDP Fall Due to Trade Sanctions on Russia", 
+          alpha = 0.6) +
+  tm_layout(legend.outside = TRUE)
+
+# Set tmap mode to view (interactive map mode)
+tmap_mode("view")
+
+# Display the map with hierarchical clustering
+auxQmap2 + tm_view(set.view = c(7, 51, 4), text.size.variable = TRUE)
+```
+
+
+## Mapping Trade in Intermediate and Final Products
+### Intermediate Products
+
+
+```{r, warning=FALSE}
+
+# Create a map for trade in intermediate products and its impact on GDP
+auxQmap3 <- tm_shape(aux_map_data) +
+  tm_fill(col = "gGDPc_A",   
+          style = "hclust", 
+          n = 8, 
+          legend.hist = TRUE, 
+          palette = "YlOrRd", 
+          title = "GDP Impact Due to Trade Sanctions in Intermediate Products", 
+          alpha = 0.6) +
+  tm_layout(legend.outside = TRUE)
+
+# Display the map in interactive view
+tmap_mode("view")
+auxQmap3 + tm_view(set.view = c(7, 51, 4), text.size.variable = TRUE)
+
+```
+
+
+
+### Intermediate products
+
+
+
+```{r, warning=FALSE}
+
+# Create a map for trade in intermediate products and its impact on GDP
+auxQmap3 <- tm_shape(aux_map_data) +
+  tm_fill(col = "gGDPc_A",   
+          style = "hclust", 
+          n = 8, 
+          legend.hist = TRUE, 
+          palette = "YlOrRd", 
+          title = "GDP Impact Due to Trade Sanctions in Intermediate Products", 
+          alpha = 0.6) +
+  tm_layout(legend.outside = TRUE)
+
+# Display the map in interactive view
+tmap_mode("view")
+auxQmap3 + tm_view(set.view = c(7, 51, 4), text.size.variable = TRUE)
+
+
+```
+
+
+
+### Final Products
+
+
+
+```{r, warning=FALSE}
+
+# Create a map for trade in final products and its impact on GDP
+auxQmap4 <- tm_shape(aux_map_data) +
+  tm_fill(col = "gGDPc_Y",   
+          style = "hclust", 
+          n = 8, 
+          legend.hist = TRUE, 
+          palette = "YlOrRd", 
+          title = "GDP Impact Due to Trade Sanctions in Final Products", 
+          alpha = 0.6) +
+  tm_layout(legend.outside = TRUE)
+
+# Display the map in interactive view
+tmap_mode("view")
+auxQmap4 + tm_view(set.view = c(7, 51, 4), text.size.variable = TRUE)
+
+
+```
