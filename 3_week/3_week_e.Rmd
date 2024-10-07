@@ -456,7 +456,7 @@ auxQmap1 + tm_view(set.view = c(7, 51, 4), text.size.variable = TRUE)
 
 ## Hierarchical Clustering Style
 
-```{r, warning=FALSE}
+```{r eval=FALSE, warning=FALSE, include=TRUE}
 # Create a choropleth map using hierarchical clustering style for a different view
 auxQmap2 <- tm_shape(aux_map_data) +
   tm_fill(col = "gGDPc",   
@@ -480,7 +480,7 @@ auxQmap2 + tm_view(set.view = c(7, 51, 4), text.size.variable = TRUE)
 ### Intermediate Products
 
 
-```{r, warning=FALSE}
+```{r,eval=FALSE, warning=FALSE, include=TRUE}
 
 # Create a map for trade in intermediate products and its impact on GDP
 auxQmap3 <- tm_shape(aux_map_data) +
@@ -505,7 +505,7 @@ auxQmap3 + tm_view(set.view = c(7, 51, 4), text.size.variable = TRUE)
 
 
 
-```{r, warning=FALSE}
+```{r eval=FALSE, warning=FALSE, include=TRUE}
 
 # Create a map for trade in intermediate products and its impact on GDP
 auxQmap3 <- tm_shape(aux_map_data) +
@@ -531,7 +531,7 @@ auxQmap3 + tm_view(set.view = c(7, 51, 4), text.size.variable = TRUE)
 
 
 
-```{r, warning=FALSE}
+```{r, eval=FALSE, warning=FALSE, include=TRUE}
 
 # Create a map for trade in final products and its impact on GDP
 auxQmap4 <- tm_shape(aux_map_data) +
@@ -549,4 +549,110 @@ tmap_mode("view")
 auxQmap4 + tm_view(set.view = c(7, 51, 4), text.size.variable = TRUE)
 
 
+```
+
+## Maps in ggplot 
+
+
+```{r}
+library(maps)
+library(countrycode)
+library(gapminder)
+
+dat_map <- map_data("world")
+ggplot(dat_map, aes(x = long, y = lat,
+group = group)) +
+geom_polygon(fill = "white", colour = "black")
+
+#Plot the first shot
+gdp_map <- full_join(x=dat_map,y=gapminder, by= c("region"="country"))
+ggplot(gdp_map, aes(x = long, y = lat,
+                                       group = group, fill = log10(gdpPercap))) +
+  geom_polygon() +
+  scale_fill_gradient(low = "red", high = "green")
+
+#Too much countries are missing 
+gapminder$ccode <- countrycode(gapminder$country,
+origin = "country.name",
+destination = "wb")
+dat_map$ccode <- countrycode(dat_map$region,
+origin = "country.name",
+destination = "wb")
+gdp_map_codes <- full_join(x=dat_map,y=gapminder, by="ccode")
+
+
+#Plot again after merging 
+ggplot(gdp_map_codes, aes(x = long, y = lat,
+                                       group = group, fill = log10(gdpPercap))) +
+  geom_polygon() +
+  scale_fill_gradient(low = "red", high = "green")
+
+```
+
+# Dynamic graphs (examples)
+
+
+```{r echo=TRUE, fig.height=15, fig.width=20, message=FALSE, warning=FALSE, fig.retina=4}
+library(tidyverse)
+library(gapminder)
+library(echarts4r)
+library(gganimate)
+library(ggiraph)
+library(widgetframe)
+library(ggthemes)
+library(plotly)
+library(viridis)
+library(DT)
+
+# country codes in gapminder::country_codes
+
+gapminder_codes <- gapminder::country_codes
+
+# countries with info in gapminder::gapminder_unfiltered
+
+gapminder <-gapminder::gapminder_unfiltered
+
+# We join both datasets with inner_join to get a dataset with the info by country, continent and country-code
+
+gapminder <- gapminder %>%
+  inner_join(gapminder_codes, by= "country") %>%
+  mutate(code = iso_alpha)
+
+# A map of the world (Antarctica removed)
+
+world <- map_data("world") %>%
+  filter(region != "Antarctica")
+
+
+gapminder_data <- gapminder %>%
+  inner_join(maps::iso3166 %>%
+               select(a3, mapname), by= c(code = "a3")) %>%
+  mutate(mapname = str_remove(mapname, "\\(.*"))
+
+
+datagpmnd <- gapminder %>%
+  mutate(Name = recode_factor(country,
+                              `Congo, Dem. Rep.`= "Dem. Rep. Congo",
+                              `Congo, Rep.`= "Congo",
+                              `Cote d'Ivoire`= "Côte d'Ivoire",
+                              `Central African Republic`= "Central African Rep.",
+                              `Yemen, Rep.`= "Yemen",
+                              `Korea, Rep.`= "Korea",
+                              `Korea, Dem. Rep.`= "Dem. Rep. Korea",
+                              `Czech Republic`= "Czech Rep.",
+                              `Slovak Republic`= "Slovakia",
+                              `Dominican Republic`= "Dominican Rep.",
+                              `Equatorial Guinea`= "Eq. Guinea"))
+
+
+datagpmnd %>%
+  group_by(year) %>%
+  e_chart(Name, timeline = TRUE) %>%
+  e_map(lifeExp) %>%
+  e_visual_map(min= 30, max= 90,
+               type = 'piecewise') %>%
+  e_title("Life expectancy by country and year", left = "center") %>%
+  e_tooltip(
+    trigger = "item",
+    formatter = e_tooltip_choro_formatter())
 ```
