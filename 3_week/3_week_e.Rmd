@@ -56,7 +56,12 @@ plot(pt_geo)
 
 # The base plot function has some aesthetic options we can use to tweak our plots
 plot(pt_geo, col = "lemonchiffon2")
-plot(pt_geo, lwd = 1, border = "red")
+plot(pt_geo, lwd = 2, border = "red")
+
+
+
+plot(c(pt_geo[[1]], pt_geo[[4]]))
+
 
 ```
 
@@ -86,6 +91,8 @@ library(tidyverse)
 
 crime_aux <- read_csv("data/crime_incidents.csv")
 
+head(crime_aux)
+
 crime_aux <- crime_aux[which(!is.na(crime_aux$lat) & !is.na(crime_aux$lng)),]
 
 crime <- st_as_sf(crime_aux, coords = c("lng","lat"))
@@ -101,7 +108,6 @@ plot(st_geometry(crime))
 table(crime$text_general_code)
 homicide <- filter(crime, text_general_code == "Homicide - Criminal")
 fraud <- filter(crime, text_general_code == "Fraud")
-
 # Note subsets of an sf object are also sf objects
 class(homicide)
 class(fraud)
@@ -144,7 +150,7 @@ lyme <- readRDS("data/nys_lyme_data.rds")
 
 # Let's take a look at some data attributes
 class(lyme)
-#head(lyme)
+head(lyme)
 
 # Note that the variable Lyme.Incidence.Rate gives the county-level Lyme disease incidence per 100,000 population
 
@@ -180,6 +186,7 @@ tm_shape(lyme) +    # specify sf object with geographic attribute of interest
 This section was adapted from a tutorial created by Manuel Gimmond, which can be found on his [github page](https://mgimond.github.io/simple_moransI_example/). 
 
 ### Assess data distribution
+
 Let's begin by looking at the distribution of our Lyme incidence rate data. The Moran's *I* statistic is not robust to extreme values or outliers so we will need to transform our data if it deviates greatly from a normal distribution.
 
 ```{r}
@@ -204,9 +211,11 @@ lyme$log_lyme_incidence <- log(lyme$Lyme.Incidence.Rate)
 # Histogram
 hist(lyme$log_lyme_incidence)
 
+
 # Boxplot
 boxplot(lyme$log_lyme_incidence, horizontal = TRUE)
 
+summary(lyme$log_lyme_incidence)
 ```
 
 That's much better! We can see what our log-transformed values look like on a map.
@@ -256,19 +265,35 @@ lyme_weights$weights[[2]]  # The weights of the neighbors for Allegheny
 ### Perform hypothesis testing 
 Now we can calculate the Moran's *I* statistic and perform hypothesis testing using 'moran.test' (analytical calculation) and 'moran.mc' (via Monte Carlo simulations). These functions require that we specify the variable of interest and the list of neighbor weights for each polygon. The option 'alternative = "greater"' specifies testing for *positive* spatial autocorrelation, which is also the default for these functions. The 'moran.mc' function also requires that we specify the number of simulations with option 'nsim'.
 
+
 ```{r}
 # Analytical test - quicker computation but sensitive to irregularly distributed polygons
-moran.test(lyme$log_lyme_incidence, lyme_weights, alternative = "greater")
+moran.test(lyme$log_lyme_incidence, lyme_weights, alternative = "two.sided")
 
 # Monte Carlo (MC) simulation is slower but the preferred  method to calculate an accurate p-value
 MC <- moran.mc(lyme$log_lyme_incidence, lyme_weights, nsim = 999, alternative = "greater")
 MC
+```
+Next, we’ll have R compute the average neighbor income value for each polygon. These values are often referred to as spatially lagged values.
+
+```{r}
+log_lyme_incidence.lag <- lag.listw(lyme_weights, lyme$log_lyme_incidence)
+log_lyme_incidence.lag
+
+plot(log_lyme_incidence.lag ~ lyme$log_lyme_incidence, pch=16, asp=1)
+M1 <- lm(log_lyme_incidence.lag ~ lyme$log_lyme_incidence)
+summary(M1)
+abline(M1, col="blue")
+
+coef(M1)[2]
 ```
 We can see the results of the MC simulations graphically by passing the output of MC model to the 'plot' function.
 
 ```{r}
 plot(MC)
 ```
+
+
 
 ## Local clustering (local Moran)
 
@@ -296,6 +321,7 @@ lyme$NAME[get_neighbors(lyme_gweights, 1)]
 # See the neighbors of the first polygon (Allegany)
 get_neighbors(lyme_gweights, 2)
 lyme$NAME[2]
+
 lyme$NAME[get_neighbors(lyme_gweights, 2)]
 
 # See the neighbor weights of the first and second polygons
@@ -335,6 +361,7 @@ plot(st_geometry(lyme),
      col=sapply(map_clusters, function(x){return(map_colors[[x+1]])}), 
      border = "#333333", lwd=0.2)
 legend('topright', legend = map_labels, fill = map_colors, border = "#eeeeee", cex = 0.7)
+
 ```
 
 # Mapping GDP Fall Due to Trade Sanctions on Russia
