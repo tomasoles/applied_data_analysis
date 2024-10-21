@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aplikovaná dátová analýza</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Eduard Nežinský" />
+    <meta name="date" content="2024-01-01" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+    <link rel="stylesheet" href="custom.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Aplikovaná dátová analýza
+]
+.subtitle[
+## Základy pravdepodobnosti
+]
+.author[
+### Eduard Nežinský
+]
+.institute[
+### Katedra hospodárskej politiky
+]
+.date[
+### 2024
+]
+
+---
+
+
+##  Pravdepodobnosť v praxi 
+&lt;style&gt;
+    body {
+    line-height: 1.6;
+  }
+&lt;/style&gt;
+
+- **Politológia, sociológia**: Volebné preferencie, výsledky volieb, exit polly
+- **Teória hier**: Pravdepodobnostné zmiešané stratégie v súťaži
+- **Prognózovanie**: Pravdepodobnostné modely na predpovedanie počasia
+- **Strojové učenie**: Základ algoritmov, ktoré robia predpovede na základe dátových vzorcov a pravdepodobnostných rozdelení (LLM, chatGPT)
+- **Manažment dodávateľského reťazca**: Predpovedanie dopytu, optimalizácia zásob a riadenie rizík pomocou pravdepodobnostných modelov.
+- **Zdravotníctvo**: Hodnotenie rizík, diagnostika chorôb a posudzovanie účinnosti liečby.
+- **Kontrola kvality**: Vyhodnotenie monitorovania `\(\rightarrow\)` zlepšovanie kvality produktov v rámci výrobných procesov.
+- **Environmentálna veda**: Pravdepodobnosť environmentálnych udalostí - klimatické zmeny a prírodné katastrofy.
+---
+##   Pravdepodobnosť v ekonómii
+- **Riziko a neistota v rozhodovaní**: Teória očakávanej užitočnosti
+- **Ekonometria**: Regresné modely, testovanie hypotéz a štatistická inferencia.
+- **Finančné trhy**: Black-Scholesov modely oceňovania aktív a optimalizácia portfólia.
+- **Makroekonomické modelovanie**: Bayesovské metódy, stochastické modely ekonomických šokov.
+- **Poisťovníctvo**: Aktuárska veda a hodnotenie rizík, riešenie morálnych hazardov.
+- **Ekonómia práce**: Modely hľadania práce a distribúcie miezd.
+- **Behaviorálna ekonómia**: Teória perspektívy a averzia voči riziku.
+- **Teória aukcií**: Pravdepodobnosť v tvorbe stratégií.
+- **Environmentálna ekonómia**: Ceny uhlíka a predpovedanie dostupnosti zdrojov.
+---
+##Základné pojmy a označenie
+
+- **Náhodný** jav: &amp;nbsp; &lt;del&gt;definícia&lt;/del&gt;, intuitívne pochopenie, = výsledok náhodného pokusu (napr. 🎲) `\(\,\)` vs. `\(\,\)` **istý / nemožný** jav
+
+- Základný priestor **elementárnych** udalostí:
+
+&amp;nbsp; `\(\Omega\)` = množina všetkých možných základných výsledkov náhodného pokusu
+&lt;br&gt;
+&lt;br&gt;
+`\(\,\)` Definície **pravdepodobnosti** :
+
+`\(\quad P(\)` udalosť `\(A)\, =\, P(A)\, = \,\tfrac{\text{Počet priaznivých výsledkov pre udalosť } A}{\text{Celkový počet možných výsledkov}} \, =\,\dfrac{m}{n}\)`
+ - *štatistická*
+ 
+ - *geometrická*: `\(\quad \infty\,\)` elementárnych udalostí
+ 
+ - *axiomatická*
+
+---
+&lt;div style="margin-top: 20px;"&gt;&lt;/div&gt;
+
+## Diskrétna náhodná premenná
+
+ **Náhodná premenná** 
+- premenlivá veličina `\(X\)`  
+- konkrétny výsledok náhodného pokusu je vyjadrený reálnym číslom = hodnotou NP `\(X\)`
+
+**Diskrétna** náhodná premenná 
+- nadobúda hodnoty z konečnej množiny `\(\{x_1,x_2,...,x_n\}\)`
+
+- konkrétny výsledok náhodného pokusu je vyjadrený reálnym číslom = hodnotou NP `\(X\)`
+- Ak `\(X\)` je počet bodov pri hode kockou `\(\,\rightarrow \color{blue}{ \,X \in \{1,2,3,4,5,6\}}\)`
+---
+####Štatistická pravdepodobnosť
+&lt;div style="font-size: 80%;"&gt;
+Príklad 1. `\(X\)` je súčet bodov pri hode 2 kockami `\(\,\rightarrow \color{blue}{ \,X \in \{2,3,4,\,\dots,11,12\}}\)`
+
+``` r
+# 1 Hod 2 kockami
+x =  sample(1:6, 2, replace = TRUE)
+x
+```
+
+```
+## [1] 1 1
+```
+
+``` r
+sum(x)
+```
+
+```
+## [1] 2
+```
+
+
+``` r
+# n hodov 2 kockami
+n = 10
+x1 &lt;- replicate(10, sample(1:6, 2, replace = TRUE))
+x1
+```
+
+```
+##      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]
+## [1,]    5    3    4    4    2    5    6    6    4     6
+## [2,]    2    1    4    2    2    4    1    1    4     3
+```
+&lt;div&gt;
+---
+####Štatistická pravdepodobnosť
+&lt;div style="font-size: 80%;"&gt;
+Druhý spôsob: cyklus
+
+``` r
+# Replicate by a loop
+x2 = matrix(0, nrow = 2, ncol = 10)
+
+# Loop to simulate 10 rolls of 2 dice
+for (i in 1:n) {
+  x2[, i] = sample(1:6, 2, replace = TRUE)
+}
+x2
+```
+
+```
+##      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]
+## [1,]    4    2    3    3    2    2    2    3    1     5
+## [2,]    2    6    4    2    6    1    5    5    3     3
+```
+
+
+``` r
+# sucet bodov
+s2 = colSums(x2)
+s2
+```
+
+```
+##  [1] 6 8 7 5 8 3 7 8 4 8
+```
+&lt;div&gt;
+---
+Príklad 1 (pokračovanie)
+&lt;div style="font-size: 90%;"&gt;
+`\(\color{blue}{P(X=6)\,=\,p(6) \quad \leftarrow \quad}\)`   `\(P\,\)` je vyjadrenie pravdepodobnosti udalosti, `\(p\,\)` je funkcia
+
+``` r
+n = 15
+x3 = replicate(n, sample(1:6, 2, replace = TRUE))
+s3 = colSums(x3)
+
+freq6 = sum(s3 == 6); prob6 = freq6/n
+hists3 = hist(s3, xlim = c(0, 12), main = paste("Relativna_pocetnost(6): ", freq6, "/" , n,  "= ", round(prob6, 5)), cex.main = 0.9)
+```
+
+![](5_week_pe_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
+&lt;div&gt;
+---
+&lt;div style="margin-top: 15px;"&gt;&lt;/div&gt;
+
+###Diskrétna NP: rozdelenie pravdepodobnosti, PMF
+- NP `\(X\)` nadobúda hodnoty `\({x_i}\; (i=1,2,...,n)\;\)` t.j. `\(X \in \{x_1, x_2, ..., x_n\}\)`
+- hodnoty `\(p(x_i)\)` pre všetky možné hodnoty NP X
+
+&lt;!-- Table PDF CDF --&gt;
+&lt;summary&gt;Tabuľka 1&lt;/summary&gt;
+&lt;table style="width:90%; font-size:14px; border-collapse: collapse; margin-left: auto; margin-right: auto; float: left; text-align: center"&gt;
+  &lt;tr style="background-color:#f0f0f0;"&gt;
+    &lt;th style="width:2cm;"&gt;\(x_i\)&lt;/th&gt;
+    &lt;th style="width:3cm;"&gt;\(x_1\)&lt;/th&gt;
+    &lt;th&gt;\(x_2\)&lt;/th&gt;
+    &lt;th&gt;\(x_3\)&lt;/th&gt;
+    &lt;th&gt;...&lt;/th&gt;
+    &lt;th&gt;\(x_{n-1}\)&lt;/th&gt;
+    &lt;th&gt;\(x_n\)&lt;/th&gt;
+    &lt;th&gt;sum&lt;/th&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;\(p(x_i)\)&lt;/td&gt;
+    &lt;td&gt;\(p(x_1)\)&lt;/td&gt;
+    &lt;td&gt;\(p(x_2)\)&lt;/td&gt;
+    &lt;td&gt;\(p(x_3)\)&lt;/td&gt;
+    &lt;td&gt;...&lt;/td&gt;
+    &lt;th&gt;\(p(x_{n-1})\)&lt;/th&gt;
+    &lt;td&gt;\(p(x_n)\)&lt;/td&gt;
+    &lt;td&gt;\(\small \displaystyle \sum_i{p(x_i)}\)&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(x_i\)&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;2&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;3&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;4&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;...&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;11&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;12&lt;/td&gt;
+    &lt;td&gt; &lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(p(x_i)\)&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(\frac{1}{12}\)&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(\frac{2}{12}\)&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(\frac{3}{12}\)&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;...&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(\frac{2}{12}\)&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(\frac{1}{12}\)&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(\large 1 \)&lt;/td&gt;
+      &lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;div style="clear: both;"&gt;
+  &lt;br&gt;
+  &lt;ul&gt;
+  &lt;li&gt;graf funkcie pravdepodobnosti PMF (Probability Mass Function)&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+&lt;div style="text-align: center;margin-top: -26px;"&gt;
+  &lt;img src="img/pmf_plot.png" alt="Graf PMF" width="500px" height="180px"&gt;
+&lt;/div&gt;
+---
+&lt;div style="margin-top: 15px;"&gt;&lt;/div&gt;
+
+###Diskrétna NP: rozdelenie pravdepodobnosti, CDF
+Pre údaje z Tabuľky 1 rozdelenia pravdepodobnosti definujme
+ `$$F(x_i) = P(X\leq x_i)$$`
+- Napr. 
+`\(\;\small\color{blue}{F(3) = P(X\leq 3) \,=\, p(x_1)+p(x_2)+p(x_3) =\, \frac{1+2+3}{36} = \frac{1}{6}}\)`
+
+
+&lt;!-- Table PDF CDF --&gt;
+&lt;summary&gt;Tabuľka 1&lt;/summary&gt;
+&lt;table style="width:90%; font-size:14px; border-collapse: collapse; margin-left: auto; margin-right: auto; float: left; text-align: center"&gt;
+  &lt;tr style="background-color:#f0f0f0;"&gt;
+    &lt;th style="width:2cm;"&gt;\(x_i\)&lt;/th&gt;
+    &lt;th style="width:3cm;"&gt;\(x_1\)&lt;/th&gt;
+    &lt;th&gt;\(x_2\)&lt;/th&gt;
+    &lt;th&gt;\(x_3\)&lt;/th&gt;
+    &lt;th&gt;...&lt;/th&gt;
+    &lt;th&gt;\(x_{n-1}\)&lt;/th&gt;
+    &lt;th&gt;\(x_n\)&lt;/th&gt;
+  &lt;/tr&gt;
+    &lt;tr&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(x_i\)&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;2&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;3&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;4&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;...&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;11&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;12&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(p(x_i)\)&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(\frac{1}{36}\)&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(\frac{2}{36}\)&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(\frac{3}{36}\)&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;...&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(\frac{2}{36}\)&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(\frac{1}{36}\)&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(F(x_i)\)&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(\frac{1}{36}\)&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(\frac{3}{36}\)&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(\frac{6}{36}\)&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;...&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(\frac{31}{36}\)&lt;/td&gt;
+    &lt;td style="color: blue; font-weight: bold;"&gt;\(\frac{36}{36}\)&lt;/td&gt;
+      &lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;p style="margin-top: 6em;"&gt;&lt;/p&gt;  
+`\(\rightarrow\; p(x_i)\, = \,F(x_i)-F(x_{i-1}) \qquad \qquad \small\color{blue}{\bullet \; p(2)\, = \,F(3)-F(2)}\)`
+ 
+ - Dôležité rozšírenie: **kumulatívnu distribučnú funkciu** môžeme definovať pre všetky `\(x \in R: \;  F(x) = P(X\leq x) \quad \rightarrow \;\)` prechod k **spojitej NP**.
+
+---
+###Rozdelenie pravdepodobnosti, CDF
+&lt;div style="margin-bottom: -24px;"&gt;&lt;/div&gt;
+
+`\(\qquad \qquad\)` **PDF** a **CDF** obsahujú _rovnakú_ informáciu o NP!!
+&lt;div style="text-align: center;margin-top: 0px;"&gt;
+  &lt;img src="img/cdf_plot2.png" alt="Graf PMF" width="500px" height="200px"&gt;
+&lt;/div&gt;
+&lt;div style="text-align: center;margin-top: 0px;"&gt;
+  &lt;img src="img/cdf_plot.png" alt="Graf PMF" width="550px" height="280px"&gt;
+&lt;/div&gt;
+
+---
+##Spojitá náhodná premenná
+- `\(\quad \infty\,\)` možných výsledkov náhodnej udalostí, interval
+- `\(\quad\)` dôsledok:  `\(\,P(X=\,\)` konečný počet výsledkov `\()\quad=\,\dfrac{m}{\infty}\,=0\)`
+&lt;br&gt;
+
+- `\(\quad\)` Keďže `\(\, P(X=\,a)=0 \quad\rightarrow \quad P(X\leq\,a) \,= \,P(X\,&lt;\,a)\)`
+####Geometrická pravdepodobnosť
+- grafická reprezentácia spojitej NP, pravdepodonosťvyjadrená  ako pomer dĺžok, plôch
+- intuitívne používanie v každodennej praxi
+&lt;br&gt;
+&lt;br&gt;
+Príklady
+- 1D: čas (príchody vlakov, autobusov)
+- 2D: geografia (P udalosti na určitom území)
+---
+####Príklad "Palica" &lt;div style="margin-bottom: -16px;"&gt;&lt;/div&gt;
+Podmienky (trojuholníkovej nerovnosti) pre prípad `\(\;y&gt;x\)`:
+
+`\(\small x + (y - x) &gt; (1 - y) \tag{1}\)`
+
+`\(\small x + (1 - y) &gt; (y - x) \tag{2}\)`
+
+`\(\small (y - x) + (1 - y) &gt; x \tag{3}\)`
+&lt;br&gt;
+Po úprave: &amp;emsp;&amp;emsp;&amp;emsp;&amp;emsp;&amp;emsp;&amp;emsp;  `\((1) \quad\small  y &gt; \frac{1}{2}, \qquad (2)\quad y &lt; \frac{1}{2}+x, \qquad (3)\quad x &lt; \frac{1}{2}\)`
+&lt;br&gt;
+&lt;div style="text-align: center;"&gt;
+  &lt;img src="img/palica.png", width="39%" /&gt;
+ &lt;/div&gt;
+---
+####Príklad "Palica" &lt;div style="margin-bottom: -33px;"&gt;&lt;/div&gt;
+![](5_week_pe_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
+
+``` r
+ j = 10000; tri = 0
+for (i in 1:j) {
+  points = sort(runif(2, min = 0, max = 1))
+  a = points[1]          
+  b = points[2] - points[1]  
+  c = 1 - points[2]      
+  tri = tri + sum(a+b&gt;c &amp; a+c&gt;b &amp; b+c &gt;a)
+}
+tri
+```
+
+```
+## [1] 2480
+```
+
+``` r
+tri/j
+```
+
+```
+## [1] 0.248
+```
+---
+&lt;div style="margin-top: 20px;"&gt;&lt;/div&gt;
+
+### Distribučná funkcia - vlastnosti
+&lt;div style="display: flex; align-items: center;"&gt;
+  &lt;div style="flex: 0.8;text-align: right; font-size: 1.3em;"&gt;
+    &lt;div style="line-height: 2.3;"&gt;
+      `\(\color{red}{!!}\;\)` definovaná na `\(\small(-\infty, \infty)\)`&lt;br&gt;
+      `\(\small0 \leq F(x) \leq 1\)` &lt;br&gt;
+      • neklesajúca &lt;br&gt;
+      • intervaly `\(=\)` množiny
+    &lt;/div&gt;
+  &lt;/div&gt; 
+&lt;div style="flex: 1; text-align: right;"&gt;
+  &lt;img src="img/F_mnoziny.png", width="75%" /&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;br&gt;
+&lt;div style="text-align: right; font-size: 1.1em; line-height: 1.2; margin-top: -10px;"&gt;
+`\(B = A + B \setminus A\)`
+
+`\(\;P(B) = P(A) + P(B \setminus A)\)`
+
+`\(P(X \leq b) = P(X \leq a) + P(a &lt; X \leq b)\;\)`
+
+&lt;div&gt;
+&lt;div style="color: brown; text-align: center; font-size: 1.3em; padding: 10px 10px; background-color: #f0f0f0; display: inline-block; margin-top: 10px;"&gt;
+  `\(P(a \leq X \leq b) \; = \; F(b) - F(a)\)`
+&lt;div&gt;
+
+---
+###Rozdelenie spojitej NP (histogram)
+&lt;div style="margin-top: -30px;"&gt;&lt;/div&gt;
+Príklad: Empirické rozdelenie: histogram
+&lt;/div&gt; 
+
+![](5_week_pe_files/figure-html/unnamed-chunk-8-1.png)&lt;!-- --&gt;
+ 
+ &lt;div style="text-align: left; font-size: 0.8em; margin-top: -20px;"&gt; Zdroj: &lt;a href="https://www.meteoto.sk/data.php?year=2024&amp;data=maxpres"&gt;https://www.meteoto.sk/data.php?year=2024&amp;data=maxpres&lt;/a&gt; &lt;/div&gt;
+
+- nemá zmysel sledovať jednotlivé pozorovania v "bodoch", nebudú sa opakovať ( `\(p=0\)` ), napr. konkrétna hodnota `\(1011.98\,\)` sa nevyskytuje
+- zobrazené sú výskyty NP v jednotlivých intervaloch
+- intuitívne z grafu: výskyt hodnôt "v blízkosti" hodnoty `\(1011.98\,\)` je pravdepodobnejší ako "v blízkosti" `\(1000.00\)`
+
+---
+&lt;div style="margin-top: 20px;"&gt;&lt;/div&gt;
+
+###Teoretické *vs* empirické rozdelenie 
+&lt;div style="margin-bottom: -25px;"&gt;&lt;/div&gt;
+Recap: **diskrétna** NP
+
+&lt;div style="display: flex; justify-content: center; align-items: center;"&gt;
+  &lt;div style="flex: 1; text-align: center; font-size: 1.3em;"&gt;
+    &lt;img src="img/pmf_plot.png", width="90%" /&gt;
+  &lt;/div&gt; 
+  &lt;div style="flex: 1; text-align: center;"&gt;
+    &lt;img src="img/cdf_plot2.png", width="90%" /&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div style="margin-top: -10px;"&gt;&lt;/div&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;
+PMF:  `\(\small \;x\rightarrow p(x), \quad x_i\rightarrow p(x_i) \qquad \qquad \,\)`
+CDF:  `\(\small \;x\rightarrow F(x), \quad \displaystyle F(x_i) = \sum_{k \leq i} p(x_k)\)`
+
+&lt;img src="5_week_pe_files/figure-html/unnamed-chunk-9-1.png" style="display: block; margin: auto;" /&gt;
+
+`\(\rightarrow \quad\)` 
+&lt;span style="font-size: 18px;"&gt;Matematický aparát pre **spojitú** NP: diferenciálny a integrálny počet (Calculus)&lt;/span&gt;
+
+---
+## Neurčitý integrál = "antiderivácia"
+**Zmena**: `\(\quad \Delta x\)`, `\(dx\)`, `\(\partial x\)`
+&lt;br&gt;
+&lt;br&gt;
+**Derivácia** funkcie `\(F\)`:  `\(\quad F'(x)=f(x)\)`
+
+- napr. `\(\color{blue}{\quad (x^2)'=2x}\)`
+&lt;br&gt;
+&lt;br&gt;
+
+**Antiderivácia**:
+`\(\; \displaystyle \int f(x) \, dx\, = \, F(x)\, + C, \quad F\;\)` sa nazýva **primitívna** funkcia k `\(f\)` 
+- konkrétne výpočty pomocou "tabuľkových" integrálov (podobne ako derivácie základných funkcií)
+- napr. `\(\color{blue}{\quad \displaystyle \int 2x\, dx \, = x^2\,} + C\)`
+
+`\(\qquad + \;\)` pravidlá pre zložené funkcie a špeciálne metódy (*per partes*)
+---
+##Určitý integrál 
+Označenie:  `\(\quad\displaystyle \int_{a}^{b} f(x) dx\)`
+&lt;br&gt;
+&lt;br&gt;
+Geometrický význam: plocha pod krivkou funkcie `\({f(x)}\)`
+
+**Riemannov integrál**:  definícia pomocou limity súm
+&lt;div style="text-align: center;"&gt;
+&lt;video width="45%" controls&gt;
+  &lt;source src="img/integral_sum_low_up.mp4" type="video/mp4"&gt;
+ &lt;/video&gt;
+ &lt;/div&gt;
+---
+##Určitý integrál - výpočet
+- Newton-Leibniz: 
+$$
+\int_a^b f(x) \, dx = F(b) - F(a)
+$$
+- `\(F(x)\)` je primitívna funkcia k `\(f(x)\)`, ktorú vieme nájsť pomocou **neurčitého integrálu**.
+&lt;br&gt;
+&lt;br&gt;
+Aplikácie v E: 
+- akumulácia veličiny `\(y(t)\)` v čase: `\(\displaystyle \int_{t_1}^{t_2} y(t) dt\)`
+&lt;br&gt;
+&lt;br&gt;
+- plocha pod [Lorenzovou krivkou](https://en.wikipedia.org/wiki/Lorenz_curve): `\(\color{blue}{\displaystyle \, \int_{0}^{1} x^2 dx\,=\,\left[ \frac{x^3}{3} \right]_0^1 = \frac{1^3}{3}-\frac{0^3}{3}\, = \,1}\)`
+---
+##Hustota pravdepodobnosti (PDF)
+[dif. počet] `\(\rightarrow \;\)` Skúmame NP `\(X\;\)` v okolí hodnoty `\(x\)`.
+
+Pravdepodobnosť, že NP nadobudne hodnotu z (nekonečne) malého intervalu `\([x, x+\Delta x]\)`:
+
+`$$\lim_{\Delta x \to 0} \frac{\mathbb{P}\,(X \in [x, x + \Delta x]\,)}{\Delta x} \quad \iff \quad
+\lim_{\Delta x \to 0} \frac{\mathbb{P}\,(x \leq X \leq x + \Delta x)}{\Delta x}$$`
+
+Normalizácia: skúmame `\(\mathbb{P}\;\)`"na jednotku dĺžky intervalu".
+
+Zmenšovaním intervalu `\(\Delta{x}\;\)` dostávame presnejšiu charakteristiku - **hustotu pravdepodobnosti** NP v okolí hodnoty (bodu) `\(x\)`:
+&lt;br&gt;
+&lt;br&gt;
+
+`$$\lim_{\Delta x \to 0} \frac{F(x + \Delta x) - F(x)}{\Delta x} \;= \;F'(x)\;   \; \color{green} {\large =\, f(x)}$$`
+---
+### Príklady PDF rozličných rozdelení 
+&lt;div style="margin-bottom: -40px;"&gt;&lt;/div&gt;
+
+&lt;div style="flex: 1.6; text-align: center;"&gt;
+    &lt;img src="img/dist_6x.png" width = "83%" /&gt;
+&lt;/div&gt;
+---
+&lt;div style="margin-top: 20px;"&gt;&lt;/div&gt;
+
+### Geometria PDF a CDF [1b]
+
+&lt;div style="display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 10px;"&gt;
+    &lt;!-- First Image --&gt;
+  &lt;div style="text-align: center;"&gt;
+    &lt;img src="img/F1a.png" width="95%" /&gt;
+  &lt;/div&gt;
+    &lt;!-- Second Image --&gt;
+  &lt;div style="text-align: center;"&gt;
+    &lt;img src="img/Fb.png" width="95%" /&gt;
+  &lt;/div&gt;
+    &lt;!-- Math Text 1 --&gt;
+  &lt;div style="text-align: right; font-size: 1em;"&gt;
+     `$$F(a)\; = \;\mathbb{P}\,(X \leq a)$$`
+     `$$F(1-a)\; = \;\mathbb{P}\,(X \geq a)$$`
+  &lt;/div&gt;
+   &lt;!-- Math Text 2--&gt;
+  &lt;div style="text-align: center; font-size: 1em;"&gt;
+    `$$F(b)\; = \;\mathbb{P}\,(X \leq b)$$`
+  &lt;/div&gt;
+ &lt;/div&gt;
+---
+&lt;div style="margin-top: 20px;"&gt;&lt;/div&gt;
+
+### Geometria PDF a CDF [2]
+
+&lt;div style="display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 10px;"&gt;
+    &lt;!-- First Image --&gt;
+  &lt;div style="text-align: center;"&gt;
+    &lt;img src="img/Fa.png" width="95%" /&gt;
+  &lt;/div&gt;
+    &lt;!-- Second Image --&gt;
+  &lt;div style="text-align: center;"&gt;
+    &lt;img src="img/Fb.png" width="95%" /&gt;
+  &lt;/div&gt;
+    &lt;!-- Third Image --&gt;
+  &lt;div style="text-align: center;"&gt;
+    &lt;img src="img/Fba.png" width="95%" /&gt;
+  &lt;/div&gt;
+   &lt;!-- Math Text --&gt;
+  &lt;div style="text-align: center; font-size: 1em;"&gt;
+  
+   `$$F(b)-F(a)\; = \;\mathbb{P}\,(a\leq X \leq b)$$`
+  $$ F(b) - F(a) = \displaystyle \int_a^b f(x) \, dx $$
+  &lt;/div&gt;
+&lt;/div&gt;
+---
+&lt;div style="margin-top: 30px; "&gt;&lt;/div&gt;
+###PDF a CDF základných rozdelení
+R funkcie: &amp;nbsp;&amp;nbsp; sample *r___()*,&amp;nbsp; PDF *d___()*,&amp;nbsp; CDF *p___()*
+
+&lt;img src="img/pdf_cdf.png" style="width: 80%; height: 450px" /&gt;
+---
+&lt;div style="margin-top: 15px;"&gt;&lt;/div&gt;
+
+###Rozdelenie NP ako funkcia
+- Teoretické `\(f(x)\)` alebo `\(F(x)\)` sú štandardnými funkciami z M analýzy
+- Jednoznačne určené druhom a parametrami, podobne ako priamka: sklon, konštanta; parabola: 3 parametre; guľa, kruh: 1 parameter
+- funkcia hustoty má predpis `\(\;x\rightarrow f(x)\)`
+ - &lt;span style="color:blue;"&gt;rovnomerné rozdelenie:&lt;/span&gt;: `\(\small\color{blue}{\;f(x)=\frac{1}{b-a}}\)`
+- plocha pod krivkou hustoty pravdepodobnosti je rovná 1, podobne ako súčet P všetkých možných hodnôt pri dNP
+
+&lt;div style="display: flex; align-items: center;"&gt;
+  &lt;div style="flex: 1.6; text-align: center;"&gt;
+    &lt;img src="img/F1.png", width="75%" /&gt;
+  &lt;/div&gt;
+  &lt;div style="flex: 1;text-align: left; font-size: 1.1em;"&gt;
+    &lt;div style="line-height: 3;"&gt;
+      \(\small \mathbb{P}(X\in( -\infty,\infty))\)&lt;br&gt;
+      \(\small F(\infty)-F(-\infty)\)&lt;br&gt;
+            \( \small \displaystyle \int_{-\infty}^{\infty} f(x)\,dx = 1\)
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+---
+&lt;div style="margin-top: 10px;"&gt;&lt;/div&gt;
+###Normálne rozdelenie
+&lt;div style="margin-bottom: -40px;"&gt;&lt;/div&gt;
+[Gauss](https://sk.wikipedia.org/wiki/Norm%C3%A1lne_rozdelenie)
+
+``` r
+tlak &lt;- read.csv("tlak.csv")
+tlak_data &lt;- tlak %&gt;% as.matrix() %&gt;% as.vector() %&gt;% na.omit()
+ggplot(data.frame(tlak_data), aes(x = tlak_data)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 20, fill = "blue", alpha = 0.6, color = "black") +
+  stat_function(fun = dnorm, args = list(mean = mean(tlak_data), sd = sd(tlak_data)),
+                color = "red", size = 1) +
+  labs(title = "Histogram with Normal Distribution Fit",
+       x = "tlak", 
+       y = "Density") +
+  theme_minimal()
+```
+
+![](5_week_pe_files/figure-html/unnamed-chunk-10-1.png)&lt;!-- --&gt;
+
+---
+&lt;div style="margin-top: -15px;"&gt;
+## Stredná hodnota
+&lt;/div&gt;
+- označenie: `\(\;E(X)\;\)` *- expected value*
+- chápeme ako operátor `\(\rightarrow \;\)`pravidlá počítania
+- všeobecnejší príbuzný pojem k *priemeru* - ten sa však v štatistike vzťahuje ku konečnej vzorke *(sample)*
+- Definícia / výpočet strednej hodnoty:
+
+&lt;div style="text-align: center;"&gt;
+  `\(E(X) = \displaystyle\sum_{i} x_i \,p(x_i)\)` &amp;nbsp; pre diskrétnu NP
+&lt;/div&gt;
+&lt;br&gt;
+&lt;div style="text-align: center;"&gt;
+  `\(\displaystyle E(X) = \int_{-\infty}^{\infty} x\,f(x) \, dx\)` &amp;nbsp; pre spojitú NP
+&lt;/div&gt;
+&lt;br&gt;
+Príklad 1: Hod 1 kockou. `\(\; \small \color{blue}{E(X)=3.5}\)`
+
+Príklad 2: Hod 2 kockami, súčet. `\(\small \; \color{blue}{E(X)=?}\)`
+
+Príklad 3: Fisherovo rozdelenie
+`\(\small X\sim F(3,8),\quad \color{blue}{E(X)=\frac{8}{8-2}=1.333 \quad \neq \,\bar{X}}\)`
+---
+
+Graf teoretického `\(\small F(3,8)\;\)`a simulované hodnoty:
+
+``` r
+par(mfrow = c(1, 2)) # 2 obrazky vedla seba
+# Obr. vlavo - teoreticke F(3,8)
+curve(df(x, df1 = 3, df2 = 8), from = 0, to = 5, 
+      col = "blue", lwd = 3, ylab = "Density", 
+      xlab = "X", main = "Fisher distribution F(3, 8)")
+# Simulácia m náhodných hodnôt --&gt; priemer
+#Obr.vpravo - histogram nahodneho vyberu z F(3,8)
+m = 20; rf = rf(m,3,8); cat("priemer =", mean(rf)); hist(rf)
+```
+
+```
+## priemer = 1.716729
+```
+
+![](5_week_pe_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
+
+---
+###  Ostatné charakteristiky rozdelenia NP
+
+- **rozptyl** (*variance*), jedna z mier disperzie NP:
+`$$\; \text{Var}(X) = E(X^2) - \big[E(X)\big]^2$$`
+
+&lt;br&gt;
+- `\(p\,\)`-**kvantil** `\(Q_p\;\)` je taká hodnota NP, v ktorej CDF dáva zadanú pravdepodobnosť. Vyčísli sa inverznou funkciou k F: `$$F(Q_p)=p \quad \rightarrow \quad Q_p=F^{-1}(p)$$`
+&lt;br&gt;
+
+- **medián**: `\(\;F(\)` medián `\() \;= 0.5\)`
+
+- **modus**: hodnota (nie nutne jediná) s najvyššou hustotou pravdepodobnosti, `\(\; \quad\underset{x}{\text{argmax}} \, f(x)\;\)`
+ 
+---
+##  Vzťah medzi dvoma NP
+
+- **kovariancia**
+
+$$
+\text{Cov}(X, Y) \,=\,  E\,\bigg[\,\big( X - E(X)\big)\,\big( Y - E(Y)\big)\bigg]
+$$
+
+Kovariancia určuje, ako sa menia dve náhodné premenné "súbežne".
+
+- `\(\small \text{Cov}(X, X) = E\,\bigg[\,\big( X - E(X)\big)^2\,\bigg] \quad \color{blue}{\stackrel{?}{=} \;\text{Var}(X)}\)`
+
+---
+##Podmienená pravdepodobnosť [1]
+
+`\(\mathbb{P}\,(\)` udalosť `\(A\,)\)` za podmienky, že nastala udalosť `\(B\)`
+
+`\(\mathbb{P}(\)` súčet 2 hodov `\(\; X=8\,|\,\)` 1.hod `\(\, &lt; 3)\)`
+
+Pre **diskrétne** NP  náhodné premenné X,Y:  `\(\mathbb{P}(Y=y\,|\,X=x)\)`
+
+Pre **spojité** NP sa pýtame na hustotu `\(f_{Y|X}\,(y|x)\)` v okolí hodnoty `\(y\)` za podmienky `\(X=x\)`.
+---
+##Podmienená pravdepodobnosť [2]
+
+- Podmienená pravdepodobnosť: **Bayesova veta**
+
+$$
+P(A|B) \, = \,\frac{P(B|A)\,\, P(A)}{P(B)}
+$$
+- **Bayesovská**  vs  **frekventistická** štatistika
+
+&lt;div style="margin-bottom: -10px; padding-bottom: 0px;font-size: 90%;"&gt;
+`\(\quad\)` Aplikácie:
+&lt;div&gt;
+
+&lt;div style="font-size: 90%;"&gt;
+- Predikcia a riadenie rizika v ekonómii a financiách
+- Bayesovské siete a optimalizácia hyperparametrov v strojovom učení
+- Klasifikácia a predikcia pomocou bayesovských modelov
+- Adaptívne klinické skúšky v medicíne a modelovanie šírenia chorôb v epidemiológii
+- Diagnostické testovanie s ohľadom na predchádzajúce informácie (priors)
+- Modely rozhodovania v kognitívnej vede a psychológii
+- Lokalizácia a mapovanie robotov v robotike
+- Riadiace systémy v inžinierstve s využitím spätnej väzby
+- Ekologické modelovanie a predikcia klimatických zmien
+- Analýza prieskumov a predpovede volebných výsledkov v spoločenských vedách
+&lt;div&gt;
+
+---
+##Záver
+
+- Diferenciálny a integrálny počet a pravdepodobnosť  `\(=\)` základ kvantitatívnych metód v ekonómii
+- Rozdelenie pravdepodobnosti: diskrétna NP, tabuľka, PMF, CDF
+- Empirické vs teoretické rozdelenie: histogram simulovaných hodnôt vs graf funkcie `\(\small p(x)\)`
+- Prechod z diskrétnych na spojité modely NP cez distribučnú funkciu F(x)
+- F(x) spojitej NP `\(\;\rightarrow\;\)` hustota pravdepodobnosti
+- PDF `\(\;\rightarrow\;\)` CDF spojitej funkcie
+
+- Charakteristiky rozdelenia: `\(\small E(X)\)`, `\(\small Var(X)\)`
+- Podmienená pravdepodobnosť
+
+---
+## Further reading
+&lt;div style="text-align: left; margin-top: 0px;"&gt;
+  &lt;img src="img/pishro_nik.png"&gt;
+&lt;/div&gt;
+- [Pishro-Nik, H. - Introduction to Probability, Statistics and Random Processess](https://www.probabilitycourse.com/)
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
