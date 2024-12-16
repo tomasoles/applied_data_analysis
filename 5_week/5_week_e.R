@@ -1,4 +1,4 @@
-# Cvicenie 22.10.2024
+# Prenaska/ cvicenie 22.10.2024 a 10.12.2024
 tlak <- read.csv("tlak.csv")
 library(ggplot2) 
 library(dplyr)
@@ -59,4 +59,31 @@ curve(dt(x, df = 4), from = -3, to = 3, ylim = c(0, 0.6),
 curve(dnorm(x, 1, 0.7), from = -2, to = 3, ylim = c(0, 0.6),
       col = "blue", lwd = 3, ylab = "f(x)", 
       xlab = "x", main = "Gaussovo (dnorm)")
-#----
+#---- PDF, CDF, kvantily, Var, stredna hodnota ----
+dnorm(0)
+pnorm(2)
+qnorm(0.025)
+u <- rnorm(500)
+hist(u)
+hist(u^2)
+var1 = mean((u-mean(u))^2); var1
+var2 = mean(u^2)-mean(u)^2; var2
+#---- Korelacie v regresii ----
+m_ols2 <- lm(wage ~ educ + IQ + exper + married, wage)
+summary(m_ols2)
+y_hat <- predict(m_ols2); u_hat <- resid(m_ols2)
+#cor, cov, var, sd
+educ_p_value <- summary(m_ols2)$coefficients["educ", 4]
+educ_point <- summary(m_ols2)$coefficients["educ", 1]
+#dt(), pt(), qt()
+
+#---- Numericky integral, pravidlo sigma ----
+integrate(function(x) {x^2}, lower = 0, upper = 1)
+
+f_norm <- function(x, mu = 2, sigma = 3) {
+  (1 / (sigma * sqrt(2 * pi))) * exp(-((x - mu)^2 / (2 * sigma^2))) }
+
+f_norm_std <- function(z) {(1 / sqrt(2 * pi)) * exp(-0.5 * z^2)}
+
+integrate(f_norm_std, lower = -Inf, upper = -2)
+integrate(f_norm, lower = -Inf, upper = -4)

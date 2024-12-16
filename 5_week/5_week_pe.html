@@ -103,7 +103,7 @@ x
 ```
 
 ```
-## [1] 4 4
+## [1] 4 1
 ```
 
 ``` r
@@ -111,7 +111,7 @@ sum(x)
 ```
 
 ```
-## [1] 8
+## [1] 5
 ```
 
 
@@ -124,8 +124,8 @@ x1
 
 ```
 ##      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]
-## [1,]    5    5    6    5    2    3    6    4    2     2
-## [2,]    3    3    2    5    2    5    4    4    5     5
+## [1,]    3    2    5    5    2    5    5    4    2     5
+## [2,]    6    4    1    1    4    3    6    3    2     2
 ```
 &lt;div&gt;
 ---
@@ -146,8 +146,8 @@ x2
 
 ```
 ##      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]
-## [1,]    2    4    5    2    6    6    6    5    3     1
-## [2,]    3    2    5    5    4    6    6    1    5     3
+## [1,]    2    5    2    3    6    5    1    6    3     2
+## [2,]    1    3    3    2    6    5    3    1    6     3
 ```
 
 
@@ -158,7 +158,7 @@ s2
 ```
 
 ```
-##  [1]  5  6 10  7 10 12 12  6  8  4
+##  [1]  3  8  5  5 12 10  4  7  9  5
 ```
 &lt;div&gt;
 ---
@@ -353,7 +353,7 @@ tri
 ```
 
 ```
-## [1] 2486
+## [1] 2516
 ```
 
 ``` r
@@ -361,7 +361,7 @@ tri/j
 ```
 
 ```
-## [1] 0.2486
+## [1] 0.2516
 ```
 ---
 &lt;div style="margin-top: 20px;"&gt;&lt;/div&gt;
@@ -597,13 +597,65 @@ ggplot(data.frame(tlak_data), aes(x = tlak_data)) +
 ```
 
 ![](5_week_pe_files/figure-html/unnamed-chunk-10-1.png)&lt;!-- --&gt;
+---
+&lt;div style="margin-top: 20px;"&gt;&lt;/div&gt;
+###Prečo normálne rozdelenie?
+&lt;div style="margin-bottom: -20px;"&gt;&lt;/div&gt;
+- Prírodné a spoločenské javy
+ - výška, hmotnosť, tlak, IQ
+ - chyby merania a variancia v experimentoch
+ - pri daných strednej hodnote a rozptyle max [entropia](https://en.wikipedia.org/wiki/Entropy_(information_theory)
+
+- Centrálna limitná veta (CLT)
+ - asymptotika
+ - súčet non-Normal `\(\;\rightarrow\;\)` Normal
+
+- Jednoduché matematické modelovanie
+ - symetria, iba 2 parametre, operácie 
 
 ---
-&lt;div style="margin-top: -15px;"&gt;
-## Stredná hodnota
+&lt;div style="margin-top: 30px;"&gt;&lt;/div&gt;
+###Normálne rozdelenie - pravidlo sigma
+
+NP `\(\small\,X\)` je normálne rozdelená `\(\; \small X \sim \mathcal{N}(\mu, \sigma^2) \;\,\rightarrow\;\, Z=\frac{\displaystyle x-\mu}{\displaystyle\sigma} \sim \mathcal{N}(0, 1)\)`
+&lt;br&gt;
+&lt;div style="flex: 1; text-align: center;"&gt;
+  &lt;img src="img/normdist_sigma.png", width="75%" /&gt;
 &lt;/div&gt;
-- označenie: `\(\;E(X)\;\)` *- expected value*
-- chápeme ako operátor `\(\rightarrow \;\)`pravidlá počítania
+&lt;br&gt;
+
+`$$\color{blue}{\mathbb{P}(\mu - 2\sigma \, \leq \,X\, \leq \mu + 2\sigma) \;=\; \mathbb{P}(-2 \, \leq \,Z\, \leq 2)}$$`
+
+
+`$$=\color{blue}{\;\Phi(2)-\Phi(-2) \approx\; 0.95}$$`
+---
+&lt;div style="margin-top: 10px;"&gt;&lt;/div&gt;
+###Štandardizované normálne rozdelenie
+NP `\(X\)` je normálne rozdelená, 2 parametre: `\(\; X \sim \mathcal{N}(\mu, \sigma^2)\)`
+
+stredná hodnota: `\(\; \mu \,= \,0\)`
+
+štandardná odchýlka: `\(\; \sigma \,= \,1\)`, `\(\quad\)`rozptyl: `\(\; \sigma^2 \,= \,1\)`
+
+hustota pravdepodobnosti NP `\(\;Z \sim \mathcal{N}(0, 1)\,\)`: `\(\quad \phi(z) \,=\, \frac{1}{\sqrt{2 \pi}} e^{-\frac{z^2}{2}}\)`
+
+&lt;br&gt;
+
+[Gaussov integrál](https://fb.watch/vNFIcvZBOP/) `\(\qquad \displaystyle \int_{-\infty}^{\infty} e^{-x^2} \, dx = \; \sqrt{\pi} \; \neq \;1 \quad \Large \color{red}\times\)`
+
+
+&amp;emsp;&amp;emsp;&amp;emsp;&amp;emsp;&amp;emsp;&amp;emsp;&amp;emsp;&amp;emsp;&amp;emsp;
+`\(\quad \displaystyle \int_{-\infty}^{\infty} \, \frac{1}{\sqrt{\pi}} \;e^{-x^2} \, dx \,= 1 \quad \Large \color{green}\checkmark\)` &amp;emsp; &amp;emsp;rozptyl `\(\; \neq1 \quad \Large \color{red}\times\)`
+
+&amp;emsp;&amp;emsp;&amp;emsp;&amp;emsp;&amp;emsp;&amp;emsp;&amp;emsp;&amp;emsp;&amp;emsp;
+`\(\quad \displaystyle \int_{-\infty}^{\infty} \, \frac{1}{\sqrt{2\pi}} \;e^{\frac{-x^2}{2}} \, dx \,= 1 \quad \Large\color{green}\checkmark\)` &amp;emsp;&amp;emsp; rozptyl `\(\; =1 \quad \Large\color{green}\checkmark\)`
+
+---
+&lt;h2 style="margin-top: 0.2em; margin-bottom: 0.01em;"&gt;Stredná hodnota\(\;\,E(X)\)
+&lt;/h2&gt;
+
+- označenie: `\(\small \;E(X)\;\)` *= expected value*
+- chápeme ako operátor `\(\rightarrow \;\)`pravidlá počítania: `\(\;\small E(aX+b) = aE(X)+b\)`
 - všeobecnejší príbuzný pojem k *priemeru* - ten sa však v štatistike vzťahuje ku konečnej vzorke *(sample)*
 - Definícia / výpočet strednej hodnoty:
 
@@ -637,7 +689,7 @@ m = 20; rf = rf(m,3,8); cat("priemer =", mean(rf)); hist(rf)
 ```
 
 ```
-## priemer = 0.7869598
+## priemer = 1.212606
 ```
 
 ![](5_week_pe_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
@@ -646,18 +698,70 @@ m = 20; rf = rf(m,3,8); cat("priemer =", mean(rf)); hist(rf)
 ###  Ostatné charakteristiky rozdelenia NP
 
 - **rozptyl** (*variance*), jedna z mier disperzie NP:
-`$$\; \text{Var}(X) = E(X^2) - \big[E(X)\big]^2$$`
+`$$\; \text{Var}(X) = E(X^2) - \big[E(X)\big]^2\\
+\small \color{grey}{\rightarrow \quad sd = \sqrt{Var(X)}}$$`
 
-&lt;br&gt;
-- `\(p\,\)`-**kvantil** `\(Q_p\;\)` je taká hodnota NP, v ktorej CDF dáva zadanú pravdepodobnosť. Vyčísli sa inverznou funkciou k F: `$$F(Q_p)=p \quad \rightarrow \quad Q_p=F^{-1}(p)$$`
-&lt;br&gt;
+- `\(p\,\)`-**kvantil** `\(Q_p\;\)` je taká hodnota NP, v ktorej CDF dáva zadanú pravdepodobnosť. V analytickej, žurnalistickej praxi: *decil, percentil, kvartil*. Vyčísli sa inverznou funkciou k CDF: `$$F(Q_p)=p \quad \rightarrow \quad Q_p=F^{-1}(p)$$`
 
 - **medián**: `\(\;F(\)` medián `\() \;= 0.5\)`
 
 - **modus**: hodnota (nie nutne jediná) s najvyššou hustotou pravdepodobnosti, `\(\; \quad\underset{x}{\text{argmax}} \, f(x)\;\)`
- 
+
 ---
-##  Vzťah medzi dvoma NP
+&lt;h2 style="margin-top: 0.2em; margin-bottom: -0.1em;"&gt;Rozptyl `\(\;Var(X)\)`&lt;/h2&gt;
+- druhý moment rozdelenia,  stredná kvadratická odchýlka 
+- rozptyl štatistického súboru (výberu):
+$$
+ \small s^2 \,=\, \frac{1}{n} \,\sum_{i=1}^n (x_i - \bar{x})^2
+$$
+
+- rozptyl NP (diskrétnej i spojitej):
+
+`$$\text{Var}(X) \,=\,  E\,\big[\, X - E(X)\,\big]^2 \\
+\small\color{grey} {=\,  E\,\big[\, X^2 - 2\,X \,E(X)\, +E(X)^2\big]\,=\,E(X^2)-2\,E(X)\;E\big[X\big]+E(X)^2} \\[1.1em]
+\text{Var}(X) = E(X^2) - \big[E(X)\big]^2$$`
+
+- operátor `\(\rightarrow \;\)`pravidlá počítania:
+&lt;div style="text-align: left; font-size: 1.0em; line-height: 0.8; margin-top: 2px;"&gt;
+\(\small \; Var(aX+b) \,=\, Var(aX) = a^2\,Var(X)\\[-1.3em]
+\small \; Var(X+Y) \,=\, Var(X) \,+\, Var(Y) \,+\, \overbrace{\;\; 2 \, Cov(X, Y)\;\,}^{\color{magenta}{\text{=  0, ak sú X a Y nezávislé}}}\)
+&lt;/div&gt;
+
+
+---
+&lt;h2 style="margin-top: 0.2em; margin-bottom: 0.01em;"&gt;Kvantil `\(\; Q_p\)`&lt;/h2&gt;
+&lt;div style="display: grid; grid-template-columns: 2fr 3fr; grid-template-rows: 0.5fr 0.5fr; gap: 8px;"&gt;
+    &lt;!-- Math Text 1 --&gt;
+    &lt;div style="margin-top: 0.1em; text-align: right; font-size: 1em; line-height: 1;"&gt;
+        `$$\mathbb{P}\,(X \leq a)\; = \;F(a)\; = \;p\\[1.4em]
+        \small \color{blue}{Z \sim \mathcal{N}(0, 1)\;\rightarrow\;\Phi(-1.96) \,\approx\, 0.025}$$`
+        &lt;div style="font-size: 0.9em; margin-top: 0.4em; font-family: 'Consolas', monospace; color: magenta;text-align: left;"&gt;
+            pnorm(-1.96)&lt;br&gt;
+            pnorm(-1.96, mean = 0, sd = 1)
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;!-- First Image --&gt;
+    &lt;div style="text-align: center;"&gt;
+        &lt;img src="img/Qa.png" width="90%" /&gt;
+    &lt;/div&gt;
+    &lt;!-- Math Text 2 --&gt;
+    &lt;div style="margin-top: 0.1em; text-align: center; font-size: 1em; line-height: 1;"&gt;
+        $$ a = F^{-1}\Big(F(a)\Big) \,= \,F^{-1}(p)\,= \,Q_p\\[1.4em]
+          \small \color{blue}{
+          Q_{0.025} \,= \,\Phi^{-1}(0.025) \;\approx\; -1.96}$$`
+        &lt;div style="font-size: 0.9em; margin-top: 0.4em; font-family: 'Consolas', monospace; color: magenta;text-align: left;"&gt;
+            qnorm(0.025)&lt;br&gt;
+            qnorm(0.025, mean = 0, sd = 1)
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;!-- Second Image --&gt;
+    &lt;div style="text-align: center;"&gt;
+        &lt;img src="img/Qp.png" width="90%" /&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+---
+##  Lineárny vzťah medzi dvoma NP
 
 - **kovariancia**
 
@@ -669,25 +773,59 @@ Kovariancia určuje, ako sa menia dve náhodné premenné "súbežne".
 
 - `\(\small \text{Cov}(X, X) = E\,\bigg[\,\big( X - E(X)\big)^2\,\bigg] \quad \color{blue}{\stackrel{?}{=} \;\text{Var}(X)}\)`
 
+- **korelácia**  `\(\quad Corr(X,Y) \;=\; \frac{Cov(X,Y)}{\sqrt{Var(X)} \sqrt{Var(Y)}}\)`
+
+- **regresný koeficient** &amp;nbsp; z &amp;nbsp; *lm(y ~ x)* `\(\quad \rightarrow \quad \beta_{yx} \;=\; \frac{Cov(X,Y)}{Var(X)}\)`
+
+&lt;div style="margin-left: 13.5em;"&gt;
+  &lt;p style="color: blue; font-size: 19px;"&gt;
+    &lt;i&gt;lm(x ~ y)&lt;/i&gt; \(\quad \small\color{blue}{\rightarrow \quad \beta_{xy} \;=\;\, ?}\)
+  &lt;/p&gt;
+&lt;/div&gt;
 ---
 ##Podmienená pravdepodobnosť [1]
+Podmienenosť zužuje priestor možných udalostí, koncentrujeme sa na `\(\,X\,=\,x\)`
 
 `\(\mathbb{P}\,(\)` udalosť `\(A\,\)` za podmienky, že nastala udalosť `\(B\,)\;\; = \;\mathbb{P}(A|B)\)`
 
-`\(\mathbb{P}\,(\)` súčet 2 hodov `\(\; X=8\,|\,\)` 1. hod `\(\, &lt; 3)\)`
 
-Pre **diskrétne** NP  náhodné premenné X,Y:  `\(\mathbb{P}(Y=y\,|\,X=x)\)`
+`\(\color{blue}{\mathbb{P}\,(}\)` súčet 2 hodov `\(\color{blue}{\; X=8\,|\,}\)` 1. hod `\(\color{blue}{\, &lt; 3)}\)`
 
-Pre **spojité** NP sa pýtame na hustotu `\(f_{Y|X}\,(y|x)\)` v okolí hodnoty `\(y\)` za podmienky `\(X=x\)`.
+Pre **diskrétne** náhodné premenné `\(\;X\)`, `\(\,Y\)`:  `\(\quad\mathbb{P}(Y=y\,|\,X=x)\)`
+
+Pre **spojité** NP sa pýtame na hustotu `\(f_{Y|X}\,(y|x)\)` v okolí hodnoty `\(y\)` za podmienky, že poznáme hustotu `\(f_{X}\,(x)\)`.
+
+
 ---
-##Podmienená pravdepodobnosť [2]
+&lt;h2 style="margin-top: 0.2em; margin-bottom: 0.01em;"&gt;Podmienená pravdepodobnosť [2]&lt;/h2&gt;
+Výskyt v ekonomickej analýze:
+
+
+- **Ortogonálnosť** regresorov a náhodnej zložky: `\(\small \;E(\mathbf{u}) = E(\mathbf{u}|\mathbf{X})\)`
+
+- **Regresná analýza** = modely podmienenej strednej hodnoty `\(\small E(\mathbf{y}|\mathbf{X}) = \beta_0+\mathbf{X} \boldsymbol{\beta}\)`
+
+- **Testovanie** 
+
+`\(\quad \quad \color{blue}{p\,\text{-}value \;=\; \mathbb{P}\,(t\,\text{-}stat\;}\)` alebo "extrémnejšia" `\(\color{blue}{t\,\text{-}stat \,|\, H_0)}\)`
+
+- **Markovove reťazce** - prechody medzi stavmi: `\(\small \;P_{ij} = P(X_{t+1} = j \mid X_t = i)\)`
+
+Základné pravidlá pre počítanie:
+
+- časti výrazov obsahujúce `\(\small X\)` sa považujú za známe (konštanty): `\(\; \small E\big[g(X)\,E(Y | X)\,\big]=g(X)\,E\big[\,E(Y | X)\,\big]\)`
+- Law of Total Expectation: `\(\small \quad E[Y] = E\big[\,E(Y | X)\,\big]\)`
+- ...
+
+---
+##Podmienená pravdepodobnosť [3]
 
 - Podmienená pravdepodobnosť: **Bayesova veta**
 
 $$
 P(A|B) \, = \,\frac{P(B|A)\,\, P(A)}{P(B)}
 $$
-- **Bayesovská**  vs  **frekventistická** štatistika
+- **Bayesovská**  vs  **frekventistická** štatistika: `\(\;\small \color{blue}{P(H_0|\,data) \, = \,\frac{P(data|H_0)\,\, P(H_0)}{P(data)}}\)`
 
 &lt;div style="margin-bottom: -10px; padding-bottom: 0px;font-size: 90%;"&gt;
 `\(\quad\)` Aplikácie:
@@ -707,24 +845,36 @@ $$
 &lt;div&gt;
 
 ---
-##Záver
+##Zhrnutie
 
 - Diferenciálny a integrálny počet a pravdepodobnosť  `\(=\)` základ kvantitatívnych metód v ekonómii
 - Rozdelenie pravdepodobnosti: diskrétna NP, tabuľka, PMF, CDF
 - Empirické vs teoretické rozdelenie: histogram simulovaných hodnôt vs graf funkcie `\(\small p(x)\)`
-- Prechod z diskrétnych na spojité modely NP cez distribučnú funkciu F(x)
-- F(x) spojitej NP `\(\;\rightarrow\;\)` hustota pravdepodobnosti
+- Prechod z diskrétnych na spojité modely NP cez distribučnú funkciu `\(\,\small F(x)\)`
+- `\(\small F(x)\)` spojitej NP `\(\;\rightarrow\;\)` hustota pravdepodobnosti `\(\,\small f(x)\)`
 - PDF `\(\;\rightarrow\;\)` CDF spojitej funkcie
 
-- Charakteristiky rozdelenia: `\(\small E(X)\)`, `\(\small Var(X)\)`
+- Charakteristiky rozdelenia: `\(\small E(X)\)`, `\(\small Var(X), Q_p\)`
+- Normálne rozdelenie
+
 - Podmienená pravdepodobnosť
 
+---
+&lt;br&gt;
+&lt;br&gt;
+&lt;div style="text-align: center;margin-top: 0px;"&gt;
+  &lt;img src="img/top_1best.png"&gt;
+&lt;/div&gt;
 ---
 ## Further reading
 &lt;div style="text-align: left; margin-top: 0px;"&gt;
   &lt;img src="img/pishro_nik.png"&gt;
 &lt;/div&gt;
 - [Pishro-Nik, H. - Introduction to Probability, Statistics and Random Processess](https://www.probabilitycourse.com/)
+
+
+
+
 
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
