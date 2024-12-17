@@ -583,7 +583,7 @@ Typically we don’t know these parameters; we just have the training data. In t
 ---
 ## Estimating the parameters 
 
-$$\hat{k} = \frac{n_k}{n}$$
+$$\hat{\pi_k} = \frac{n_k}{n}$$
 $$\hat{\mu}_k = \frac{1}{n_k} \sum_{i: y_i = k} x_i$$
 
 $$\hat{\sigma}^2 = \frac{1}{n - K} \sum_{k=1}^{K} \sum_{i: y_i = k} (x_i - \hat{\mu}_k)^2 = \sum_{k=1}^{K} \frac{n_k - 1}{n - K} \cdot \hat{\sigma_k}^2$$
