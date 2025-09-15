@@ -2,7 +2,7 @@
 title: "Applied Data Analysis"
 subtitle: "Analyzing geospatial data in R"
 author: "Sherrie Xie, Tomas Oles"
-date: "2024"
+date: "2025"
 output: 
   html_document:
     toc: true

@@ -3,13 +3,13 @@ title: "Applied Data Analysis"
 subtitle: "Data visualization (numerical, categorical)"
 author: "Tomáš Oleš"
 institute: "Department of Economic Policy"
-date: "2024"
+date: "2025"
 output:
   xaringan::moon_reader:
     css: xaringan-themer.css
     lib_dir: libs
     nature:
-      highlightStyle: github
+      highlightStyle: atom-one-light
       highlightLines: true
       countIncrementalSlides: false
 ---
@@ -26,7 +26,7 @@ library(xaringanthemer)
 # primary_color = "#d19f2a",     # KHP color
 # secondary_color = "#e2c47c",   # KHP light
 style_mono_accent(
-base_color = "#d19f2a",
+base_color = "#002147",
 header_font_google = google_font("Josefin Sans"),
 text_font_google = google_font("Montserrat", "300", "300i"),
 code_font_google = google_font("Fira Mono")
@@ -59,7 +59,6 @@ class: middle
 
 # Numerical data
 ---
-
 ```{r include=FALSE}
 library(openintro)
 loans_full_schema <- loans_full_schema %>%

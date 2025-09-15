@@ -3,13 +3,13 @@ title: "Applied Data Analysis"
 subtitle: "Introduction to R toolkit"
 author: "Tomáš Oleš"
 institute: "Department of Economic Policy"
-date: "2024"
+date: "2025"
 output:
   xaringan::moon_reader:
     css: xaringan-themer.css
     lib_dir: libs
     nature:
-      highlightStyle: github
+      highlightStyle: atom-one-light
       highlightLines: true
       countIncrementalSlides: false
 ---
@@ -28,7 +28,7 @@ library(xaringanthemer)
 # primary_color = "#d19f2a",     # KHP color
 # secondary_color = "#e2c47c",   # KHP light
 style_mono_accent(
-base_color = "#d19f2a",
+base_color = "#002147",
 header_font_google = google_font("Josefin Sans"),
 text_font_google = google_font("Montserrat", "300", "300i"),
 code_font_google = google_font("Fira Mono")
@@ -48,17 +48,6 @@ if (!require("mathart")) devtools::install_github("marcusvolz/mathart")
 ```
 
 
-
-
-
-## Hello world! `r emo::ji('smile')`  
-
-- Office hours: Monday 1PM - 3PM (Please write me before  `r emo::ji('calendar')` )
-
-- Room 4B.40; Old Building
-
-- Contact me: tomas.oles@euba.sk
----
 
 ## Reproducible data analysis
 

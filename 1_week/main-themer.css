@@ -44,20 +44,20 @@
 
   /* Colors */
   --text-color: #272822;
-  --header-color: #d19f2a;
+  --header-color: #002147;
   --background-color: #FFFFFF;
-  --link-color: #d19f2a;
-  --text-bold-color: #d19f2a;
+  --link-color: #002147;
+  --text-bold-color: #002147;
   --code-highlight-color: rgba(255,255,0,0.5);
   --inverse-text-color: #FFFFFF;
-  --inverse-background-color: #d19f2a;
+  --inverse-background-color: #002147;
   --inverse-header-color: #FFFFFF;
-  --inverse-link-color: #d19f2a;
-  --title-slide-background-color: #d19f2a;
+  --inverse-link-color: #002147;
+  --title-slide-background-color: #002147;
   --title-slide-text-color: #FFFFFF;
-  --header-background-color: #d19f2a;
+  --header-background-color: #002147;
   --header-background-text-color: #FFFFFF;
-  --base: #d19f2a;
+  --base: #002147;
   --white: #FFFFFF;
   --black: #272822;
 }
@@ -100,10 +100,10 @@ h1, h2, h3 {
 }
 .remark-inline-code {
   font-size: var(--code-inline-font-size);
-  color: #d19f2a;
+  color: #002147;
 }
 .remark-slide-number {
-  color: #d19f2a;
+  color: #002147;
   opacity: 1;
   font-size: 0.9rem;
 }
@@ -154,7 +154,7 @@ a, a > code {
   color: #d19f2a99;
 }
 .left-column h2:last-of-type, .left-column h3:last-child {
-  color: #d19f2a;
+  color: #002147;
 }
 .right-column {
   width: 75%;
@@ -317,11 +317,17 @@ table.dataTable.hover tbody tr:hover, table.dataTable.display tbody tr:hover {
 
 
 .question {
-  border-left: solid 5px #d19f2a;
+  border-left: solid 5px #002147;
   background-color: #f6e1a2;
   padding: 10px 16px;
   margin-top: 12px;
   margin-bottom: 12px;
   font-size: 90%;
   color: #1E5C65;
+}
+
+
+/* Override string color in code blocks */
+code span.hljs-string {
+  color: #228B22 !important; /* e.g. forest green */
 }

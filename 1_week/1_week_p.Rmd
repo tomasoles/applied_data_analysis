@@ -1,15 +1,15 @@
 ---
 title: "Applied Data Analysis"
 subtitle: "Hello World!"
-author: "Eduard Nežinský, Tomáš Oleš, Ella Sargsyan"
+author: " Tomáš Oleš, Eduard Nežinský, Ella Sargsyan"
 institute: "Department of Economic Policy"
-date: "2024"
+date: "2025"
 output:
   xaringan::moon_reader:
     css: xaringan-themer.css
     lib_dir: libs
     nature:
-      highlightStyle: github
+      highlightStyle: atom-one-light
       highlightLines: true
       countIncrementalSlides: false
 ---
@@ -28,7 +28,7 @@ library(xaringanthemer)
 # primary_color = "#d19f2a",     # KHP color
 # secondary_color = "#e2c47c",   # KHP light
 style_mono_accent(
-base_color = "#d19f2a",
+base_color = "#002147",
 header_font_google = google_font("Josefin Sans"),
 text_font_google = google_font("Montserrat", "300", "300i"),
 code_font_google = google_font("Fira Mono")
@@ -51,7 +51,7 @@ if (!require("mathart")) devtools::install_github("marcusvolz/mathart")
 
 ## Hello world! `r emo::ji('smile')`  
 
-- Office hours: Monday 1PM - 3PM (Please write me before  `r emo::ji('calendar')` )
+- Office hours: Wednesday 1PM - 3PM (Please write me before  `r emo::ji('calendar')` )
 
 - Room 4B.40; Old Building
 
@@ -62,9 +62,8 @@ if (!require("mathart")) devtools::install_github("marcusvolz/mathart")
 
 <div class="left">
   <img src="https://nhf.euba.sk/www_write/images/katedry/khp.png" width="100" height="100">
-  <img src="https://nhf.euba.sk/www_write/files/katedry/khp/profilove_foto/nhf_foto/en.jpg" width="150">
   <img src="https://nhf.euba.sk/www_write/files/katedry/khp/profilove_foto/nhf_foto/to.jpg" width="150">
-
+  <img src="https://nhf.euba.sk/www_write/files/katedry/khp/profilove_foto/nhf_foto/en.jpg" width="150">
 </div>
 
 <div class="left">
@@ -133,19 +132,19 @@ A: We can discuss that over `r emo::ji("coffee")`.
 
 ---
 
-```{r echo=FALSE, out.width="75%", fig.align="left"}
+```{r echo=FALSE, out.width="100%", fig.align="left"}
 knitr::include_graphics("img/excel.png")
 ```
 
 ---
 
-```{r echo=FALSE, out.width="50%", fig.align="left"}
+```{r echo=FALSE, out.width="100%", fig.align="left"}
 knitr::include_graphics("img/r.png")
 ```
 
 ---
 
-```{r echo=FALSE, out.width="73%", fig.align="left"}
+```{r echo=FALSE, out.width="100%", fig.align="left"}
 knitr::include_graphics("img/rstudio.png")
 ```
 
@@ -157,7 +156,7 @@ knitr::include_graphics("img/data-science.png")
 ```
 ---
 
-```{r echo=FALSE, out.width="85%", fig.align="left"}
+```{r echo=FALSE, out.width="100%", fig.align="left"}
 knitr::include_graphics("img/unvotes/unvotes.gif")
 ```
 
@@ -263,25 +262,34 @@ knitr::include_graphics("img/unvotes/unvotes-14.jpeg")
 ]
 ]
 
-```{r echo=FALSE, out.width="65%"}
+```{r echo=FALSE, out.width="75%"}
 knitr::include_graphics("img/unvotes/unvotes-15.png")
 ```
 ---
 
 # Organization of the course
-- 1-6 introduction to data science, visialization, tiding, wrangling, probablity and (classification) **Thuesday**
-- 7-12 introduction to econometrics, linear regression, introduction causal research design methods, panel data techniques  **Lecture - Monday; Excercise - Friday**
+- 1-6 introduction to data science, visualization, tiding, wrangling, probability (text mining) and classification **Tuesday (slovak classes) Thursday (english classes)**
+- 7-12 introduction to econometrics, linear regression, introduction causal research design methods, panel data techniques  **Excercise Tuesday|Thursday. Lectures - Friday ** 
 
 ### Textbooks 
 
+<span style="font-size:90%">
 [Wickham, H., Çetinkaya-Rundel, M., Grolemund, G. (2023). R for Data Science. O'Reilly Media, Inc..](https://r4ds.had.co.nz/)
 
+<span style="font-size:90%">
 [Gareth, J., Daniela, W., Trevor, H., Robert, T. (2013). An Introduction to Statistical Learning: With Applications in R. Spinger.](https://www.statlearning.com/)
 
+<span style="font-size:90%">
+[Silge, J., Robinson D. (2025). Text Mining with R!. O'Reilly](https://www.tidytextmining.com/)
+</span>
+
+<span style="font-size:90%">
 [Wooldridge, Jeffrey M. Introductory Econometrics: A Modern Approach. 5th ed., US, 2012]()
+</span>
 
+<span style="font-size:90%">
 [Angrist, J. D., Pischke, J. S. (2009). Mostly Harmless Econometrics: An Empiricist's Companion. Princeton University Press.]()
-
+</span>
 
 
 ---
