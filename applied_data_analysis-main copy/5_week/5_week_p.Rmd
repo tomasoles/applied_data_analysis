@@ -1,0 +1,595 @@
+---
+title: "Applied Data Analysis"
+subtitle: "Text tidying and sentiment analysis"
+author: "Tomáš Oleš"
+institute: "Department of Economic Policy"
+date: "2025"
+output:
+  xaringan::moon_reader:
+    css: xaringan-themer.css
+    lib_dir: libs
+    nature:
+      highlightStyle: atom-one-light
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+#See slide on xaringanthemer
+library(xaringanthemer)
+# style_duo_accent(
+# primary_color = "#d19f2a",     # KHP color
+# secondary_color = "#e2c47c",   # KHP light
+style_mono_accent(
+base_color = "#002147",
+header_font_google = google_font("Josefin Sans"),
+text_font_google = google_font("Montserrat", "300", "300i"),
+code_font_google = google_font("Fira Mono")
+)
+
+```
+
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+# Remember to compile
+#xaringan::inf_mr(cast_from = "..")
+#       slideNumberFormat: ""  
+library(tidyverse)
+if (!require("emo")) devtools::install_github("")
+library(emo)
+library(ggplot2)
+library(gridExtra)
+if (!require("dsbox")) devtools::install_github("rstudio-education/dsbox")
+library(dsbox)
+library(tibble)
+# Show only 5 rows of a tibble by default
+options(tibble.print_max = 5, tibble.print_min = 5)
+```
+
+```{r  echo=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(fig.retina = 5)
+```
+
+---
+
+
+class: middle
+
+# The tidy text format
+
+---
+
+# Text as a data 
+
+* **String**: Text can, of course, be stored as strings, i.e., character vectors, within R, and often text data is first read into memory in this form.
+
+* **Corpus**: These types of objects typically contain raw strings annotated with additional metadata and details.
+
+* **Document-term matrix**: This is a sparse matrix describing a collection (i.e., a corpus) of documents with one row for each document and one column for each term. The value in the matrix is typically word count or tf-idf.
+---
+
+
+## Character vectors
+
+```{r text}
+text <- c("Because I could not stop for Death -",
+          "He kindly stopped for me -",
+          "The Carriage held but just Ourselves -",
+          "and Immortality")
+
+text
+```
+We can turn this into tidy dataset
+
+```{r text_df}
+library(dplyr)
+text_df <- tibble(line = 1:4, text = text)
+```
+
+---
+
+### Tokenization 
+
+Tokenization - A token is a meaningful unit of text, most often a word, that we are interested in using for further analysis.
+
+
+```{r}
+library(tidytext)
+
+text_df %>%
+  unnest_tokens(word, text)
+```
+---
+### Tokenization `unnest_tokens()`
+
++ Split each row so that there is one token (word) in each row of the new data frame
++ Punctuation has been removed 
++ Turned into lower case (`to_lower = TRUE`)
+
+The default tokenizing is for words, but other options include **characters, n-grams, sentences, lines, paragraphs, or separation around a regex pattern**. (... we will get use to it)
+
+
+
+```{r tidyflow-ch1, echo = FALSE, out.width = '100%', fig.cap = "A flowchart of a typical text analysis using tidy data principles."}
+knitr::include_graphics("img/tmwr_0101.png")
+```
+--- 
+---
+## Tidying the text
+
+```{r, output=FALSE}
+library(janeaustenr)
+library(dplyr)
+library(stringr)
+
+original_books <- austen_books() %>%
+  group_by(book) %>%
+  mutate(linenumber = row_number(),
+         chapter = cumsum(str_detect(text, 
+                                     regex("^chapter [\\divxlc]",
+                                           ignore_case = TRUE)))) %>%
+  ungroup()
+
+#original_books
+```
+Tokenize 
+
+```{r}
+tidy_books <- original_books %>%
+  unnest_tokens(word, text)
+
+#tidy_books
+```
+What is the dimension of `original_books` and `tidy_books`?
+---
+--- 
+### Let's plot the distribution of tokens 
+```{r echo=FALSE}
+library(ggplot2)
+
+tidy_books %>%
+  count(word, sort = TRUE) %>%
+  filter(n > 1200) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word)) +
+  geom_col() +
+  labs(y = NULL)
+```
+.question[*Something unusual?*]
+---
+
+### Clean the stop-words 
+
+```{r}
+
+data(stop_words)
+
+tidy_books <- tidy_books %>%
+  anti_join(stop_words, by = join_by(word))
+
+tidy_books %>%
+  count(word, sort = TRUE) 
+```
+
+What are the Austen's books about? `r emo::ji("girls")`
+
+--- 
+---
+
+## Word frequencies
+
+```{r}
+# Jane Eyre, Wuthering Heights
+library(gutenbergr)
+
+hgwells <- gutenberg_download(c(35, 36))
+
+tidy_hgwells <- hgwells %>%
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words)
+```
+---
+
+```{r}
+bronte <- gutenberg_download(c(1260, 768))
+
+tidy_bronte <- bronte %>%
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words)
+
+tidy_bronte %>%
+  count(word, sort = TRUE)
+```
+
+---
+
+```{r}
+library(tidyr)
+
+frequency <- bind_rows(mutate(tidy_bronte, author = "Brontë Sisters"),
+                       mutate(tidy_hgwells, author = "H.G. Wells"), 
+                       mutate(tidy_books, author = "Jane Austen")) %>% 
+  mutate(word = str_extract(word, "[a-z']+")) %>%
+  count(author, word) %>%
+  group_by(author) %>%
+  mutate(proportion = n / sum(n)) %>% 
+  select(-n) %>% 
+  pivot_wider(names_from = author, values_from = proportion) %>%
+  pivot_longer(`Brontë Sisters`:`H.G. Wells`,
+               names_to = "author", values_to = "proportion")
+
+frequency
+
+```
+
+---
+
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+library(scales)
+
+# expect a warning about rows with missing values being removed
+ggplot(frequency, aes(x = proportion, y = `Jane Austen`, 
+                      color = abs(`Jane Austen` - proportion))) +
+  geom_abline(color = "gray40", lty = 2) +
+  geom_jitter(alpha = 0.1, size = 2.5, width = 0.3, height = 0.3) +
+  geom_text(aes(label = word), check_overlap = TRUE, vjust = 1.5) +
+  scale_x_log10(labels = percent_format()) +
+  scale_y_log10(labels = percent_format()) +
+  scale_color_gradient(limits = c(0, 0.001), 
+                       low = "darkslategray4", high = "gray75") +
+  facet_wrap(~author, ncol = 2) +
+  theme(legend.position="none") +
+  labs(y = "Jane Austen", x = NULL)
+
+```
+
+---
+
+
+```{r echo=FALSE, warning=FALSE, out.width="80%", fig.align="center"}
+library(scales)
+
+ggplot(frequency, aes(x = proportion, y = `Jane Austen`, 
+                      color = abs(`Jane Austen` - proportion))) +
+  geom_abline(color = "gray40", lty = 2) +
+  geom_jitter(alpha = 0.1, size = 2.5, width = 0.3, height = 0.3) +
+  geom_text(aes(label = word), check_overlap = TRUE, vjust = 1.5) +
+  scale_x_log10(labels = percent_format()) +
+  scale_y_log10(labels = percent_format()) +
+  scale_color_gradient(limits = c(0, 0.001), 
+                       low = "darkslategray4", high = "gray75") +
+  facet_wrap(~author, ncol = 2) +
+  theme(legend.position="none") +
+  labs(y = "Jane Austen", x = NULL)
+
+```
+
+---
+
+class: middle
+
+# Sentiment analysis with tidy data
+
+---
+
+
+
+### Using **tidytext**, **dplyr**, and friends in R
+
+
+
+```{r tidyflow-ch2, echo = FALSE, out.width = '100%', fig.cap = "A flowchart of a typical text analysis that uses tidytext for sentiment analysis."}
+knitr::include_graphics("img/tmwr_0201.png")
+```
+
+
+This deck covers: tidy sentiment lexicons, joining lexicons to tokenized text, computing sentiment trajectories, comparing dictionaries, most-influential words, wordclouds, and sentence/chapter tokenization.
+
+
+---
+
+## What is sentiment analysis?
+
+
++ Programmatic approach to estimate **opinion/emotion** in text (positive/negative or emotions like joy, anger).
++ Tidy approach: treat text as **tokens (words)**; compute document sentiment by **combining word-level scores**.
++ Caveats: negations (e.g., *"not good"*), sarcasm, domain mismatch, and chunk size effects.
+
+
+---
+
+## Packages
+
+```r
+#install.packages(c("tidytext","janeaustenr","dplyr","stringr","tidyr","ggplot2","wordcloud","reshape2"))
+
+library(tidytext)
+library(janeaustenr)
+library(dplyr)
+library(stringr)
+library(tidyr)
+library(ggplot2)
+library(wordcloud)
+library(reshape2)
+```
+
+---
+
+## Sentiment lexicons available via `tidytext`
+
+
+
++ **AFINN** (−5…+5 numeric scores)
++ **bing** (binary: positive/negative)
++ **nrc** (binary: pos/neg + emotions: joy, anger, fear, trust, sadness, surprise, disgust, anticipation)
+
+Get any lexicon:
+
+
+```{r echo=TRUE, warning=FALSE}
+library(tidytext)
+library(textdata)
+library(dplyr)
+get_sentiments("afinn")   # or "bing", "nrc"
+
+```
+
+
+**Licensing matters**: check each lexicon’s license before use.
+
+
+---
+
+## Build a tidy corpus from Jane Austen
+
+```{r  echo=TRUE, warning=FALSE}
+# 1 token per row, with book/line/chapter metadata
+
+tidy_books <- austen_books() %>%
+  group_by(book) %>%
+  mutate(
+    linenumber = row_number(),
+    chapter = cumsum(str_detect(text, regex("^chapter [\\divxlc]", ignore_case = TRUE)))
+  ) %>%
+  ungroup() %>%
+  unnest_tokens(word, text)
+```
+
+
+We name the token column **word** to match lexicons, making joins simpler.
+
+
+---
+
+## Joy words in *Emma* (NRC)
+
+```{r  echo=TRUE, warning=FALSE}
+nrc_joy <- get_sentiments("nrc") %>% filter(sentiment == "joy")
+
+joy_counts <- tidy_books %>%
+  filter(book == "Emma") %>%
+  inner_join(nrc_joy, by = "word") %>%
+  count(word, sort = TRUE)
+
+head(joy_counts, 15)
+```
+
+---
+
+## Compute sentiment through each novel (Bing)
+
+```{r  echo=TRUE, warning=FALSE}
+jane_austen_sentiment <- tidy_books %>%
+  inner_join(get_sentiments("bing"), by = "word") %>%
+  count(book, index = linenumber %/% 80, sentiment) %>%
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) %>%
+  mutate(sentiment = positive - negative)
+```
+
+Tip: `%/%` does **integer division**; choose bin size to balance noise vs smoothing.
+
+---
+
+### Visualize sentiment through each novel (Bing)
+
+```{r out.width = '50%', fig.align="center"}
+ggplot(jane_austen_sentiment, aes(index, sentiment, fill = book)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~book, ncol = 2, scales = "free_x") +
+  labs(x = "Narrative index (80-line bins)", y = "Net sentiment (pos - neg)")
+
+```
+---
+
+## Compare AFINN vs Bing vs NRC on *Pride and Prejudice*
+
+```{r  echo=TRUE, warning=FALSE}
+pp <- tidy_books %>% filter(book == "Pride & Prejudice")
+
+afinn <- pp %>%
+  inner_join(get_sentiments("afinn"), by = "word") %>%
+  group_by(index = linenumber %/% 80) %>%
+  summarise(sentiment = sum(value), .groups = "drop") %>%
+  mutate(method = "AFINN")
+
+bing_nrc <- bind_rows(
+  pp %>% inner_join(get_sentiments("bing"), by = "word") %>% mutate(method = "Bing"),
+  pp %>% inner_join(get_sentiments("nrc") %>% filter(sentiment %in% c("positive","negative")), by = "word") %>% mutate(method = "NRC")
+) %>%
+  count(method, index = linenumber %/% 80, sentiment) %>%
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) %>%
+  mutate(sentiment = positive - negative)
+
+```
+---
+### Visualize across sentiment lexicons
+
+```{r out.width='50%', fig.align="center"}
+
+bind_rows(afinn, bing_nrc) %>%
+  ggplot(aes(index, sentiment, fill = method)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~method, ncol = 1, scales = "free_y") +
+  labs(x = "Narrative index", y = "Net sentiment")
+
+```
+
+**Patterns**: similar ups/downs across methods; different absolute scales (AFINN often larger; NRC skewed more positive; Bing shows longer runs).
+
+
+---
+
+## Why NRC skews higher?
+
+```{r  echo=TRUE, warning=FALSE}
+get_sentiments("nrc") %>%
+  filter(sentiment %in% c("positive","negative")) %>%
+  count(sentiment)
+
+get_sentiments("bing") %>%
+  count(sentiment)
+```
+
+
+Lexicon composition differs (ratio of negative to positive tokens). Also, word-match coverage vs author vocabulary matters.
+
+
+---
+
+## Most influential words (Bing)
+
+```{r  echo=TRUE, warning=FALSE, out.width='60%', fig.align="center"}
+bing_word_counts <- tidy_books %>%
+  inner_join(get_sentiments("bing"), by = "word") %>%
+  count(word, sentiment, sort = TRUE) %>%
+  ungroup()
+
+bing_word_counts
+```
+
+---
+
+```{r out.width='40%', fig.align="center"}
+bing_word_counts %>%
+  group_by(sentiment) %>%
+  slice_max(n, n = 10) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(x = "Contribution to sentiment", y = NULL)
+```
+
+
+Watch for anomalies like **"miss"** (title vs negative verb); consider a **custom stop-word list**.
+
+
+---
+
+## Custom stop words example
+
+```{r  echo=TRUE, warning=FALSE}
+custom_stop_words <- bind_rows(
+  tibble(word = c("miss"), lexicon = c("custom")),
+  stop_words
+)
+```
+
+---
+
+## Wordclouds
+
+```{r echo=TRUE, warning=FALSE, out.width='50%', fig.align="center"}
+# All words, excluding stop words
+library(wordcloud)
+tidy_books %>%
+  anti_join(stop_words, by = "word") %>%
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 100))
+```
+---
+```{r  echo=TRUE, warning=FALSE, out.width='50%', fig.align="center"}
+# Comparison cloud: positive vs negative (Bing)
+library(reshape2)
+tidy_books %>%
+  inner_join(get_sentiments("bing"), by = "word") %>%
+  count(word, sentiment, sort = TRUE) %>%
+  acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("gray20","gray80"), max.words = 100)
+```
+
+---
+
+## Beyond words: sentences & chapters
+
+```{r  echo=TRUE, warning=FALSE}
+# Sentence tokenization (e.g., for negation-aware methods)
+pp_sentences <- tibble(text = prideprejudice) %>%
+  unnest_tokens(sentence, text, token = "sentences")
+pp_sentences$sentence[2]
+```
+
+```{r  echo=TRUE, warning=FALSE}
+# Chapter tokenization via regex
+
+austen_chapters <- austen_books() %>%
+  group_by(book) %>%
+  unnest_tokens(chapter, text, token = "regex",
+                pattern = "Chapter|CHAPTER [\\dIVXLC]") %>%
+  ungroup()
+
+```
+---
+
+```{r}
+austen_chapters %>% group_by(book) %>% summarise(chapters = n())
+```
+
+---
+
+### Most negative chapter per book (normalized)
+
+```{r  echo=TRUE, warning=FALSE}
+bing_negative <- get_sentiments("bing") %>% filter(sentiment == "negative")
+
+wordcounts <- tidy_books %>%
+  group_by(book, chapter) %>%
+  summarise(words = n(), .groups = "drop")
+
+neg_chapters <- tidy_books %>%
+  semi_join(bing_negative, by = "word") %>%
+  group_by(book, chapter) %>%
+  summarise(negativewords = n(), .groups = "drop") %>%
+  left_join(wordcounts, by = c("book","chapter")) %>%
+  mutate(ratio = negativewords / words) %>%
+  filter(chapter != 0) %>%
+  arrange(book)
+```
+---
+```{r}
+most_neg_chapters <- neg_chapters %>%
+  group_by(book) %>%
+  slice_max(ratio, n = 1) 
+
+most_neg_chapters
+
+```
+---
+
+## Practical caveats & tips
+
+
+
+* **Negation/sarcasm**: unigram lexicons can miss scope; consider sentence-level or dependency-based approaches.
+* **Domain mismatch**: validate lexicon choice on your domain; try multiple lexicons and compare.
+* **Chunk size**: tune bin size (lines, sentences, paragraphs) to retain narrative structure without excessive noise.
+* **Preprocessing**: be consistent (lowercasing, tokenization, handling of names/characters).
+* **Reproducibility**: set seeds where randomness appears; record package versions.
+
+
+---
+# Sources
+- [Silge, J., Robinson D. (2025). Text Mining with R!. O'Reilly](https://www.tidytextmining.com/)
+
+---
