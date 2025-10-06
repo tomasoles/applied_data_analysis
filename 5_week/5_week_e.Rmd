@@ -1,0 +1,755 @@
+---
+title: "Applied Data Analysis"
+subtitle: "Analyzing word and document frequency and relationships between words"
+author: "Tomáš Oleš"
+institute: "Department of Economic Policy"
+date: "2025"
+output:
+  xaringan::moon_reader:
+    css: xaringan-themer.css
+    lib_dir: libs
+    nature:
+      highlightStyle: atom-one-light
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+#See slide on xaringanthemer
+library(xaringanthemer)
+# style_duo_accent(
+# primary_color = "#d19f2a",     # KHP color
+# secondary_color = "#e2c47c",   # KHP light
+style_mono_accent(
+base_color = "#002147",
+header_font_google = google_font("Josefin Sans"),
+text_font_google = google_font("Montserrat", "300", "300i"),
+code_font_google = google_font("Fira Mono")
+)
+
+```
+
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+# Remember to compile
+#xaringan::inf_mr(cast_from = "..")
+#       slideNumberFormat: ""  
+library(tidyverse)
+if (!require("emo")) devtools::install_github("")
+library(emo)
+library(DiagrammeR)
+library(Tmisc)
+library(ggplot2)
+library(gridExtra)
+if (!require("dsbox")) devtools::install_github("rstudio-education/dsbox")
+library(dsbox)
+library(palmerpenguins)
+library(tibble)
+# Show only 5 rows of a tibble by default
+options(tibble.print_max = 3, tibble.print_min = 3)
+```
+
+```{r  echo=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(fig.retina = 5)
+```
+
+# Motivation (i.)
+
+A central question in **text mining** and **NLP** is:
+
+> How can we quantify *what a document is about*?
+
+---
+---
+
+class: middle
+
+# Analyzing word and document frequency: tf-idf
+
+---
+
+## Word importance
+
+- One idea: look at which words appear in a document  
+- **Term frequency (tf):** how often a word occurs  
+- But: some words appear in every document  
+  - “the”, “is”, “of”, etc.  
+- These are not informative!
+
+---
+
+## Beyond stop words
+
+We can remove common words (stop words),  
+but this is a crude approach.
+
+> We need a dynamic way to **down-weight ubiquitous words**.
+
+---
+
+# Inverse document frequency (idf)
+
+Another idea: give less weight to words  
+that appear in many documents.
+
+$$idf(\text{term}) = \ln{\left(\frac{n_{\text{documents}}}{n_{\text{documents containing term}}}\right)}$$
+
+---
+
+## Combining tf and idf
+
+The **tf–idf** score = term frequency × inverse document frequency
+
+- High tf–idf → frequent in this document, rare elsewhere  
+- Low tf–idf → common word shared across documents  
+
+---
+
+## Interpretation
+
+> tf–idf measures how important a word is to a document  
+> within a collection of documents (the *corpus*).
+
+It’s a **heuristic**—useful in search engines, topic modeling, and NLP.
+
+---
+
+# Example: Jane Austen’s novels
+
+We’ll start with the published novels of **Jane Austen**  
+and examine term frequency, then tf–idf.
+
+---
+
+## Data setup
+
+```{r}
+library(dplyr)
+library(janeaustenr)
+library(tidytext)
+
+book_words <- austen_books() %>%
+  unnest_tokens(word, text) %>%
+  count(book, word, sort = TRUE)
+
+total_words <- book_words %>% 
+  group_by(book) %>% 
+  summarize(total = sum(n))
+
+book_words <- left_join(book_words, total_words)
+
+book_words
+```
+---
+### Term frequency distribution
+
+```{r warning=FALSE, out.width='38%',fig.align="center"}
+library(ggplot2)
+
+ggplot(book_words, aes(n/total, fill = book)) +
+  geom_histogram(show.legend = FALSE) +
+  xlim(NA, 0.0009) +
+  facet_wrap(~book, ncol = 2, scales = "free_y")
+```
+
+---
+### Zipf’s Law
+
+ > The frequency of a word is inversely proportional to its rank.
+
+ This relationship is common in natural language corpora.
+```{r warning=FALSE, out.width='38%',fig.align="center"}
+freq_by_rank <- book_words %>%
+  group_by(book) %>%
+  mutate(rank = row_number(),
+         term_frequency = n/total)
+freq_by_rank
+```
+---
+### Zipf's law
+
+```{r warning=FALSE, out.width='50%',fig.align="center"}
+freq_by_rank %>% 
+  ggplot(aes(rank, term_frequency, color = book)) + 
+  geom_line(linewidth = 1.1, alpha = 0.8, show.legend = FALSE) + 
+  scale_x_log10() +
+  scale_y_log10()
+```
+
+
+
+---
+### Term frequency distribution
+
+```{r}
+rank_subset <- freq_by_rank %>%
+  filter(rank < 500, rank > 10)
+
+lm(log10(term_frequency) ~ log10(rank), data = rank_subset)
+```
+
+
+---
+### Visualizing with the fitted line
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+freq_by_rank %>% 
+  ggplot(aes(rank, term_frequency, color = book)) + 
+  geom_abline(intercept = -0.62, slope = -1.1, 
+              color = "gray50", linetype = 2) +
+  geom_line(linewidth = 1.1, alpha = 0.8, show.legend = FALSE) + 
+  scale_x_log10() +
+  scale_y_log10()
+```
+
+---
+
+### Computing the tf-idf
+
+Use `bind_tf_idf()` from `tidytext`.
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+book_tf_idf <- book_words %>%
+  bind_tf_idf(word, book, n)
+
+# Inspect the tf-idf
+book_tf_idf %>%
+  arrange(desc(tf_idf))
+```
+
+---
+
+```{r warning=FALSE, out.width='50%',fig.align="center"}
+book_tf_idf %>%
+  group_by(book) %>%
+  slice_max(tf_idf, n = 15) %>%
+  ungroup() %>%
+  ggplot(aes(tf_idf, fct_reorder(word, tf_idf), fill = book)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~book, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+```
+---
+
+### Example: classic physics texts 
+
+
+Let’s try the same on scientific works:
+
+ + Galileo: Discourse on Floating Bodies
+
+ + Huygens: Treatise on Light
+
+ + Tesla: Experiments with Alternate Currents
+
+ + Einstein: Relativity: The Special and General Theory
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+library(gutenbergr)
+
+physics <- gutenberg_download(
+  c(37729, 14725, 13476, 30155),
+  meta_fields = "author"
+)
+
+physics_words <- physics %>%
+  unnest_tokens(word, text) %>%
+  count(author, word, sort = TRUE)
+```
+
+---
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+physics_words
+```
+
+```{r}
+plot_physics <- physics_words %>%
+  bind_tf_idf(word, author, n) %>%
+  mutate(author = factor(author, levels = c("Galilei, Galileo",
+                                            "Huygens, Christiaan", 
+                                            "Tesla, Nikola",
+                                            "Einstein, Albert")))
+```
+
+---
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+plot_physics %>% 
+  group_by(author) %>% 
+  slice_max(tf_idf, n = 15) %>% 
+  ungroup() %>%
+  mutate(word = reorder(word, tf_idf)) %>%
+  ggplot(aes(tf_idf, word, fill = author)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = "tf-idf", y = NULL) +
+  facet_wrap(~author, ncol = 2, scales = "free")
+
+```
+---
+--- 
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+library(stringr)
+
+physics %>% 
+  filter(str_detect(text, "_k_")) %>% 
+  select(text)
+```
+
+---
+--- 
+### Custom stop words removal
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+mystopwords <- tibble(word = c("eq", "co", "rc", "ac", "ak", "bn", 
+                                   "fig", "file", "cg", "cb", "cm",
+                               "ab", "_k", "_k_", "_x"))
+
+physics_words <- anti_join(physics_words, mystopwords, 
+                           by = "word")
+
+```
+
+---
+--- 
+
+```{r warning=FALSE, out.width='30%',fig.align="center"}
+plot_physics <- physics_words %>%
+  bind_tf_idf(word, author, n) %>%
+  mutate(word = str_remove_all(word, "_")) %>%
+  group_by(author) %>% 
+  slice_max(tf_idf, n = 15) %>%
+  ungroup() %>%
+  mutate(word = fct_reorder(word, tf_idf)) %>%
+  mutate(author = factor(author, levels = c("Galilei, Galileo",
+                                            "Huygens, Christiaan",
+                                            "Tesla, Nikola",
+                                            "Einstein, Albert")))
+
+ggplot(plot_physics, aes(tf_idf, word, fill = author)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~author, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+```
+---
+### Usecase in economics
+
+- **Applications:**
+  - **Labor economics:** Identify skill content in job vacancies or resumes (e.g., Deming & Kahn, 2018; Modestino et al., 2020).  
+    → TF–IDF weights reflect demand intensity for each skill.
+  - **Innovation and productivity:** Measure technological similarity between patents and firms’ text disclosures.  
+    → Used to link innovation clusters and productivity spillovers.
+  - **Political economy & finance:** Extract themes from speeches, central bank statements, or reports.  
+    → TF–IDF helps detect attention shifts or sentiment changes over time.
+
+- **Advantages:**
+  - Simple, interpretable weighting scheme  
+  - Reduces dominance of frequent but uninformative words  
+  - Useful as input for clustering, topic modeling, or regression analysis
+  
+> After learning some regression techniques based on TF-IDF, we will classify emails as spam or ham (13th week). This can easily be extended to automation and non-automation innovations, as pioneered by Mann & Putman (2023).
+---
+
+class: middle
+
+# Relationships between words: n-grams and correlations
+
+---
+--- 
+# Motivation (ii.)
+
+So far we treated **words as individual units**.
+
+Now we analyze **relationships between words**:
+- Which words **follow** others
+- Which words **co-occur** in the same documents/sections
+
+---
+--- 
+
+## Toolbox
+
+We’ll use:
+- `unnest_tokens(..., token = "ngrams")` for bigrams/trigrams  
+- **ggraph** for network plots  
+- **widyr** for pairwise counts & correlations
+
+---
+## Tokenizing by n-gram
+
+Tokenize into consecutive sequences of words (**n-grams**).
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+library(dplyr)
+library(tidytext)
+library(janeaustenr)
+
+austen_bigrams <- austen_books() %>%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
+  filter(!is.na(bigram))
+
+head(austen_bigrams, 5)
+
+```
+
+> Still tidy: one token per row, with metadata (e.g., book) preserved.
+
+---
+### Count the most common n-gram
+
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+austen_bigrams %>%
+  count(bigram, sort = TRUE)
+
+head(austen_bigrams, 5)
+
+```
+
+---
+
+Split into words, remove stop words
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+library(tidyr)
+
+bigrams_separated <- austen_bigrams %>%
+  separate(bigram, c("word1", "word2"), sep = " ")
+
+bigrams_filtered <- bigrams_separated %>%
+  filter(!word1 %in% stop_words$word,
+         !word2 %in% stop_words$word)
+
+bigram_counts <- bigrams_filtered %>%
+  count(word1, word2, sort = TRUE)
+
+head(bigram_counts, 1)
+
+bigrams_united <- bigrams_filtered %>%
+  unite(bigram, word1, word2, sep = " ")
+
+head(bigrams_united, 1)
+
+```
+
+---
+
+### Trigrams **n=3**.
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+austen_books() %>%
+  unnest_tokens(trigram, text, token = "ngrams", n = 3) %>%
+  filter(!is.na(trigram)) %>%
+  separate(trigram, c("word1", "word2", "word3"), sep = " ") %>%
+  filter(!word1 %in% stop_words$word,
+         !word2 %in% stop_words$word,
+         !word3 %in% stop_words$word) %>%
+  count(word1, word2, word3, sort = TRUE)
+
+```
+
+---
+
+
+### Analyzing bigrams
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+bigrams_filtered %>%
+  filter(word2 == "street") %>%
+  count(book, word1, sort = TRUE)
+
+```
+
+---
+### TF-IDF on bigrams 
+
+```{r}
+bigram_tf_idf <- bigrams_united %>%
+  count(book, bigram) %>%
+  bind_tf_idf(bigram, book, n) %>%
+  arrange(desc(tf_idf))
+
+bigram_tf_idf
+
+```
+
+---
+
+### Bigrams by book 
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+bigram_tf_idf %>%
+  arrange(desc(tf_idf)) %>%
+  group_by(book) %>%
+  slice_max(tf_idf, n = 10) %>%
+  ungroup() %>%
+  mutate(bigram = reorder(bigram, tf_idf)) %>%
+  ggplot(aes(tf_idf, bigram, fill = book)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ book, ncol = 2, scales = "free") +
+  labs(x = "tf–idf of bigram", y = NULL)
+```
+
+> Using bigrams for sentiment context. Problem with simple lexicon counts: ignores negation. Example: “not happy” should reverse sentiment.
+
+---
+
+### Find 'not X' bigrams 
+
+```{r fig.align="center", warning=FALSE, out.width='40%'}
+bigrams_separated %>%
+  filter(word1 == "not") %>%
+  count(word1, word2, sort = TRUE)
+```
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+#Join with AFINN scores 
+AFINN <- get_sentiments("afinn")
+
+not_words <- bigrams_separated %>%
+  filter(word1 == "not") %>%
+  inner_join(AFINN, by = c(word2 = "word")) %>%
+  count(word2, value, sort = TRUE)
+
+head(not_words, 3)
+```
+
+---
+
+### Which 'not X' drives misclassification?
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+not_words %>%
+  mutate(contribution = n * value) %>%
+  arrange(desc(abs(contribution))) %>%
+  head(20) %>%
+  mutate(word2 = reorder(word2, contribution)) %>%
+  ggplot(aes(n * value, word2, fill = n * value > 0)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = "Sentiment value × occurrences",
+       y = "Words preceded by \"not\"")
+```
+---
+--- 
+
+### Broaden negations 
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+negation_words <- c("not", "no", "never", "without")
+
+negated_words <- bigrams_separated %>%
+  filter(word1 %in% negation_words) %>%
+  inner_join(AFINN, by = c(word2 = "word")) %>%
+  count(word1, word2, value, sort = TRUE)
+
+```
+
+---
+
+```{r echo=FALSE, fig.align="center", warning=FALSE, out.width='80%'}
+
+negated_words %>%
+  mutate(contribution = n * value,
+         word2 = reorder(paste(word2, word1, sep = "__"), contribution)) %>%
+  group_by(word1) %>%
+  slice_max(abs(contribution), n = 12, with_ties = FALSE) %>%
+  ggplot(aes(word2, contribution, fill = n * value > 0)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ word1, scales = "free") +
+  scale_x_discrete(labels = function(x) gsub("__.+$", "", x)) +
+  xlab("Words preceded by negation term") +
+  ylab("Sentiment value × # occurrences") +
+  coord_flip()
+```
+
+---
+
+### Bigrams with networks with `ggraph`
+
+We can visualize all relationships (not just top few) as a graph.
+
+- from: word1
+
+- to: word2
+
+- weight: count n
+
+```{r fig.align="center", message=FALSE, warning=FALSE, out.width='40%'}
+library(igraph)
+
+bigram_graph <- bigram_counts %>%
+  filter(n > 20) %>%        # keep common bigrams
+  graph_from_data_frame()
+
+bigram_graph
+```
+
+---
+
+
+```{r warning=FALSE, message=FALSE, out.width='40%',fig.align="center"}
+
+library(ggraph)
+set.seed(42)
+
+ggraph(bigram_graph, layout = "fr") +
+  geom_edge_link() +
+  geom_node_point() +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1)
+
+```
+
+
+---
+```{r warning=FALSE, message=FALSE, out.width='40%',fig.align="center"}
+
+set.seed(42)
+a <- grid::arrow(type = "closed", length = unit(.15, "inches"))
+
+ggraph(bigram_graph, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE,
+                 arrow = a, end_cap = circle(.07, 'inches')) +
+  geom_node_point(color = "lightblue", size = 5) +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
+  theme_void()
+```
+---
+### Tokenize the books
+```{r}
+library(tidytext)
+
+austen_section_words <- austen_books() %>%
+  filter(book == "Pride & Prejudice") %>%
+  mutate(section = row_number() %/% 10) %>%
+  filter(section > 0) %>%
+  unnest_tokens(word, text) %>%
+  filter(!word %in% stop_words$word)
+
+head(austen_section_words, 3)
+```
+---
+### Motivation (iii.)
+
+
+```{r}
+library(widyr)
+
+# count words co-occuring within sections
+word_pairs <- austen_section_words %>%
+  pairwise_count(word, section, sort = TRUE)
+
+head(word_pairs, 3)
+```
+
+Pairs like **“Elizabeth”** and **“Darcy”** are the most common co-occurring words, but that’s not particularly meaningful — they’re also the most common individual words.
+
+We want to examine **correlation among words**,  which indicates how often they appear together  relative to how often they appear separately.
+
+--- 
+---
+
+### Binary correlation
+
+The **phi coefficient** ($\phi$) is a common measure for binary correlation.
+
+It measures how much more likely it is that  both word X and word Y appear (or neither do)  than that one appears without the other.
+
+> Contingency table
+
+|                     | Has word Y | No word Y | Total |
+|:--------------------|:-----------:|:-----------:|:------:|
+| **Has word X**      | $n_{11}$ | $n_{10}$ | $n_{1\cdot}$ |
+| **No word X**       | $n_{01}$ | $n_{00}$ | $n_{0\cdot}$ |
+| **Total**           | $n_{\cdot1}$ | $n_{\cdot0}$ | $n$ |
+
+
+> Interpreting the counts
+
+- $n_{11}$: number of documents where **both X and Y** appear  
+- $n_{00}$: number of documents where **neither** appears  
+- $n_{10}$, $n_{01}$: cases where **only one** appears  
+
+---
+
+### Formula for binary (pairwise) correlation $\phi$
+
+$$\phi = \frac{n_{11}n_{00} - n_{10}n_{01}} {\sqrt{\,n_{1\cdot} n_{0\cdot} n_{\cdot0} n_{\cdot1}\,}}$$
+
+The phi coefficient is **equivalent to the Pearson correlation**  
+when applied to **binary data**.
+
+---
+
+### Compute pairwise correlations in R
+
+
+```{r}
+library(widyr)
+word_cors <- austen_section_words %>%
+  group_by(word) %>%
+  filter(n() >= 20) %>%            # focus on common words
+  pairwise_cor(word, section, sort = TRUE)
+
+word_cors
+```
+
+```{r}
+word_cors %>%
+  filter(item1 == "pounds")
+```
+
+
+---
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+
+word_cors %>%
+  filter(item1 %in% c("elizabeth", "pounds", "married", "pride")) %>%
+  group_by(item1) %>%
+  slice_max(correlation, n = 6) %>%
+  ungroup() %>%
+  mutate(item2 = reorder(item2, correlation)) %>%
+  ggplot(aes(item2, correlation)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ item1, scales = "free") +
+  coord_flip() +
+  labs(x = NULL, y = "Correlation (ϕ)")
+```
+
+---
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+
+set.seed(42)
+
+word_cors %>%
+  filter(correlation > .15) %>%
+  graph_from_data_frame() %>%
+  ggraph(layout = "fr") +
+  geom_edge_link(aes(edge_alpha = correlation), show.legend = FALSE) +
+  geom_node_point(color = "lightblue", size = 5) +
+  geom_node_text(aes(label = name), repel = TRUE) +
+  theme_void()
+```
+
+
+---
+
+# Sources
+- [Silge, J., Robinson D. (2025). Text Mining with R!. O'Reilly](https://www.tidytextmining.com/)
+
+---
+
+## References
+
+- [Deming, D. J., & Kahn, L. B. (2018). *Skill Requirements across Firms and Labor Markets: Evidence from Job Postings.* The Journal of Labor Economics.](https://doi.org/10.1086/694106)
+
+- [Modestino, A. S., Shoag, D., & Ballance, J. (2020). *Downskilling: Changes in Employer Skill Requirements over the Business Cycle.* Labour Economics, 65, 101821.](https://doi.org/10.1016/j.labeco.2020.101821)
+
+- [Mann, K., & Putman, L. (2023). *Benign Effects of Automation.* Working Paper, CBS.](https://research-api.cbs.dk/ws/portalfiles/portal/71105288/katja_mann_et_al_benign_effects_of_automation_acceptedversion.pdf)
+
+- [Silge, J., & Robinson, D. (2025). *Text Mining with R!* O’Reilly.](https://www.tidytextmining.com/)
+
+
+
+---
