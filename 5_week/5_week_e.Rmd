@@ -732,15 +732,305 @@ word_cors %>%
   theme_void()
 ```
 
+---
+
+class: middle
+
+# Converting to and from non-tidy formats
+
+---
+
+## Converting to and from Non-Tidy Formats
+
+In previous lectures, we've analyzed text in **tidy** format—one token per document per row, as produced by `unnest_tokens()`.
+
+This structure integrates seamlessly with `dplyr`, `tidyr`, and `ggplot2`, allowing flexible text analysis.
+
+---
+
+### Why Non-Tidy Formats Matter
+
+Most R NLP tools (beyond `tidytext`) use **non-tidy** data formats, such as:
+
+- `DocumentTermMatrix` (from **tm**)
+- `dfm` (from **quanteda**)
+- Sparse matrices (from **Matrix**)
+
+Bridging these structures is essential for combining tidy workflows with established NLP tools.
+
+> “It is often the quality of the glue that determines the power of the system.”  
+> — Hal Abelson
+
+---
+
+## Tidying a Document-Term Matrix (DTM)
+
+A **Document-Term Matrix (DTM)** has:
+
+- Rows = documents  
+- Columns = terms  
+- Cells = term frequencies  
+
+DTMs are usually sparse matrices.
+
+---
+
+### Converting Between Formats
+
+`tidytext` provides verbs for conversion:
+
+- `tidy()` — DTM → tidy tibble  
+- `cast_*()` — tidy tibble → matrix  
+
+Examples:
+- `cast_sparse()`
+- `cast_dtm()`
+- `cast_dfm()`
+
+---
+### Non-tidy formats
+
+```{r , echo = FALSE, out.width = '100%'}
+knitr::include_graphics("img/tmwr_0501.png")
+```
+
+---
+
+## Example: `DocumentTermMatrix` (tm)
+
+```{r warning = F, message=F}
+library(tm)
+data("AssociatedPress", package = "topicmodels")
+AssociatedPress
+```
+
+---
+### What is inside the document-term matrix?
+
+```{r}
+terms <- Terms(AssociatedPress)
+head(terms)
+```
+
+> Tidying:
+
+```{r}
+library(tidytext)
+ap_td <- tidy(AssociatedPress)
+ap_td
+```
+
+Produces columns: document, term, count.
+
+Notice that the tidy format is no longe *sparse* vector. 
+
+---
+### Standard pipeline: sentiment
+
+```{r}
+ap_sentiments <- ap_td %>%
+  inner_join(get_sentiments("bing"), by = c(term = "word"))
+
+ap_sentiments
+```
+
+---
+### Visualize 
+
+```{r warning=FALSE, out.width='38%',fig.align="center"}
+
+library(ggplot2)
+
+ap_sentiments %>%
+  count(sentiment, term, wt = count) %>%
+  filter(n >= 200) %>%
+  mutate(n = ifelse(sentiment == "negative", -n, n)) %>%
+  mutate(term = reorder(term, n)) %>%
+  ggplot(aes(n, term, fill = sentiment)) +
+  geom_col() +
+  labs(x = "Contribution to sentiment", y = NULL)
+```
+
+---
+## Example: `dfm objects` (quanteda)
+
+```{r warning=F, message=F}
+library(quanteda)
+data("data_corpus_inaugural", package = "quanteda")
+inaug_dfm <- data_corpus_inaugural %>%
+  tokens() %>%
+  dfm()
+```
+
+> Tidying 
+
+```{r warning=F, message=F}
+inaug_td <- tidy(inaug_dfm)
+inaug_td
+```
+
+---
+### Standard pipeline: TF-IDF
+
+```{r}
+inaug_tf_idf <- inaug_td %>%
+  bind_tf_idf(term, document, count) %>%
+  arrange(desc(tf_idf))
+
+inaug_tf_idf
+```
+---
+
+```{r  echo = FALSE, fig.cap = "The terms with the highest tf-idf from each of four selected inaugural addresses.", fig.height=6, fig.width=7,fig.align="center"}
+speeches <- c("1933-Roosevelt", "1861-Lincoln",
+              "1961-Kennedy", "2009-Obama")
+
+inaug_tf_idf %>%
+  filter(document %in% speeches) %>%
+  group_by(document) %>%
+  slice_max(tf_idf, n = 10, with_ties = FALSE) %>%
+  ungroup() %>%
+  mutate(term = reorder_within(term, tf_idf, document)) %>%
+  ggplot(aes(term, tf_idf, fill = document)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ document, scales = "free") +
+  coord_flip() +
+  scale_x_reordered() +
+  labs(x = NULL,
+       y = "tf-idf")
+```
+
+---
+
+```{r}
+library(tidyr)
+
+year_term_counts <- inaug_td %>%
+  extract(document, "year", "(\\d+)", convert = TRUE) %>%
+  complete(year, term, fill = list(count = 0)) %>%
+  group_by(year) %>%
+  mutate(year_total = sum(count))
+```
+
+> Note that we’ve used tidyr’s `complete()` function to include zeroes (cases where a word didn’t appear in a document) in the table.
+
+
+---
+
+```{r  out.width='48%',fig.align="center", message=F}
+year_term_counts %>%
+  filter(term %in% c("god", "america", "foreign", "union", "constitution", "freedom")) %>%
+  ggplot(aes(year, count / year_total)) +
+  geom_point() +
+  geom_smooth() +
+  facet_wrap(~ term, scales = "free_y") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(y = "% frequency of word in inaugural address")
+
+```
+
+---
+
+### From tidy text format to matrix
+
+```{r}
+ap_td %>%
+  cast_dtm(document, term, count)
+```
+
+```{r}
+ap_td %>%
+  cast_dfm(document, term, count)
+```
+---
+
+```{r}
+library(janeaustenr)
+
+austen_dtm <- austen_books() %>%
+  unnest_tokens(word, text) %>%
+  count(book, word) %>%
+  cast_dtm(book, word, n)
+
+austen_dtm
+```
+
+---
+
+### Tidying Corpus Objects with Metadata
+
+Corpus objects (from tm) store:
+
+Raw text
+
+Metadata (id, date, title, etc.)
+
+```{r}
+# Corpus, containing 50 articles from the news service Reuters.
+data("acq")
+acq
+```
+
+```{r}
+acq_td <- tidy(acq)
+acq_td
+```
+
+---
+
+### Standard pipline: summarizing
+
+```{r}
+acq_tokens <- acq_td %>%
+  select(-places) %>%
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words, by = "word")
+
+# Most common words
+acq_tokens %>%
+  count(word, sort = TRUE)
+```
+
+---
+
+```{r}
+
+# TF-IDF
+acq_tokens %>%
+  count(id, word) %>%
+  bind_tf_idf(word, id, n) %>%
+  arrange(desc(tf_idf))
+```
+
+
+---
+
+### Where next?
+
+```{r , echo = FALSE, out.width = '80%'}
+knitr::include_graphics("img/paper1.png")
+```
+
+---
+```{r , echo = FALSE, out.width = '50%'}
+knitr::include_graphics("img/paper2.png")
+```
+---
+
+```{r , echo = FALSE, out.width = '50%'}
+knitr::include_graphics("img/book1.png")
+```
+
+---
+
+```{r , echo = FALSE, out.width = '50%'}
+knitr::include_graphics("img/book2.png")
+```
+
 
 ---
 
 # Sources
-- [Silge, J., Robinson D. (2025). Text Mining with R!. O'Reilly](https://www.tidytextmining.com/)
-
----
-
-## References
 
 - [Deming, D. J., & Kahn, L. B. (2018). *Skill Requirements across Firms and Labor Markets: Evidence from Job Postings.* The Journal of Labor Economics.](https://doi.org/10.1086/694106)
 

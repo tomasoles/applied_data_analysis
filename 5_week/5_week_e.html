@@ -108,7 +108,7 @@ and examine term frequency, then tf–idf.
 ## Data setup
 
 
-```r
+``` r
 library(dplyr)
 library(janeaustenr)
 library(tidytext)
@@ -128,7 +128,7 @@ book_words &lt;- left_join(book_words, total_words)
 ## Joining with `by = join_by(book)`
 ```
 
-```r
+``` r
 book_words
 ```
 
@@ -145,7 +145,7 @@ book_words
 ### Term frequency distribution
 
 
-```r
+``` r
 library(ggplot2)
 
 ggplot(book_words, aes(n/total, fill = book)) +
@@ -155,7 +155,7 @@ ggplot(book_words, aes(n/total, fill = book)) +
 ```
 
 ```
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+## `stat_bin()` using `bins = 30`. Pick better value `binwidth`.
 ```
 
 &lt;img src="5_week_e_files/figure-html/unnamed-chunk-3-1.png" width="38%" style="display: block; margin: auto;" /&gt;
@@ -167,7 +167,7 @@ ggplot(book_words, aes(n/total, fill = book)) +
 
  This relationship is common in natural language corpora.
 
-```r
+``` r
 freq_by_rank &lt;- book_words %&gt;%
   group_by(book) %&gt;%
   mutate(rank = row_number(),
@@ -189,7 +189,7 @@ freq_by_rank
 ### Zipf's law
 
 
-```r
+``` r
 freq_by_rank %&gt;% 
   ggplot(aes(rank, term_frequency, color = book)) + 
   geom_line(linewidth = 1.1, alpha = 0.8, show.legend = FALSE) + 
@@ -205,7 +205,7 @@ freq_by_rank %&gt;%
 ### Term frequency distribution
 
 
-```r
+``` r
 rank_subset &lt;- freq_by_rank %&gt;%
   filter(rank &lt; 500, rank &gt; 10)
 
@@ -227,7 +227,7 @@ lm(log10(term_frequency) ~ log10(rank), data = rank_subset)
 ### Visualizing with the fitted line
 
 
-```r
+``` r
 freq_by_rank %&gt;% 
   ggplot(aes(rank, term_frequency, color = book)) + 
   geom_abline(intercept = -0.62, slope = -1.1, 
@@ -246,7 +246,7 @@ freq_by_rank %&gt;%
 Use `bind_tf_idf()` from `tidytext`.
 
 
-```r
+``` r
 book_tf_idf &lt;- book_words %&gt;%
   bind_tf_idf(word, book, n)
 
@@ -268,7 +268,7 @@ book_tf_idf %&gt;%
 ---
 
 
-```r
+``` r
 book_tf_idf %&gt;%
   group_by(book) %&gt;%
   slice_max(tf_idf, n = 15) %&gt;%
@@ -296,14 +296,22 @@ Let’s try the same on scientific works:
  + Einstein: Relativity: The Special and General Theory
 
 
-```r
+``` r
 library(gutenbergr)
 
 physics &lt;- gutenberg_download(
   c(37729, 14725, 13476, 30155),
   meta_fields = "author"
 )
+```
 
+```
+## Determining mirror for Project Gutenberg from
+## https://www.gutenberg.org/robot/harvest.
+## Using mirror http://aleph.gutenberg.org.
+```
+
+``` r
 physics_words &lt;- physics %&gt;%
   unnest_tokens(word, text) %&gt;%
   count(author, word, sort = TRUE)
@@ -312,7 +320,7 @@ physics_words &lt;- physics %&gt;%
 ---
 
 
-```r
+``` r
 physics_words
 ```
 
@@ -327,7 +335,7 @@ physics_words
 ```
 
 
-```r
+``` r
 plot_physics &lt;- physics_words %&gt;%
   bind_tf_idf(word, author, n) %&gt;%
   mutate(author = factor(author, levels = c("Galilei, Galileo",
@@ -339,7 +347,7 @@ plot_physics &lt;- physics_words %&gt;%
 ---
 
 
-```r
+``` r
 plot_physics %&gt;% 
   group_by(author) %&gt;% 
   slice_max(tf_idf, n = 15) %&gt;% 
@@ -356,7 +364,7 @@ plot_physics %&gt;%
 --- 
 
 
-```r
+``` r
 library(stringr)
 
 physics %&gt;% 
@@ -378,7 +386,7 @@ physics %&gt;%
 --- 
 ### Custom stop words removal
 
-```r
+``` r
 mystopwords &lt;- tibble(word = c("eq", "co", "rc", "ac", "ak", "bn", 
                                    "fig", "file", "cg", "cb", "cm",
                                "ab", "_k", "_k_", "_x"))
@@ -391,7 +399,7 @@ physics_words &lt;- anti_join(physics_words, mystopwords,
 --- 
 
 
-```r
+``` r
 plot_physics &lt;- physics_words %&gt;%
   bind_tf_idf(word, author, n) %&gt;%
   mutate(word = str_remove_all(word, "_")) %&gt;%
@@ -460,7 +468,7 @@ We’ll use:
 Tokenize into consecutive sequences of words (**n-grams**).
 
 
-```r
+``` r
 library(dplyr)
 library(tidytext)
 library(janeaustenr)
@@ -489,7 +497,7 @@ head(austen_bigrams, 5)
 
 
 
-```r
+``` r
 austen_bigrams %&gt;%
   count(bigram, sort = TRUE)
 ```
@@ -504,7 +512,7 @@ austen_bigrams %&gt;%
 ## # ℹ 193,206 more rows
 ```
 
-```r
+``` r
 head(austen_bigrams, 5)
 ```
 
@@ -523,7 +531,7 @@ head(austen_bigrams, 5)
 Split into words, remove stop words
 
 
-```r
+``` r
 library(tidyr)
 
 bigrams_separated &lt;- austen_bigrams %&gt;%
@@ -546,7 +554,7 @@ head(bigram_counts, 1)
 ## 1 sir   thomas   266
 ```
 
-```r
+``` r
 bigrams_united &lt;- bigrams_filtered %&gt;%
   unite(bigram, word1, word2, sep = " ")
 
@@ -565,7 +573,7 @@ head(bigrams_united, 1)
 ### Trigrams **n=3**.
 
 
-```r
+``` r
 austen_books() %&gt;%
   unnest_tokens(trigram, text, token = "ngrams", n = 3) %&gt;%
   filter(!is.na(trigram)) %&gt;%
@@ -592,7 +600,7 @@ austen_books() %&gt;%
 ### Analyzing bigrams
 
 
-```r
+``` r
 bigrams_filtered %&gt;%
   filter(word2 == "street") %&gt;%
   count(book, word1, sort = TRUE)
@@ -612,7 +620,7 @@ bigrams_filtered %&gt;%
 ### TF-IDF on bigrams 
 
 
-```r
+``` r
 bigram_tf_idf &lt;- bigrams_united %&gt;%
   count(book, bigram) %&gt;%
   bind_tf_idf(bigram, book, n) %&gt;%
@@ -636,7 +644,7 @@ bigram_tf_idf
 ### Bigrams by book 
 
 
-```r
+``` r
 bigram_tf_idf %&gt;%
   arrange(desc(tf_idf)) %&gt;%
   group_by(book) %&gt;%
@@ -658,7 +666,7 @@ bigram_tf_idf %&gt;%
 ### Find 'not X' bigrams 
 
 
-```r
+``` r
 bigrams_separated %&gt;%
   filter(word1 == "not") %&gt;%
   count(word1, word2, sort = TRUE)
@@ -675,7 +683,7 @@ bigrams_separated %&gt;%
 ```
 
 
-```r
+``` r
 #Join with AFINN scores 
 AFINN &lt;- get_sentiments("afinn")
 
@@ -701,7 +709,7 @@ head(not_words, 3)
 ### Which 'not X' drives misclassification?
 
 
-```r
+``` r
 not_words %&gt;%
   mutate(contribution = n * value) %&gt;%
   arrange(desc(abs(contribution))) %&gt;%
@@ -720,7 +728,7 @@ not_words %&gt;%
 ### Broaden negations 
 
 
-```r
+``` r
 negation_words &lt;- c("not", "no", "never", "without")
 
 negated_words &lt;- bigrams_separated %&gt;%
@@ -746,7 +754,7 @@ We can visualize all relationships (not just top few) as a graph.
 - weight: count n
 
 
-```r
+``` r
 library(igraph)
 
 bigram_graph &lt;- bigram_counts %&gt;%
@@ -757,9 +765,9 @@ bigram_graph
 ```
 
 ```
-## IGRAPH 98162a7 DN-- 85 70 -- 
+## IGRAPH adf791d DN-- 85 70 -- 
 ## + attr: name (v/c), n (e/n)
-## + edges from 98162a7 (vertex names):
+## + edges from adf791d (vertex names):
 ##  [1] sir     -&gt;thomas     miss    -&gt;crawford   captain -&gt;wentworth 
 ##  [4] miss    -&gt;woodhouse  frank   -&gt;churchill  lady    -&gt;russell   
 ##  [7] sir     -&gt;walter     lady    -&gt;bertram    miss    -&gt;fairfax   
@@ -775,7 +783,7 @@ bigram_graph
 
 
 
-```r
+``` r
 library(ggraph)
 set.seed(42)
 
@@ -790,7 +798,7 @@ ggraph(bigram_graph, layout = "fr") +
 
 ---
 
-```r
+``` r
 set.seed(42)
 a &lt;- grid::arrow(type = "closed", length = unit(.15, "inches"))
 
@@ -806,7 +814,7 @@ ggraph(bigram_graph, layout = "fr") +
 ---
 ### Tokenize the books
 
-```r
+``` r
 library(tidytext)
 
 austen_section_words &lt;- austen_books() %&gt;%
@@ -832,7 +840,7 @@ head(austen_section_words, 3)
 
 
 
-```r
+``` r
 library(widyr)
 
 # count words co-occuring within sections
@@ -860,7 +868,7 @@ We want to examine **correlation among words**,  which indicates how often they 
 
 ### Binary correlation
 
-The **phi coefficient** ($\phi$) is a common measure for binary correlation.
+The **phi coefficient** (`\(\phi\)`) is a common measure for binary correlation.
 
 It measures how much more likely it is that  both word X and word Y appear (or neither do)  than that one appears without the other.
 
@@ -894,7 +902,7 @@ when applied to **binary data**.
 
 
 
-```r
+``` r
 library(widyr)
 word_cors &lt;- austen_section_words %&gt;%
   group_by(word) %&gt;%
@@ -915,7 +923,7 @@ word_cors
 ```
 
 
-```r
+``` r
 word_cors %&gt;%
   filter(item1 == "pounds")
 ```
@@ -934,7 +942,7 @@ word_cors %&gt;%
 ---
 
 
-```r
+``` r
 word_cors %&gt;%
   filter(item1 %in% c("elizabeth", "pounds", "married", "pride")) %&gt;%
   group_by(item1) %&gt;%
@@ -953,7 +961,7 @@ word_cors %&gt;%
 ---
 
 
-```r
+``` r
 set.seed(42)
 
 word_cors %&gt;%
@@ -968,14 +976,427 @@ word_cors %&gt;%
 
 &lt;img src="5_week_e_files/figure-html/unnamed-chunk-37-1.png" width="40%" style="display: block; margin: auto;" /&gt;
 
+---
+
+class: middle
+
+# Converting to and from non-tidy formats
 
 ---
+
+## Converting to and from Non-Tidy Formats
+
+In previous lectures, we've analyzed text in **tidy** format—one token per document per row, as produced by `unnest_tokens()`.
+
+This structure integrates seamlessly with `dplyr`, `tidyr`, and `ggplot2`, allowing flexible text analysis.
+
+---
+
+### Why Non-Tidy Formats Matter
+
+Most R NLP tools (beyond `tidytext`) use **non-tidy** data formats, such as:
+
+- `DocumentTermMatrix` (from **tm**)
+- `dfm` (from **quanteda**)
+- Sparse matrices (from **Matrix**)
+
+Bridging these structures is essential for combining tidy workflows with established NLP tools.
+
+&gt; “It is often the quality of the glue that determines the power of the system.”  
+&gt; — Hal Abelson
+
+---
+
+## Tidying a Document-Term Matrix (DTM)
+
+A **Document-Term Matrix (DTM)** has:
+
+- Rows = documents  
+- Columns = terms  
+- Cells = term frequencies  
+
+DTMs are usually sparse matrices.
+
+---
+
+### Converting Between Formats
+
+`tidytext` provides verbs for conversion:
+
+- `tidy()` — DTM → tidy tibble  
+- `cast_*()` — tidy tibble → matrix  
+
+Examples:
+- `cast_sparse()`
+- `cast_dtm()`
+- `cast_dfm()`
+
+---
+### Non-tidy formats
+
+&lt;img src="img/tmwr_0501.png" width="100%" /&gt;
+
+---
+
+## Example: `DocumentTermMatrix` (tm)
+
+
+``` r
+library(tm)
+data("AssociatedPress", package = "topicmodels")
+AssociatedPress
+```
+
+```
+## &lt;&lt;DocumentTermMatrix (documents: 2246, terms: 10473)&gt;&gt;
+## Non-/sparse entries: 302031/23220327
+## Sparsity           : 99%
+## Maximal term length: 18
+## Weighting          : term frequency (tf)
+```
+
+---
+### What is inside the document-term matrix?
+
+
+``` r
+terms &lt;- Terms(AssociatedPress)
+head(terms)
+```
+
+```
+## [1] "aaron"      "abandon"    "abandoned"  "abandoning" "abbott"    
+## [6] "abboud"
+```
+
+&gt; Tidying:
+
+
+``` r
+library(tidytext)
+ap_td &lt;- tidy(AssociatedPress)
+ap_td
+```
+
+```
+## # A tibble: 302,031 × 3
+##   document term   count
+##      &lt;int&gt; &lt;chr&gt;  &lt;dbl&gt;
+## 1        1 adding     1
+## 2        1 adult      2
+## 3        1 ago        1
+## # ℹ 302,028 more rows
+```
+
+Produces columns: document, term, count.
+
+Notice that the tidy format is no longe *sparse* vector. 
+
+---
+### Standard pipeline: sentiment
+
+
+``` r
+ap_sentiments &lt;- ap_td %&gt;%
+  inner_join(get_sentiments("bing"), by = c(term = "word"))
+
+ap_sentiments
+```
+
+```
+## # A tibble: 30,094 × 4
+##   document term    count sentiment
+##      &lt;int&gt; &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;    
+## 1        1 assault     1 negative 
+## 2        1 complex     1 negative 
+## 3        1 death       1 negative 
+## # ℹ 30,091 more rows
+```
+
+---
+### Visualize 
+
+
+``` r
+library(ggplot2)
+
+ap_sentiments %&gt;%
+  count(sentiment, term, wt = count) %&gt;%
+  filter(n &gt;= 200) %&gt;%
+  mutate(n = ifelse(sentiment == "negative", -n, n)) %&gt;%
+  mutate(term = reorder(term, n)) %&gt;%
+  ggplot(aes(n, term, fill = sentiment)) +
+  geom_col() +
+  labs(x = "Contribution to sentiment", y = NULL)
+```
+
+&lt;img src="5_week_e_files/figure-html/unnamed-chunk-43-1.png" width="38%" style="display: block; margin: auto;" /&gt;
+
+---
+## Example: `dfm objects` (quanteda)
+
+
+``` r
+library(quanteda)
+data("data_corpus_inaugural", package = "quanteda")
+inaug_dfm &lt;- data_corpus_inaugural %&gt;%
+  tokens() %&gt;%
+  dfm()
+```
+
+&gt; Tidying 
+
+
+``` r
+inaug_td &lt;- tidy(inaug_dfm)
+inaug_td
+```
+
+```
+## # A tibble: 46,402 × 3
+##   document        term            count
+##   &lt;chr&gt;           &lt;chr&gt;           &lt;dbl&gt;
+## 1 1789-Washington fellow-citizens     1
+## 2 1797-Adams      fellow-citizens     3
+## 3 1801-Jefferson  fellow-citizens     2
+## # ℹ 46,399 more rows
+```
+
+---
+### Standard pipeline: TF-IDF
+
+
+``` r
+inaug_tf_idf &lt;- inaug_td %&gt;%
+  bind_tf_idf(term, document, count) %&gt;%
+  arrange(desc(tf_idf))
+
+inaug_tf_idf
+```
+
+```
+## # A tibble: 46,402 × 6
+##   document        term        count      tf   idf tf_idf
+##   &lt;chr&gt;           &lt;chr&gt;       &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
+## 1 1793-Washington arrive          1 0.00680  4.09 0.0279
+## 2 1793-Washington upbraidings     1 0.00680  4.09 0.0279
+## 3 1793-Washington willingly       1 0.00680  3.40 0.0231
+## # ℹ 46,399 more rows
+```
+---
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="5_week_e_files/figure-html/unnamed-chunk-47-1.png" alt="The terms with the highest tf-idf from each of four selected inaugural addresses." width="504" /&gt;
+&lt;p class="caption"&gt;The terms with the highest tf-idf from each of four selected inaugural addresses.&lt;/p&gt;
+&lt;/div&gt;
+
+---
+
+
+``` r
+library(tidyr)
+
+year_term_counts &lt;- inaug_td %&gt;%
+  extract(document, "year", "(\\d+)", convert = TRUE) %&gt;%
+  complete(year, term, fill = list(count = 0)) %&gt;%
+  group_by(year) %&gt;%
+  mutate(year_total = sum(count))
+```
+
+&gt; Note that we’ve used tidyr’s `complete()` function to include zeroes (cases where a word didn’t appear in a document) in the table.
+
+
+---
+
+
+``` r
+year_term_counts %&gt;%
+  filter(term %in% c("god", "america", "foreign", "union", "constitution", "freedom")) %&gt;%
+  ggplot(aes(year, count / year_total)) +
+  geom_point() +
+  geom_smooth() +
+  facet_wrap(~ term, scales = "free_y") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(y = "% frequency of word in inaugural address")
+```
+
+&lt;img src="5_week_e_files/figure-html/unnamed-chunk-49-1.png" width="48%" style="display: block; margin: auto;" /&gt;
+
+---
+
+### From tidy text format to matrix
+
+
+``` r
+ap_td %&gt;%
+  cast_dtm(document, term, count)
+```
+
+```
+## &lt;&lt;DocumentTermMatrix (documents: 2246, terms: 10473)&gt;&gt;
+## Non-/sparse entries: 302031/23220327
+## Sparsity           : 99%
+## Maximal term length: 18
+## Weighting          : term frequency (tf)
+```
+
+
+``` r
+ap_td %&gt;%
+  cast_dfm(document, term, count)
+```
+
+```
+## Document-feature matrix of: 2,246 documents, 10,473 features (98.72% sparse) and 0 docvars.
+##     features
+## docs adding adult ago alcohol allegedly allen apparently appeared arrested
+##    1      1     2   1       1         1     1          2        1        1
+##    2      0     0   0       0         0     0          0        1        0
+##    3      0     0   1       0         0     0          0        1        0
+##    4      0     0   3       0         0     0          0        0        0
+##    5      0     0   0       0         0     0          0        0        0
+##    6      0     0   2       0         0     0          0        0        0
+##     features
+## docs assault
+##    1       1
+##    2       0
+##    3       0
+##    4       0
+##    5       0
+##    6       0
+## [ reached max_ndoc ... 2,240 more documents, reached max_nfeat ... 10,463 more features ]
+```
+---
+
+
+``` r
+library(janeaustenr)
+
+austen_dtm &lt;- austen_books() %&gt;%
+  unnest_tokens(word, text) %&gt;%
+  count(book, word) %&gt;%
+  cast_dtm(book, word, n)
+
+austen_dtm
+```
+
+```
+## &lt;&lt;DocumentTermMatrix (documents: 6, terms: 14520)&gt;&gt;
+## Non-/sparse entries: 40379/46741
+## Sparsity           : 54%
+## Maximal term length: 19
+## Weighting          : term frequency (tf)
+```
+
+---
+
+### Tidying Corpus Objects with Metadata
+
+Corpus objects (from tm) store:
+
+Raw text
+
+Metadata (id, date, title, etc.)
+
+
+``` r
+# Corpus, containing 50 articles from the news service Reuters.
+data("acq")
+acq
+```
+
+```
+## &lt;&lt;VCorpus&gt;&gt;
+## Metadata:  corpus specific: 0, document level (indexed): 0
+## Content:  documents: 50
+```
+
+
+``` r
+acq_td &lt;- tidy(acq)
+acq_td
+```
+
+```
+## # A tibble: 50 × 16
+##   author datetimestamp       description heading    id    language origin topics
+##   &lt;chr&gt;  &lt;dttm&gt;              &lt;chr&gt;       &lt;chr&gt;      &lt;chr&gt; &lt;chr&gt;    &lt;chr&gt;  &lt;chr&gt; 
+## 1 &lt;NA&gt;   1987-02-26 15:18:06 ""          COMPUTER … 10    en       Reute… YES   
+## 2 &lt;NA&gt;   1987-02-26 15:19:15 ""          OHIO MATT… 12    en       Reute… YES   
+## 3 &lt;NA&gt;   1987-02-26 15:49:56 ""          MCLEAN'S … 44    en       Reute… YES   
+## # ℹ 47 more rows
+## # ℹ 8 more variables: lewissplit &lt;chr&gt;, cgisplit &lt;chr&gt;, oldid &lt;chr&gt;,
+## #   places &lt;named list&gt;, people &lt;lgl&gt;, orgs &lt;lgl&gt;, exchanges &lt;lgl&gt;, text &lt;chr&gt;
+```
+
+---
+
+### Standard pipline: summarizing
+
+
+``` r
+acq_tokens &lt;- acq_td %&gt;%
+  select(-places) %&gt;%
+  unnest_tokens(word, text) %&gt;%
+  anti_join(stop_words, by = "word")
+
+# Most common words
+acq_tokens %&gt;%
+  count(word, sort = TRUE)
+```
+
+```
+## # A tibble: 1,566 × 2
+##   word      n
+##   &lt;chr&gt; &lt;int&gt;
+## 1 dlrs    100
+## 2 pct      70
+## 3 mln      65
+## # ℹ 1,563 more rows
+```
+
+---
+
+
+``` r
+# TF-IDF
+acq_tokens %&gt;%
+  count(id, word) %&gt;%
+  bind_tf_idf(word, id, n) %&gt;%
+  arrange(desc(tf_idf))
+```
+
+```
+## # A tibble: 2,853 × 6
+##   id    word        n    tf   idf tf_idf
+##   &lt;chr&gt; &lt;chr&gt;   &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
+## 1 186   groupe      2 0.133  3.91  0.522
+## 2 128   liebert     3 0.130  3.91  0.510
+## 3 474   esselte     5 0.109  3.91  0.425
+## # ℹ 2,850 more rows
+```
+
+
+---
+
+### Where next?
+
+&lt;img src="img/paper1.png" width="80%" /&gt;
+
+---
+&lt;img src="img/paper2.png" width="50%" /&gt;
+---
+
+&lt;img src="img/book1.png" width="50%" /&gt;
+
+---
+
+&lt;img src="img/book2.png" width="50%" /&gt;
+
+
+---
+
 # Sources
-- [Silge, J., Robinson D. (2025). Text Mining with R!. O'Reilly](https://www.tidytextmining.com/)
-
----
-
-## References
 
 - [Deming, D. J., &amp; Kahn, L. B. (2018). *Skill Requirements across Firms and Labor Markets: Evidence from Job Postings.* The Journal of Labor Economics.](https://doi.org/10.1086/694106)
 
@@ -992,9 +1413,9 @@ word_cors %&gt;%
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
-"highlightStyle": "atom-one-light",
-"highlightLines": true,
-"countIncrementalSlides": false
+  "highlightStyle": "atom-one-light",
+  "highlightLines": true,
+  "countIncrementalSlides": false
 });
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));
