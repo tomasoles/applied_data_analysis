@@ -1,0 +1,180 @@
+---
+title: "Cistenie, uprava a sprajanie dat"
+author: "Tomas Oles"
+date: "2025-10-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(dplyr)
+
+starwars
+dim(starwars)
+
+#Zobrazenie 
+
+subset_starwars <- starwars %>%
+  select(name, mass, height)
+subset_starwars
+
+
+
+starwars %>%
+  select(name, height, mass)
+
+starwars %>%
+  group_by(gender) %>%
+  summarize(
+    avg_ht = mean(height, na.rm = TRUE)
+    )
+
+df = data.frame("a" = 1:5, "b 2" = 5:1)
+class(df)
+ti = tibble("a" = 1:5, "b 2" = 5:1)
+class(ti)
+
+df$c
+ti$c
+
+df[,1]
+ti[,1]
+
+df$b
+ti$b
+
+df = data.frame(l1=letters[1:5])
+class(df$l1)
+
+df$l2 = letters[5:1]
+class(df$l2)
+
+#df$l3 = df$l1 + df$l2 pockame na funkciu mutate
+
+```
+
+# Porozumenie databaze booking
+
+```{r}
+library(dplyr)
+library(tidyverse)
+hotels <- read_csv("data/hotels.csv", show_col_types = FALSE)
+class(hotels)
+
+#Zalozne riesenie ak neexistuje bit 
+hotels <- read.csv("data/hotels.csv")
+hotels <- tibble(hotels)
+class(hotels)
+
+dim(hotels)
+glimpse(hotels)
+
+
+select(hotels, lead_time, hotel)
+
+hotels %>%
+  select(hotel, lead_time) %>%
+  arrange(desc(lead_time))
+
+
+
+hotels %>%
+  filter(hotel == "Resort Hotel") %>%
+  lm(adr ~ lead_time, data = .)
+
+
+hotels %>% 
+  select(-hotel, -is_canceled)
+
+
+hotels %>% 
+  select(adults, children, babies) %>%
+  arrange(desc(babies))
+
+hotels %>%
+  filter(hotel != "City Hotel")
+
+hotels %>%
+  filter(hotel == "City Hotel")
+
+hotels %>%
+  select(hotel, children, adults) %>%
+  filter(adults == 0, children > 1) %>%
+  arrange(desc(children))
+
+hotels %>%
+  distinct(market_segment) %>%
+  arrange(market_segment)
+
+hotels %>%
+  count(hotel, market_segment) %>%
+  arrange(market_segment)
+
+hotels %>%
+  mutate(little_ones = log(children + babies)) %>%
+  select(children, babies, little_ones) %>%
+  arrange(desc(little_ones)) 
+
+hotels %>%
+  group_by(hotel, market_segment) %>%
+  summarize(sum(adr))
+  
+```
+# Spajanie databaz
+
+```{r}
+library(dplyr)
+
+professions <- read.csv("data/scientists/professions.csv")
+professions
+dates <- read.csv("data/scientists/dates.csv")
+dates
+works <- read.csv("data/scientists/works.csv")
+works 
+
+professions %>%
+  left_join(dates)
+
+
+a <- professions %>%
+  left_join(dates) %>%
+  left_join(works)
+
+survey <- read_csv("data/students/survey.csv")
+
+
+enrollment <- read_csv("data/students/enrollment.csv")
+
+survey
+
+survey %>%
+  anti_join(enrollment, by = "id")
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+

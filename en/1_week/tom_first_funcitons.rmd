@@ -1,0 +1,116 @@
+---
+title: "My first functions"
+author: "Tomas Oles"
+date: "2025-09-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Vectors 
+
+```{r}
+world.pop <- c(2.5, 2.75, 3, 3.25, 1.25)
+world.pop[1:3]
+world.pop[c(1,4)]
+
+pop.rate <- world.pop/world.pop[1]
+length(pop.rate)
+min(world.pop)
+mean(world.pop)
+
+year <- seq(from = 1950, to = 1990, by = 10)
+
+names(world.pop) <- year
+
+names(world.pop)
+
+world.pop
+  
+```
+```{r}
+world.pop <- c(2.5, 2.75, 3, 3.25, 1.25)
+names.char <-c("a", "b", "c", "d", "e")
+names(world.pop) <- names.char
+names(world.pop)
+world.pop
+  
+```
+```{r}
+year.f <- seq(to = 2030, from = 1950,  by = 10)
+year.f
+?seq
+
+year.n <- seq(2030,1950,-10)
+year.n
+
+
+
+```
+
+# This is how we create functions
+
+I want a function that computes the sum, length and mean of single input, and the input is a vector
+
+
+```{r}
+my.summary <- function(x){
+ s.out <- sum(x)
+ l.out <- length(x)
+ m.out <- s.out/l.out
+ out <- c(s.out, l.out, m.out)
+ names(out) <- c("sum", "length", "mean")
+ return(out)
+}
+
+
+z <- 1:20
+y <- 9
+my.summary(z)
+my.summary(y)
+
+```
+
+
+
+
+```{r}
+UNpop <- read.csv("data/UNpop.csv")
+View(UNpop)
+
+
+```
+
+
+
+```{r}
+
+
+
+
+```
+
+
+
+
+```{r}
+
+
+
+
+```
+
+
+
+```{r}
+
+
+
+
+```
+
+
+
+

@@ -1,0 +1,340 @@
+%% Aplikovaná dátová analýza -- Sylabus, zimný semester 2026 (slovenská verzia)
+%% Kompilácia: pdflatex syllabus_ADA_2026_sk.tex
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,top=2.2cm,bottom=2.2cm,left=2.2cm,right=2.2cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[slovak]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{oxfordblue}{HTML}{002147}
+
+\titleformat{\section}{\large\bfseries\color{oxfordblue}}{}{0pt}{\MakeUppercase}
+\titlespacing*{\section}{0pt}{12pt}{4pt}
+
+\newcommand{\hdivider}{\noindent\rule{\textwidth}{0.8pt}}
+\newcommand{\readings}[1]{\par\vspace{3pt}{\footnotesize\itshape #1\par}}
+
+\setlist[itemize]{leftmargin=1.4em,topsep=2pt,itemsep=1pt}
+\setlength{\LTpre}{4pt}
+\setlength{\LTpost}{4pt}
+
+\newcolumntype{W}{>{\raggedright\arraybackslash}p{0.8cm}}
+\newcolumntype{T}{>{\raggedright\arraybackslash}p{10.6cm}}
+\newcolumntype{D}{>{\raggedright\arraybackslash}p{4.1cm}}
+
+\pagestyle{plain}
+
+\begin{document}
+
+%% ---------------------------------------------------------------- HLAVIČKA
+\begin{center}
+{\LARGE\bfseries\color{oxfordblue} APLIKOVANÁ DÁTOVÁ ANALÝZA}\\[2pt]
+{\large Národohospodárska fakulta}\\[1pt]
+{\large Ekonomická univerzita v Bratislave}\\[1pt]
+{\large Katedra hospodárskej politiky}
+\end{center}
+
+\hdivider
+\smallskip
+
+\noindent
+\begin{tabular}{@{}>{\bfseries}p{3.4cm}p{12.6cm}@{}}
+Vyučujúci: & Tomáš Oleš, Martin Vaško, Lucia Širochmanová, Ella Sargsyan \\
+E-mail: & tomas.oles@euba.sk; martin.vasko@euba.sk; lucia.sirochmanova@euba.sk;\newline esargsyan@cerge-ei-foundation.org \\
+Konzultačné hodiny: & streda 13:00 -- 15:00 \\
+Kancelária: & Stará budova, 4B40 \\
+Kredity: & 6 \\
+Semester: & zimný semester 2026 \\
+\end{tabular}
+
+\smallskip
+\hdivider
+
+%% ---------------------------------------------------------------- OPIS
+\section{Charakteristika predmetu}
+
+Prvým cieľom predmetu je poskytnúť študentom vedomosti a zručnosti v moderných metódach aplikovanej dátovej
+analýzy a štatistického učenia vrátane práce v prostredí R, aby dokázali realizovať empirický ekonomický
+výskum a navrhovať výskumné prístupy a metódy na riešenie ekonomických problémov.
+
+Druhým cieľom predmetu je oboznámiť študentov so základnými ekonometrickými pojmami a metódami, ktoré sú
+nevyhnutné na čítanie a porozumenie súčasnému empirickému výskumu v ekonómii, ako aj na plánovanie a
+realizáciu samostatných výskumných projektov. Predmet uvedie myšlienku regresnej analýzy a pokryje niektoré
+z najnovších ekonometrických techník, ktoré tvoria jadro modernej ekonometrickej praxe zameranej na
+identifikáciu kauzálnych vzťahov.
+
+Predmet je rozdelený na dve časti. \textbf{Časť I -- Aplikovaná dátová analýza v R} (týždne 1--7) pokrýva
+dátovo-analytický nástrojový aparát: jazyk R, vizualizáciu údajov, spracovanie údajov, analýzu textu a úvod
+do štatistického učenia prostredníctvom klasifikácie a zhlukovania. \textbf{Časť II -- Ekonometria v kocke}
+(týždne 8--13) je samostatný modul vedený Ellou Sargsyan, Ph.D.\ (CERGE-EI Foundation) a venuje sa regresnej
+analýze a moderným technikám kauzálnej inferencie.
+
+%% ---------------------------------------------------------------- VÝSTUPY
+\section{Výstupy vzdelávania}
+
+Po absolvovaní predmetu študenti získajú poznatky o moderných metódach dátového výskumu a vizualizácie,
+klasifikácie, zhlukovania, lineárnej regresie a všeobecnej dátovej analýzy. Získajú zručnosti v práci s
+údajmi, ktoré budú vedieť uplatniť vo vlastnom empirickom výskume. Rovnako nadobudnú pokročilé zručnosti v
+používaní moderného softvéru (R) v empirickom ekonomickom výskume a budú schopní písať vlastné funkcie.
+
+Študenti budú poznať základné ekonometrické pojmy, základné metódy odhadu a metódy testovania štatistických
+hypotéz. Budú schopní aplikovať štandardné postupy konštrukcie ekonometrických modelov, spracovať
+štatistické informácie, dospieť k štatisticky podloženým záverom a zmysluplne interpretovať výsledky
+odhadnutých ekonometrických modelov. Okrem toho študenti získajú praktické zručnosti pri spracovaní
+reálnych údajov s využitím ekonometrických balíkov na tvorbu a odhad regresných modelov v R.
+
+%% ---------------------------------------------------------------- PREREKVIZITY
+\section{Prerekvizity}
+
+Úvod do štatistiky.
+
+%% ---------------------------------------------------------------- LITERATÚRA
+\section{Literatúra a študijné materiály}
+
+\begin{itemize}
+  \item Wickham, H., Çetinkaya-Rundel, M., Grolemund, G. (2023). \textit{R for Data Science}. O'Reilly
+        Media, Inc. Voľne dostupné na \url{https://r4ds.hadley.nz/}.
+  \item Gareth, J., Daniela, W., Trevor, H., Robert, T. (2013). \textit{An Introduction to Statistical
+        Learning: With Applications in R}. Springer. Voľne dostupné na \url{https://www.statlearning.com/}.
+  \item Silge, J., Robinson, D. (2017). \textit{Text Mining with R: A Tidy Approach}. O'Reilly Media, Inc.
+        Voľne dostupné na \url{https://www.tidytextmining.com/}.
+  \item Wooldridge, Jeffrey M. \textit{Introductory Econometrics: A Modern Approach}. 5.~vyd., US, 2012.
+  \item Angrist, J. D., Pischke, J.-S. (2009). \textit{Mostly Harmless Econometrics: An Empiricist's
+        Companion}. Princeton University Press.
+  \item Tutoriál k základom R: \url{https://cran.r-project.org/doc/contrib/Paradis-rdebuts_en.pdf}.
+\end{itemize}
+
+Všetky študijné materiály (príslušné kapitoly učebníc, odborné články a prezentácie z prednášok) budú
+zverejnené na stránke predmetu v systéme Moodle.
+
+%% ---------------------------------------------------------------- HODNOTENIE
+\section{Hodnotenie predmetu}
+
+Hodnotenie predmetu pozostáva z dvoch zložiek, ktoré spolu určujú výslednú známku.
+
+\smallskip
+\noindent\textbf{Zložka 1 --- podmienka na získanie certifikátu CERGE-EI (60\,\% výslednej známky).}
+Táto zložka sa riadi kritériami hodnotenia modulu \textit{Ekonometria v kocke} (Časť II). Na úspešné
+absolvovanie musí študent dosiahnuť aspoň 50\,\% zo záverečnej skúšky a zároveň aspoň 50\,\% z hodnotenia
+tejto zložky.
+
+\begin{itemize}
+  \item \textbf{Tri online kvízy --- 30\,\%}
+  \item \textbf{Dve domáce zadania (prevažne v R) --- 20\,\%}
+  \item \textbf{Otázky a diskusia na hodine --- 10\,\%}
+  \item \textbf{Záverečná skúška --- 40\,\%.} Záverečná skúška pokrýva vlastnosti, odvodenie, predpoklady a
+        interpretáciu lineárnej regresie, ako aj základné kauzálne výskumné dizajny a techniky panelových
+        údajov.
+\end{itemize}
+
+\smallskip
+\noindent\textbf{Zložka 2 --- na získanie plného počtu bodov z predmetu (40\,\% výslednej známky).}
+Táto zložka pokrýva Časť I predmetu.
+
+\begin{itemize}
+  \item \textbf{Kvízy a zadania --- 50\,\%.} Počas semestra budú študenti dostávať kvízy alebo krátke
+        zadania počas prednášok aj po nich. Aktívna účasť a nadštandardné zapojenie do týchto kvízov a
+        zadaní môžu túto časť hodnotenia pozitívne ovplyvniť podľa uváženia vyučujúceho.
+  \item \textbf{Záverečný dátový projekt --- 50\,\%.} Záverečná prezentácia dátového projektu.
+\end{itemize}
+
+\smallskip
+\noindent\textbf{Výpočet výslednej známky:} Študenti nemusia dosiahnuť aspoň 50\,\% v každej jednotlivej
+položke Časti I. Výsledná známka sa určí na základe kumulatívneho skóre zo všetkých zložiek, pri splnení
+vyššie uvedenej podmienky absolvovania Zložky 1.
+
+%% ---------------------------------------------------------------- TERMÍNY
+\section{Dôležité termíny}
+
+\begin{itemize}
+  \item \textbf{Časť I (Aplikovaná dátová analýza v R):} 22. september -- 4. november 2026
+  \item \textbf{Časť II (Ekonometria v kocke):} 26. október -- 4. december 2026
+  \item \textbf{Týždeň záverečných skúšok:} 7. -- 11. december 2026
+  \item \textbf{Týždeň opravných skúšok:} 14. -- 18. december 2026
+\end{itemize}
+
+\noindent\textbf{Časy výučby.}
+
+\smallskip
+\noindent\begin{tabular}{@{}>{\bfseries}p{2.4cm}p{6.4cm}p{6.4cm}@{}}
+\toprule
+ & \textbf{Časť I} --- Aplikovaná dátová analýza v R & \textbf{Časť II} --- Ekonometria v kocke \\
+\midrule
+Kód predmetu & NND21210/21 (slovenská skupina) & modul CERGE-EI \\
+Deň & utorok, od 22. 9. 2026 & Prednáška: po + št, od 26. 10. 2026\newline Cvičenie: utorok \\
+Prednáška & 13:30--15:00, miestnosť 4B26 & 11:00--12:30 SEČ, \textbf{online} \\
+Cvičenie & 15:00--16:30, miestnosť 4B26 & 13:30--15:00, miestnosť 4B26 (prezenčne) \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+\noindent Tento sylabus uvádza časy pre \textbf{slovenskú skupinu}. Anglická skupina
+(NND21254/21) má výučbu v stredu --- pozri anglickú verziu sylabu.
+
+\smallskip
+\noindent V Časti II sú prednášky vedené \textbf{online} (Ella Sargsyan), cvičenie však
+zostáva \textbf{prezenčné} v miestnosti 4B26 v obvyklom utorkovom čase.
+
+\smallskip
+\noindent\footnotesize Vyučujúci si vyhradzuje právo zmeniť obsah študijného materiálu, ak to bude
+považovať za potrebné z dôvodu odloženia výučby (nepriaznivé počasie, choroba vyučujúceho a pod.) alebo z
+dôvodu tempa výučby.\normalsize
+
+%% ---------------------------------------------------------------- INTEGRITA
+\section{Akademická integrita}
+
+Akademická integrita je nevyhnutným predpokladom vzdelávania a vedeckého bádania na univerzite a zárukou
+toho, že diplom Ekonomickej univerzity v Bratislave je silným signálom individuálneho akademického výkonu
+každého študenta. Univerzita preto pristupuje k prípadom podvádzania a plagiátorstva veľmi vážne. Etický
+kódex Ekonomickej univerzity v Bratislave (\url{https://euba.sk/univerzita/eticky-kodex}) vymedzuje
+konanie, ktoré predstavuje akademickú nečestnosť, a postupy riešenia akademických previnení. Medzi možné
+previnenia patria okrem iného:
+
+\smallskip
+\noindent\textit{V prácach a zadaniach:} použitie myšlienok alebo slov inej osoby bez náležitého uvedenia
+zdroja; odovzdanie vlastnej práce vo viac než jednom predmete bez súhlasu vyučujúceho; vymýšľanie zdrojov
+alebo faktov; získanie alebo poskytnutie nepovolenej pomoci pri akomkoľvek zadaní.
+
+\noindent\textit{Pri testoch a skúškach:} používanie alebo držba nepovolených pomôcok; nazeranie do
+odpovedí inej osoby počas skúšky alebo testu; skresľovanie vlastnej identity či vydávanie sa za inú osobu.
+
+\noindent\textit{V akademickej práci:} falšovanie dokumentov alebo známok; falšovanie alebo pozmeňovanie
+akejkoľvek dokumentácie vyžadovanej univerzitou vrátane (nie však výlučne) lekárskych potvrdení.
+
+\smallskip
+Všetky podozrenia z akademickej nečestnosti budú prešetrené podľa postupov uvedených v Etickom kódexe. Ak
+majú študenti otázky alebo pochybnosti o tom, čo predstavuje primerané akademické správanie alebo primerané
+výskumné a citačné metódy, očakáva sa, že si vyhľadajú ďalšie informácie o akademickej integrite u svojich
+vyučujúcich alebo z iných inštitucionálnych zdrojov.
+
+\clearpage
+
+%% ---------------------------------------------------------------- HARMONOGRAM
+\section{Harmonogram výučby}
+
+\begin{longtable}{@{}WTD@{}}
+\toprule
+\textbf{Tž.} & \textbf{Obsah témy} & \textbf{Termín a vyučujúci} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Tž.} & \textbf{Obsah témy} & \textbf{Termín a vyučujúci} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+
+\multicolumn{3}{@{}l}{\textbf{\color{oxfordblue} ČASŤ I --- APLIKOVANÁ DÁTOVÁ ANALÝZA V R}}\\
+\midrule
+
+1 & \textbf{Základy R.} Základná syntax R, dátové typy, aritmetika vektorov, indexovanie, triedenie,
+triedenie pomocou \texttt{dplyr} a vykresľovanie grafov v základných balíkoch. GitHub.
+\readings{Literatúra: Gareth et al. (2013), kap.~1. Wickham et al. (2023), kap.~1, 2, 4--6.}
+& utorok 22. 9. 2026\newline Prednáška 13:30--15:00, 4B26\newline Cvičenie 15:00--16:30, 4B26\newline \textit{L. Širochmanová} \\
+\midrule
+
+2 & \textbf{Vizualizácia -- časť 1.} Princípy vizualizácie údajov, tvorba vlastných grafov pomocou
+\texttt{ggplot2} a rozbor výhod i úskalí najčastejšie používaných typov grafov.
+\readings{Literatúra: Wickham et al. (2023), kap.~3, 7.}
+& utorok 29. 9. 2026\newline Prednáška 13:30--15:00, 4B26\newline Cvičenie 15:00--16:30, 4B26\newline \textit{T. Oleš} \\
+\midrule
+
+3 & \textbf{Vizualizácia -- časť 2.} Princípy priestorovej vizualizácie, tvorba vlastných máp pomocou
+\texttt{tmap}. Prehľad priestorových údajov (body, línie a polygóny) a stručná ukážka práce s rastrom.
+\readings{Literatúra: Wickham et al. (2023), kap.~3, 7.}
+& utorok 6. 10. 2026\newline Prednáška 13:30--15:00, 4B26\newline Cvičenie 15:00--16:30, 4B26\newline \textit{T. Oleš} \\
+\midrule
+
+4 & \textbf{Sumarizácia, upratovanie a spájanie údajov.} Import údajov z rôznych formátov, získavanie
+údajov z webu, usporiadané (tidy) údaje s \texttt{tidyverse}, spracovanie údajov pomocou \texttt{dplyr},
+práca s dátumovými a časovými formátmi.
+\readings{Literatúra: Wickham et al. (2023), kap.~9--16.}
+& utorok 13. 10. 2026\newline Prednáška 13:30--15:00, 4B26\newline Cvičenie 15:00--16:30, 4B26\newline \textit{T. Oleš} \\
+\midrule
+
+5 & \textbf{Analýza textu.} Usporiadaný textový formát a tokenizácia. Stop slová a frekvencie slov.
+Analýza sentimentu na usporiadaných údajoch (lexikóny Bing, AFINN, NRC). Frekvencia termínu, inverzná
+dokumentová frekvencia a \texttt{tf-idf}.
+\readings{Literatúra: Silge a Robinson (2017), kap.~1--3.}
+& utorok 20. 10. 2026\newline Prednáška 13:30--15:00, 4B26\newline Cvičenie 15:00--16:30, 4B26\newline \textit{T. Oleš} \\
+\midrule
+
+6 & \textbf{Klasifikácia.} Úvod do klasifikácie kvalitatívnych premenných. Klasifikátory: logistická
+regresia, naivný Bayesov klasifikátor, metóda k-najbližších susedov, zovšeobecnené lineárne modely. Pojmy
+klasifikácie: pretrénovanie, matica zámen, špecificita a senzitivita analýzy.
+\readings{Literatúra: Gareth et al. (2013), kap.~4.}
+& utorok 27. 10. 2026\newline Prednáška 13:30--15:00, 4B26\newline Cvičenie 15:00--16:30, 4B26\newline \textit{T. Oleš} \\
+\midrule
+
+7 & \textbf{Zhluková analýza.} Učenie bez učiteľa a pojem podobnosti. Metóda k-priemerov. Hierarchické
+zhlukovanie a dendrogramy. Voľba počtu zhlukov. Analýza hlavných komponentov a jej využitie v zhlukovej
+analýze. Aplikácie na ekonomické údaje.
+\readings{Literatúra: Gareth et al. (2013), kap.~12.}
+& utorok 3. 11. 2026\newline Prednáška 13:30--15:00, 4B26\newline Cvičenie 15:00--16:30, 4B26\newline \textit{M. Vaško} \\
+\midrule
+
+\multicolumn{3}{@{}l}{\textbf{\color{oxfordblue} ČASŤ II --- EKONOMETRIA V KOCKE}}\\
+\midrule
+
+8 & \textbf{Podstata ekonometrie a ekonomických údajov.} Čo je ekonometria a prečo ju potrebujeme? Kroky
+empirickej ekonomickej analýzy. Štruktúra ekonomických údajov. Kauzalita a pojem „ceteris paribus“ v
+ekonometrických údajoch. Definícia jednoduchého regresného modelu.
+\readings{Literatúra: Wooldridge (2012), kap.~1; kap.~2 (2.1).}
+& \footnotesize\textbf{Prednáška (online)}\normalsize\newline pondelok 26. 10. 2026, 11:00--12:30\newline štvrtok 29. 10. 2026, 11:00--12:30\newline \footnotesize\textbf{Cvičenie (prezenčne)}\normalsize\newline utorok 27. 10. 2026, 13:30--15:00, 4B26\newline \textit{E. Sargsyan} \\
+\midrule
+
+9 & \textbf{Regresná analýza prierezových údajov: časť 1.} Metóda najmenších štvorcov. Vlastnosti metódy
+najmenších štvorcov. Predpoklady jednoduchého regresného modelu.
+\readings{Literatúra: Wooldridge (2012), kap.~2 (2.2--2.5).}
+& \footnotesize\textbf{Prednáška (online)}\normalsize\newline pondelok 2. 11. 2026, 11:00--12:30\newline štvrtok 5. 11. 2026, 11:00--12:30\newline \footnotesize\textbf{Cvičenie (prezenčne)}\normalsize\newline utorok 3. 11. 2026, 13:30--15:00, 4B26\newline \textit{E. Sargsyan} \\
+\midrule
+
+10 & \textbf{Regresná analýza prierezových údajov: časť 2.} Viacnásobná regresná analýza. Testovanie
+hypotéz. Prezentovanie výsledkov regresie.
+\readings{Literatúra: Wooldridge (2012), kap.~3; kap.~4 (4.2--4.6).}
+& \footnotesize\textbf{Prednáška (online)}\normalsize\newline pondelok 9. 11. 2026, 11:00--12:30\newline štvrtok 12. 11. 2026, 11:00--12:30\newline \footnotesize\textbf{Cvičenie (prezenčne)}\normalsize\newline utorok 10. 11. 2026, 13:30--15:00, 4B26\newline \textit{E. Sargsyan} \\
+\midrule
+
+11 & \textbf{Regresná analýza: ďalšie témy a problémy.} Merné jednotky a funkčné tvary. Regresná analýza s
+kvalitatívnymi informáciami. Heteroskedasticita a sériová korelácia. Endogenita: vynechané premenné,
+selekcia a spätná kauzalita.
+\readings{Literatúra: Wooldridge (2012), kap.~2 (2.4); kap.~3 (3.3); kap.~7 (7.1--7.4); kap.~8.}
+& \footnotesize\textbf{Prednáška (online)}\normalsize\newline pondelok 16. 11. 2026, 11:00--12:30\newline štvrtok 19. 11. 2026, 11:00--12:30\newline \footnotesize\textbf{Cvičenie (prezenčne)}\normalsize\newline utorok 17. 11. 2026, 13:30--15:00, 4B26\newline \textit{E. Sargsyan} \\
+\midrule
+
+12 & \textbf{Riešenie endogenity.} Inštrumentálne premenné. Dizajn regresnej diskontinuity.
+\readings{Literatúra: Wooldridge (2012), kap.~15 (15.1--15.3); Angrist a Pischke (2009), kap.~6
+(s.~189--195).\newline Články na diskusiu: Acemoglu, D., \& Johnson, S. (2005). „Unbundling institutions.“
+\textit{Journal of Political Economy}, 113(5), 949--995. Carpenter, C., \& Dobkin, C. (2009). „The effect
+of alcohol consumption on mortality: regression discontinuity evidence from the minimum drinking age.“
+\textit{American Economic Journal: Applied Economics}, 1(1), 164--182.}
+& \footnotesize\textbf{Prednáška (online)}\normalsize\newline pondelok 23. 11. 2026, 11:00--12:30\newline štvrtok 26. 11. 2026, 11:00--12:30\newline \footnotesize\textbf{Cvičenie (prezenčne)}\normalsize\newline utorok 24. 11. 2026, 13:30--15:00, 4B26\newline \textit{E. Sargsyan} \\
+\midrule
+
+13 & \textbf{Metódy panelových údajov.} Zavedenie časového rozmeru. Model fixných efektov. Metóda rozdielov
+v rozdieloch.
+\readings{Literatúra: Wooldridge (2012), kap.~14 (14.1); Angrist a Pischke (2009), kap.~5 (s.~169--182).
+\newline Článok na diskusiu: Card, D., \& Krueger, A. B. (1994). „Minimum Wages and Employment: A Case
+Study of the Fast-Food Industry in New Jersey and Pennsylvania.“ \textit{The American Economic Review},
+84(4), 772--793.}
+& \footnotesize\textbf{Prednáška (online)}\normalsize\newline pondelok 30. 11. 2026, 11:00--12:30\newline štvrtok 3. 12. 2026, 11:00--12:30\newline \footnotesize\textbf{Cvičenie (prezenčne)}\normalsize\newline utorok 1. 12. 2026, 13:30--15:00, 4B26\newline \textit{E. Sargsyan} \\
+
+\end{longtable}
+
+\vfill
+\begin{center}
+\itshape „Sme tým, čo opakovane robíme. Dokonalosť teda nie je čin, ale zvyk.“ --- Aristoteles
+\end{center}
+
+\end{document}

@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aplikovaná dátová analýza</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Martin Vaško" />
+    <meta name="date" content="2026-01-01" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Aplikovaná dátová analýza
+]
+.subtitle[
+## Zhluková analýza
+]
+.author[
+### Martin Vaško
+]
+.institute[
+### Katedra hospodárskej politiky
+]
+.date[
+### 2026
+]
+
+---
+
+
+
+
+
+
+
+
+---
+
+## Prehľad prednášky
+
+1. **Učenie bez učiteľa**: čo sa mení, keď chýba `\(y\)`
+2. **Podobnosť a vzdialenosť**: ako meriame „blízkosť“
+3. **Metóda k-priemerov**: algoritmus, účelová funkcia, úskalia
+4. **Voľba počtu zhlukov**: lakeť, siluety, gap štatistika
+5. **Hierarchické zhlukovanie**: dendrogramy a metódy spájania
+6. **Analýza hlavných komponentov**: redukcia dimenzie pred zhlukovaním
+7. **Aplikácia**: zoskupovanie ekonomík podľa štrukturálnych ukazovateľov
+
+---
+
+class: middle
+
+# Učenie bez učiteľa
+
+---
+
+## Učenie s učiteľom vs. bez učiteľa
+
+Doteraz mala každá metóda **cieľovú premennú**.
+
+| | S učiteľom | Bez učiteľa |
+|---|---|---|
+| Údaje | `\((X, y)\)` | iba `\(X\)` |
+| Cieľ | predpovedať `\(y\)` | nájsť štruktúru v `\(X\)` |
+| Úspech | testovacia chyba, presnosť | niet jedinej správnej odpovede |
+| Príklady | regresia, logistická regresia, KNN | **zhlukovanie**, PCA |
+
+--
+
+Pri učení bez učiteľa neexistuje **kľúč so správnymi odpoveďami**. Nevieme vypočítať
+testovaciu chybu, takže analýza je viac *exploratívna* — a výsledky si vyžadujú viac úsudku.
+
+---
+
+## Prečo ekonómovia zhlukujú
+
+- **Regionálna ekonómia**: rozdelenie regiónov do vývojových typov pred modelovaním konvergencie
+- **Ekonómia práce**: segmentácia pracovníkov podľa profilov zručností z prieskumov
+- **Analýza na úrovni firiem**: identifikácia porovnateľných skupín firiem s podobnou nákladovou štruktúrou
+- **Makroekonómia**: klasifikácia krajín podľa inštitucionálnej alebo štrukturálnej podobnosti
+- **Financie**: zoskupenie aktív podľa spoločného pohybu pri tvorbe diverzifikovaného portfólia
+
+&gt; Zhlukovanie býva často **prípravným krokom**: označenie zhluku sa stane premennou
+&gt; v neskoršej regresii.
+
+---
+
+class: middle
+
+# Podobnosť a vzdialenosť
+
+---
+
+## Pojem podobnosti
+
+Zhlukovanie potrebuje formálnu odpoveď na otázku: *ako ďaleko od seba sú dve pozorovania?*
+
+Pre pozorovania `\(x_i, x_j \in \mathbb{R}^p\)`:
+
+**Euklidovská vzdialenosť**
+`$$d(x_i, x_j) = \sqrt{\sum_{k=1}^{p} (x_{ik} - x_{jk})^2}$$`
+
+**Manhattanská vzdialenosť**
+`$$d(x_i, x_j) = \sum_{k=1}^{p} |x_{ik} - x_{jk}|$$`
+
+**Korelačná vzdialenosť** považuje dve pozorovania za podobné vtedy, keď sa ich *profily*
+naprieč premennými pohybujú spoločne, bez ohľadu na veľkosť hodnôt.
+
+---
+
+## Škálovanie nie je voliteľné
+
+Vzdialenosť ovládne tá premenná, ktorá má najväčšie jednotky.
+
+
+``` r
+data("USArrests")
+round(sapply(USArrests, sd), 2)
+```
+
+```
+##   Murder  Assault UrbanPop     Rape 
+##     4.36    83.34    14.47     9.37
+```
+
+Premenná `Assault` má smerodajnú odchýlku približne **80-násobne** väčšiu než `Murder`. Bez
+škálovania by zhlukovanie bolo analýzou počtu napadnutí a ničoho iného.
+
+
+``` r
+arrests &lt;- scale(USArrests)
+round(sapply(as.data.frame(arrests), sd), 2)
+```
+
+```
+##   Murder  Assault UrbanPop     Rape 
+##        1        1        1        1
+```
+
+&gt; Praktické pravidlo: **štandardizujte**, pokiaľ premenné nie sú už v porovnateľných jednotkách.
+
+---
+
+## Pohľad na maticu vzdialeností
+
+
+``` r
+fviz_dist(dist(arrests), show_labels = FALSE) +
+  labs(title = "Párové euklidovské vzdialenosti, škálované údaje")
+```
+
+&lt;img src="7_week_p_sk_files/figure-html/unnamed-chunk-4-1.png" alt="" width="52%" style="display: block; margin: auto;" /&gt;
+
+---
+
+class: middle
+
+# Metóda k-priemerov
+
+---
+
+## Účelová funkcia metódy k-priemerov
+
+Rozdeľ pozorovania do `\(K\)` neprekrývajúcich sa zhlukov `\(C_1, \dots, C_K\)` tak, aby sa
+minimalizovala **celková vnútrozhluková variabilita**:
+
+`$$\min_{C_1,\dots,C_K} \sum_{k=1}^{K} W(C_k)$$`
+
+Pri použití štvorca euklidovskej vzdialenosti je vnútrozhluková variabilita
+
+`$$W(C_k) = \frac{1}{|C_k|} \sum_{i, i' \in C_k} \sum_{j=1}^{p} (x_{ij} - x_{i'j})^2
+ = 2 \sum_{i \in C_k} \sum_{j=1}^p (x_{ij} - \bar{x}_{kj})^2$$`
+
+kde `\(\bar{x}_{kj}\)` je priemer premennej `\(j\)` v zhluku `\(k\)` — **centroid**.
+
+&gt; Prehľadávanie všetkých rozkladov je nezvládnuteľné: je ich približne `\(K^n\)`.
+&gt; Metóda k-priemerov preto používa hladový algoritmus.
+
+---
+
+## Algoritmus
+
+1. Náhodne prirad' každé pozorovanie do jedného z `\(K\)` zhlukov.
+2. Opakuj, kým sa priradenia menia:
+   - **Krok aktualizácie**: vypočítaj centroid každého zhluku.
+   - **Krok priradenia**: prirad' každé pozorovanie k najbližšiemu centroidu.
+
+--
+
+Každý krok môže hodnotu účelovej funkcie iba **znížiť**, takže algoritmus vždy konverguje.
+
+.pull-left[
+**Zaručené**: konvergencia do *nejakého* lokálneho optima
+]
+.pull-right[
+**Nezaručené**: dosiahnutie *globálneho* optima
+]
+
+&gt; Keďže počiatočné priradenie je náhodné, rôzne spustenia môžu dať rôzne výsledky.
+&gt; Vždy použite `nstart`, aby sa algoritmus spustil viackrát a ponechal najlepší výsledok.
+
+---
+
+## Metóda k-priemerov v R
+
+
+``` r
+km4 &lt;- kmeans(arrests, centers = 4, nstart = 25)
+km4$size
+```
+
+```
+## [1] 13 13 16  8
+```
+
+``` r
+round(km4$centers, 2)
+```
+
+```
+##   Murder Assault UrbanPop  Rape
+## 1   0.70    1.04     0.72  1.28
+## 2  -0.96   -1.11    -0.93 -0.97
+## 3  -0.49   -0.38     0.58 -0.26
+## 4   1.41    0.87    -0.81  0.02
+```
+
+---
+
+## Vizualizácia zhlukov
+
+
+``` r
+fviz_cluster(km4, data = arrests, repel = TRUE, labelsize = 8) +
+  labs(title = "Metóda k-priemerov, K = 4")
+```
+
+&lt;img src="7_week_p_sk_files/figure-html/unnamed-chunk-6-1.png" alt="" width="55%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Prečo záleží na `nstart`
+
+
+``` r
+set.seed(1)
+bad  &lt;- kmeans(arrests, centers = 4, nstart = 1)
+good &lt;- kmeans(arrests, centers = 4, nstart = 50)
+
+c(nstart_1 = bad$tot.withinss, nstart_50 = good$tot.withinss)
+```
+
+```
+##  nstart_1 nstart_50 
+##  69.86858  56.40317
+```
+
+Jediný náhodný štart môže skončiť v citeľne horšom lokálnom optime.
+
+&gt; Praktická rada: `nstart = 25` alebo viac a `set.seed()` kvôli reprodukovateľnosti.
+
+---
+
+class: middle
+
+# Koľko zhlukov?
+
+---
+
+## Metóda lakťa
+
+Vynesieme celkový vnútrozhlukový súčet štvorcov proti `\(K\)` a hľadáme zlom.
+
+
+``` r
+fviz_nbclust(arrests, kmeans, method = "wss") +
+  labs(subtitle = "Metóda lakťa")
+```
+
+&lt;img src="7_week_p_sk_files/figure-html/unnamed-chunk-8-1.png" alt="" width="50%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Siluetový koeficient
+
+Pre pozorovanie `\(i\)` nech `\(a(i)\)` je jeho priemerná vzdialenosť k ostatným bodom vo vlastnom
+zhluku a `\(b(i)\)` priemerná vzdialenosť k najbližšiemu *inému* zhluku:
+
+`$$s(i) = \frac{b(i) - a(i)}{\max\{a(i), b(i)\}} \in [-1, 1]$$`
+
+- `\(s(i)\)` blízko `\(1\)`: dobre zaradené
+- `\(s(i)\)` blízko `\(0\)`: na hranici medzi dvoma zhlukmi
+- `\(s(i) &lt; 0\)`: pravdepodobne v nesprávnom zhluku
+
+
+``` r
+fviz_nbclust(arrests, kmeans, method = "silhouette") +
+  labs(subtitle = "Priemerná šírka siluety")
+```
+
+&lt;img src="7_week_p_sk_files/figure-html/unnamed-chunk-9-1.png" alt="" width="45%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Gap štatistika
+
+Porovnáva pozorovanú vnútrozhlukovú rozptýlenosť s rozptýlenosťou očakávanou pri
+**nulovom referenčnom rozdelení**, v ktorom nijaká zhluková štruktúra nie je.
+
+
+``` r
+gap &lt;- clusGap(arrests, FUN = kmeans, nstart = 25, K.max = 8, B = 50)
+fviz_gap_stat(gap)
+```
+
+&lt;img src="7_week_p_sk_files/figure-html/unnamed-chunk-10-1.png" alt="" width="50%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Ako čítať tri kritériá spoločne
+
+Tieto tri metódy si často **protirečia** — a to je informácia, nie zlyhanie.
+
+- Lakeť býva na reálnych údajoch nejednoznačný
+- Siluety uprednostňujú málo dobre oddelených zhlukov
+- Gap štatistika môže uprednostniť `\(K = 1\)`, keď je štruktúra slabá
+
+&gt; Voľte `\(K\)` s ohľadom na **výskumnú otázku**. Ak potrebujete štyri skupiny pre potreby
+&gt; politiky, obhájiteľné `\(K = 4\)` je lepšie než štatisticky hraničné `\(K = 2\)`.
+
+---
+
+class: middle
+
+# Hierarchické zhlukovanie
+
+---
+
+## Netreba vopred určiť K
+
+**Aglomeratívne** (zdola nahor) hierarchické zhlukovanie:
+
+1. Začni s každým pozorovaním ako samostatným zhlukom.
+2. Opakovane spájaj dva **najbližšie** zhluky.
+3. Skonči, keď ostane jeden zhluk.
+
+Výsledkom je **dendrogram**: strom, ktorý zaznamenáva celú históriu spájania.
+Rez stromu v danej výške dáva jedno rozdelenie — jeden strom vám teda naraz
+poskytne každé `\(K\)`.
+
+---
+
+## Metódy spájania: vzdialenosť medzi *zhlukmi*
+
+Vzdialenosť medzi dvoma pozorovaniami je jasná. Medzi dvoma **skupinami** je to voľba.
+
+| Metóda spájania | Definícia | Správanie |
+|---|---|---|
+| **Úplná** | najväčšia párová vzdialenosť | kompaktné, vyvážené zhluky |
+| **Priemerná** | priemerná párová vzdialenosť | kompaktné, vyvážené zhluky |
+| **Jednoduchá** | najmenšia párová vzdialenosť | „reťazenie“, natiahnuté zhluky |
+| **Centroidná** | vzdialenosť medzi centroidmi | môže spôsobiť inverzie |
+
+&gt; Úplná a priemerná väzba sú bežné predvoľby; jednoduchá väzba má sklon vytvárať
+&gt; dlhé natiahnuté zhluky.
+
+---
+
+## Zostrojenie dendrogramu
+
+
+``` r
+hc &lt;- hclust(dist(arrests), method = "complete")
+
+fviz_dend(hc, k = 4, cex = 0.55, rect = TRUE,
+          main = "Úplná väzba, škálované údaje")
+```
+
+&lt;img src="7_week_p_sk_files/figure-html/unnamed-chunk-11-1.png" alt="" width="58%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Rezanie stromu
+
+
+``` r
+grp &lt;- cutree(hc, k = 4)
+table(grp)
+```
+
+```
+## grp
+##  1  2  3  4 
+##  8 11 21 10
+```
+
+``` r
+split(rownames(USArrests), grp)[[1]]
+```
+
+```
+## [1] "Alabama"        "Alaska"         "Georgia"        "Louisiana"     
+## [5] "Mississippi"    "North Carolina" "South Carolina" "Tennessee"
+```
+
+
+``` r
+# zhodnú sa obe metódy?
+table(hierarchicke = grp, kmeans = km4$cluster)
+```
+
+```
+##             kmeans
+## hierarchicke  1  2  3  4
+##            1  1  0  0  7
+##            2 11  0  0  0
+##            3  1  3 16  1
+##            4  0 10  0  0
+```
+
+---
+
+## Porovnanie metód spájania
+
+
+``` r
+par(mfrow = c(1, 3), cex = 0.45)
+plot(hclust(dist(arrests), "complete"), main = "Úplná", xlab = "", sub = "")
+plot(hclust(dist(arrests), "average"),  main = "Priemerná", xlab = "", sub = "")
+plot(hclust(dist(arrests), "single"),   main = "Jednoduchá", xlab = "", sub = "")
+```
+
+&lt;img src="7_week_p_sk_files/figure-html/unnamed-chunk-14-1.png" alt="" width="70%" style="display: block; margin: auto;" /&gt;
+
+Všimnite si reťazenie v strome s jednoduchou väzbou.
+
+---
+
+class: middle
+
+# Analýza hlavných komponentov
+
+---
+
+## Prečo najprv redukovať dimenziu
+
+Pri veľkom `\(p\)`:
+
+- vzdialenosti strácajú výpovednú hodnotu (všetko je ďaleko od všetkého)
+- zhluky sa nedajú zobraziť
+- korelované premenné sa vo vzdialenosti fakticky **započítajú dvakrát**
+
+**PCA** nájde malý počet smerov, ktoré zachytávajú väčšinu variability.
+
+Prvý hlavný komponent je normalizovaná lineárna kombinácia
+
+`$$Z_1 = \phi_{11} X_1 + \phi_{21} X_2 + \dots + \phi_{p1} X_p$$`
+
+s `\(\sum_j \phi_{j1}^2 = 1\)`, ktorá má **najväčšiu možnú varianciu**. `\(Z_2\)` je ďalší taký
+smer, **ortogonálny** na `\(Z_1\)`, a tak ďalej.
+
+---
+
+## PCA v R
+
+
+``` r
+pca &lt;- prcomp(USArrests, scale. = TRUE)
+round(pca$rotation, 3)
+```
+
+```
+##             PC1    PC2    PC3    PC4
+## Murder   -0.536 -0.418  0.341  0.649
+## Assault  -0.583 -0.188  0.268 -0.743
+## UrbanPop -0.278  0.873  0.378  0.134
+## Rape     -0.543  0.167 -0.818  0.089
+```
+
+PC1 zaťažuje všetky štyri kriminálne premenné podobnou váhou — ide o celkovú
+**mieru kriminality**. PC2 je ovládaný premennou `UrbanPop` — **urbanizácia**.
+
+---
+
+## Koľko variability je vysvetlenej?
+
+
+``` r
+summary(pca)$importance[, 1:4] |&gt; round(3)
+```
+
+```
+##                          PC1   PC2   PC3   PC4
+## Standard deviation     1.575 0.995 0.597 0.416
+## Proportion of Variance 0.620 0.247 0.089 0.043
+## Cumulative Proportion  0.620 0.868 0.957 1.000
+```
+
+``` r
+fviz_eig(pca, addlabels = TRUE, barfill = "#002147", barcolor = "#002147")
+```
+
+&lt;img src="7_week_p_sk_files/figure-html/unnamed-chunk-16-1.png" alt="" width="48%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Biplot
+
+
+``` r
+fviz_pca_biplot(pca, repel = TRUE, labelsize = 3,
+                col.var = "#b22222", col.ind = "#002147")
+```
+
+&lt;img src="7_week_p_sk_files/figure-html/unnamed-chunk-17-1.png" alt="" width="55%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Zhlukovanie v priestore hlavných komponentov
+
+Bežný postup: **najprv PCA, potom zhlukovanie vedúcich komponentov.**
+
+
+``` r
+scores  &lt;- pca$x[, 1:2]
+km_pca  &lt;- kmeans(scores, centers = 4, nstart = 25)
+
+fviz_cluster(km_pca, data = scores, repel = TRUE, labelsize = 8) +
+  labs(title = "K-priemerov na prvých dvoch hlavných komponentoch")
+```
+
+&lt;img src="7_week_p_sk_files/figure-html/unnamed-chunk-18-1.png" alt="" width="50%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Interpretácia skupín
+
+
+``` r
+USArrests |&gt;
+  as_tibble(rownames = "state") |&gt;
+  mutate(cluster = factor(km4$cluster)) |&gt;
+  group_by(cluster) |&gt;
+  summarise(n = n(), across(Murder:Rape, ~ round(mean(.x), 1)))
+```
+
+```
+## # A tibble: 4 × 6
+##   cluster     n Murder Assault UrbanPop  Rape
+##   &lt;fct&gt;   &lt;int&gt;  &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;
+## 1 1          13   10.8   257.      76    33.2
+## 2 2          13    3.6    78.5     52.1  12.2
+## 3 3          16    5.7   139.      73.9  18.8
+## 4 4           8   13.9   244.      53.8  21.4
+```
+
+&gt; Zhluky sú užitočné až vtedy, keď ich viete **pomenovať**. Profilujte každý zhluk na
+&gt; pôvodných premenných, nie na škálovaných.
+
+---
+
+class: middle
+
+# Praktické úskalia
+
+---
+
+## Na čo si dať pozor
+
+* **Zhlukovanie vždy vráti zhluky.** Algoritmus ochotne rozdelí aj čistý šum.
+  Validujte skôr, než začnete interpretovať.
+* **Výsledok určuje škálovanie.** Uveďte, čo ste škálovali a prečo.
+* **Metóda k-priemerov predpokladá približne guľovité, rovnako veľké zhluky.** S pretiahnutými
+  alebo vnorenými tvarmi si neporadí.
+* **Odľahlé pozorovania skresľujú centroidy.** Zvážte `pam()` (k-medoidy), ktorá je odolnejšia.
+* **Voľba metódy spájania a vzdialenosti je modelovým predpokladom**, nie technickou drobnosťou.
+* **Výsledky nie sú test.** Niet tu p-hodnoty — zhlukovanie generuje hypotézy, nepotvrdzuje ich.
+
+---
+
+## Kontrola robustnosti, ktorú treba robiť vždy
+
+
+``` r
+# k-medoidy: medoidy sú skutočné pozorovania, odľahlé hodnoty preto vadia menej
+pam4 &lt;- pam(arrests, k = 4)
+table(kmeans = km4$cluster, pam = pam4$clustering)
+```
+
+```
+##       pam
+## kmeans  1  2  3  4
+##      1  0 12  1  0
+##      2  0  0  3 10
+##      3  0  0 16  0
+##      4  8  0  0  0
+```
+
+Ak sa rozdelenie rozpadne pri malej zmene metódy, nikdy nebolo stabilné.
+
+---
+
+# Zdroje
+
+- [James, G., Witten, D., Hastie, T., Tibshirani, R. (2021). *An Introduction to Statistical Learning*, kap. 12. Springer.](https://www.statlearning.com/)
+
+- [Kassambara, A., Mundt, F. *factoextra: Extract and Visualize the Results of Multivariate Data Analyses.*](https://cran.r-project.org/package=factoextra)
+
+- [Hastie, T., Tibshirani, R., Friedman, J. (2009). *The Elements of Statistical Learning*, kap. 14.](https://hastie.su.domains/ElemStatLearn/)
+
+- Maechler, M. et al. *cluster: Cluster Analysis Basics and Extensions.*
+
+---
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "highlightStyle": "atom-one-light",
+  "highlightLines": true,
+  "countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

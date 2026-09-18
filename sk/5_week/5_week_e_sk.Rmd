@@ -1,0 +1,350 @@
+---
+title: "Aplikovaná dátová analýza"
+subtitle: "Analýza frekvencie slov a dokumentov: tf-idf"
+author: "Tomáš Oleš"
+institute: "Katedra hospodárskej politiky"
+date: "2026"
+output:
+  xaringan::moon_reader:
+    css: xaringan-themer.css
+    lib_dir: libs
+    nature:
+      highlightStyle: atom-one-light
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+library(xaringanthemer)
+style_mono_accent(
+base_color = "#002147",
+header_font_google = google_font("Josefin Sans"),
+text_font_google = google_font("Montserrat", "300", "300i"),
+code_font_google = google_font("Fira Mono")
+)
+
+```
+
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(emo)
+library(ggplot2)
+library(gridExtra)
+library(tibble)
+# predvolene zobrazuj iba 3 riadky tibble
+options(tibble.print_max = 3, tibble.print_min = 3)
+```
+
+```{r  echo=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(fig.retina = 5, dev = "ragg_png")
+```
+
+# Motivácia (i.)
+
+Ústrednou otázkou **dolovania v texte** a **spracovania prirodzeného jazyka (NLP)** je:
+
+> Ako môžeme kvantifikovať, *o čom dokument je*?
+
+---
+---
+
+class: middle
+
+# Analýza frekvencie slov a dokumentov: tf-idf
+
+---
+
+## Dôležitosť slova
+
+- Jedna myšlienka: pozrieť sa, ktoré slová sa v dokumente vyskytujú
+- **Frekvencia termínu (tf):** ako často sa slovo vyskytuje
+- Lenže: niektoré slová sa vyskytujú v každom dokumente
+  - „the“, „is“, „of“ a podobne
+- Tie nenesú nijakú informáciu!
+
+---
+
+## Za hranicou stop slov
+
+Bežné slová (stop slová) vieme odstrániť,
+ale je to hrubý prístup.
+
+> Potrebujeme dynamický spôsob, ako **znížiť váhu všadeprítomných slov**.
+
+---
+
+# Inverzná dokumentová frekvencia (idf)
+
+Ďalšia myšlienka: prideliť menšiu váhu slovám,
+ktoré sa vyskytujú v mnohých dokumentoch.
+
+$$idf(\text{term}) = \ln{\left(\frac{n_{\text{dokumentov}}}{n_{\text{dokumentov obsahujúcich term}}}\right)}$$
+
+---
+
+## Spojenie tf a idf
+
+Skóre **tf–idf** = frekvencia termínu × inverzná dokumentová frekvencia
+
+- Vysoké tf–idf → časté v tomto dokumente, zriedkavé inde
+- Nízke tf–idf → bežné slovo spoločné pre všetky dokumenty
+
+---
+
+## Interpretácia
+
+> tf–idf meria, aké dôležité je slovo pre daný dokument
+> v rámci kolekcie dokumentov (*korpusu*).
+
+Ide o **heuristiku** — užitočnú vo vyhľadávačoch, tematickom modelovaní a NLP.
+
+---
+
+# Príklad: romány Jane Austenovej
+
+Začneme publikovanými románmi **Jane Austenovej**
+a preskúmame frekvenciu termínov, potom tf–idf.
+
+---
+
+## Príprava údajov
+
+```{r}
+library(dplyr)
+library(janeaustenr)
+library(tidytext)
+
+book_words <- austen_books() %>%
+  unnest_tokens(word, text) %>%
+  count(book, word, sort = TRUE)
+
+total_words <- book_words %>% 
+  group_by(book) %>% 
+  summarize(total = sum(n))
+
+book_words <- left_join(book_words, total_words)
+
+book_words
+```
+---
+### Rozdelenie frekvencie termínov
+
+```{r warning=FALSE, out.width='38%',fig.align="center"}
+library(ggplot2)
+
+ggplot(book_words, aes(n/total, fill = book)) +
+  geom_histogram(show.legend = FALSE) +
+  xlim(NA, 0.0009) +
+  facet_wrap(~book, ncol = 2, scales = "free_y")
+```
+
+---
+### Zipfov zákon
+
+ > Frekvencia slova je nepriamo úmerná jeho poradiu.
+
+ Tento vzťah je v korpusoch prirodzeného jazyka bežný.
+```{r warning=FALSE, out.width='38%',fig.align="center"}
+freq_by_rank <- book_words %>%
+  group_by(book) %>%
+  mutate(rank = row_number(),
+         term_frequency = n/total)
+freq_by_rank
+```
+---
+### Zipfov zákon
+
+```{r warning=FALSE, out.width='50%',fig.align="center"}
+freq_by_rank %>% 
+  ggplot(aes(rank, term_frequency, color = book)) + 
+  geom_line(linewidth = 1.1, alpha = 0.8, show.legend = FALSE) + 
+  scale_x_log10() +
+  scale_y_log10()
+```
+
+
+
+---
+### Rozdelenie frekvencie termínov
+
+```{r}
+rank_subset <- freq_by_rank %>%
+  filter(rank < 500, rank > 10)
+
+lm(log10(term_frequency) ~ log10(rank), data = rank_subset)
+```
+
+
+---
+### Vizualizácia s preloženou priamkou
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+freq_by_rank %>% 
+  ggplot(aes(rank, term_frequency, color = book)) + 
+  geom_abline(intercept = -0.62, slope = -1.1, 
+              color = "gray50", linetype = 2) +
+  geom_line(linewidth = 1.1, alpha = 0.8, show.legend = FALSE) + 
+  scale_x_log10() +
+  scale_y_log10()
+```
+
+---
+
+### Výpočet tf-idf
+
+Použijeme `bind_tf_idf()` z balíka `tidytext`.
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+book_tf_idf <- book_words %>%
+  bind_tf_idf(word, book, n)
+
+# prezrime si tf-idf
+book_tf_idf %>%
+  arrange(desc(tf_idf))
+```
+
+---
+
+```{r warning=FALSE, out.width='50%',fig.align="center"}
+book_tf_idf %>%
+  group_by(book) %>%
+  slice_max(tf_idf, n = 15) %>%
+  ungroup() %>%
+  ggplot(aes(tf_idf, fct_reorder(word, tf_idf), fill = book)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~book, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+```
+---
+
+### Príklad: klasické fyzikálne texty
+
+
+Skúsme to isté na vedeckých dielach:
+
+ + Galileo: Rozprava o plávajúcich telesách
+
+ + Huygens: Pojednanie o svetle
+
+ + Tesla: Pokusy so striedavými prúdmi
+
+ + Einstein: Teória relativity: špeciálna a všeobecná
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+library(gutenbergr)
+
+physics <- gutenberg_download(
+  c(37729, 14725, 13476, 30155),
+  meta_fields = "author"
+)
+
+physics_words <- physics %>%
+  unnest_tokens(word, text) %>%
+  count(author, word, sort = TRUE)
+```
+
+---
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+physics_words
+```
+
+```{r}
+plot_physics <- physics_words %>%
+  bind_tf_idf(word, author, n) %>%
+  mutate(author = factor(author, levels = c("Galilei, Galileo",
+                                            "Huygens, Christiaan", 
+                                            "Tesla, Nikola",
+                                            "Einstein, Albert")))
+```
+
+---
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+plot_physics %>% 
+  group_by(author) %>% 
+  slice_max(tf_idf, n = 15) %>% 
+  ungroup() %>%
+  mutate(word = reorder(word, tf_idf)) %>%
+  ggplot(aes(tf_idf, word, fill = author)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = "tf-idf", y = NULL) +
+  facet_wrap(~author, ncol = 2, scales = "free")
+
+```
+---
+--- 
+
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+library(stringr)
+
+physics %>% 
+  filter(str_detect(text, "_k_")) %>% 
+  select(text)
+```
+
+---
+--- 
+### Odstránenie vlastných stop slov
+```{r warning=FALSE, out.width='40%',fig.align="center"}
+mystopwords <- tibble(word = c("eq", "co", "rc", "ac", "ak", "bn", 
+                                   "fig", "file", "cg", "cb", "cm",
+                               "ab", "_k", "_k_", "_x"))
+
+physics_words <- anti_join(physics_words, mystopwords, 
+                           by = "word")
+
+```
+
+---
+--- 
+
+```{r warning=FALSE, out.width='30%',fig.align="center"}
+plot_physics <- physics_words %>%
+  bind_tf_idf(word, author, n) %>%
+  mutate(word = str_remove_all(word, "_")) %>%
+  group_by(author) %>% 
+  slice_max(tf_idf, n = 15) %>%
+  ungroup() %>%
+  mutate(word = fct_reorder(word, tf_idf)) %>%
+  mutate(author = factor(author, levels = c("Galilei, Galileo",
+                                            "Huygens, Christiaan",
+                                            "Tesla, Nikola",
+                                            "Einstein, Albert")))
+
+ggplot(plot_physics, aes(tf_idf, word, fill = author)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~author, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+```
+---
+### Využitie v ekonómii
+
+- **Aplikácie:**
+  - **Ekonómia práce:** identifikácia obsahu zručností v pracovných ponukách alebo životopisoch (napr. Deming a Kahn, 2018; Modestino et al., 2020).  
+    → Váhy TF–IDF odrážajú intenzitu dopytu po jednotlivých zručnostiach.
+  - **Inovácie a produktivita:** meranie technologickej podobnosti medzi patentmi a textovými zverejneniami firiem.  
+    → Používa sa na prepojenie inovačných zhlukov a preliatí produktivity.
+  - **Politická ekonómia a financie:** extrakcia tém z prejavov, vyhlásení centrálnych bánk či správ.  
+    → TF–IDF pomáha odhaliť posuny pozornosti alebo zmeny sentimentu v čase.
+
+- **Výhody:**
+  - Jednoduchá, interpretovateľná váhovacia schéma  
+  - Znižuje dominanciu častých, ale neinformatívnych slov  
+  - Užitočné ako vstup do zhlukovania, tematického modelovania alebo regresnej analýzy
+  
+> Po osvojení niektorých regresných techník založených na TF-IDF budeme klasifikovať e-maily ako spam alebo ham (týždeň 6). Toto sa dá ľahko rozšíriť na automatizačné a neautomatizačné inovácie, ako to prvýkrát urobili Mann a Putman (2023).
+---
+
+# Zdroje
+
+- [Deming, D. J., & Kahn, L. B. (2018). *Skill Requirements across Firms and Labor Markets: Evidence from Job Postings.* The Journal of Labor Economics.](https://doi.org/10.1086/694106)
+
+- [Modestino, A. S., Shoag, D., & Ballance, J. (2020). *Downskilling: Changes in Employer Skill Requirements over the Business Cycle.* Labour Economics, 65, 101821.](https://doi.org/10.1016/j.labeco.2020.101821)
+
+- [Mann, K., & Putman, L. (2023). *Benign Effects of Automation.* Working Paper, CBS.](https://research-api.cbs.dk/ws/portalfiles/portal/71105288/katja_mann_et_al_benign_effects_of_automation_acceptedversion.pdf)
+
+- [Silge, J., & Robinson, D. (2017). *Text Mining with R: A Tidy Approach.* O'Reilly.](https://www.tidytextmining.com/)
+
+---

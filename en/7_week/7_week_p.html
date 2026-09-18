@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Applied Data Analysis</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Martin Vaško" />
+    <meta name="date" content="2026-01-01" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Applied Data Analysis
+]
+.subtitle[
+## Clustering
+]
+.author[
+### Martin Vaško
+]
+.institute[
+### Department of Economic Policy
+]
+.date[
+### 2026
+]
+
+---
+
+
+
+
+
+
+
+
+---
+
+## Lecture overview
+
+1. **Unsupervised learning**: what changes when there is no `\(y\)`
+2. **Similarity and distance**: how we measure "close"
+3. **K-means clustering**: algorithm, objective, pitfalls
+4. **Choosing the number of clusters**: elbow, silhouette, gap statistic
+5. **Hierarchical clustering**: dendrograms and linkage
+6. **Principal component analysis**: dimension reduction before clustering
+7. **Application**: grouping economies by structural indicators
+
+---
+
+class: middle
+
+# Unsupervised learning
+
+---
+
+## Supervised vs. unsupervised
+
+So far every method had a **target variable**.
+
+| | Supervised | Unsupervised |
+|---|---|---|
+| Data | `\((X, y)\)` | `\(X\)` only |
+| Goal | predict `\(y\)` | find structure in `\(X\)` |
+| Success | test error, accuracy | no single ground truth |
+| Examples | regression, logistic, KNN | **clustering**, PCA |
+
+--
+
+In unsupervised learning there is **no answer key**. We cannot compute a test error,
+so the analysis is more *exploratory* — and the results need more judgement.
+
+---
+
+## Why economists cluster
+
+- **Regional economics**: group regions into development types before modelling convergence
+- **Labour economics**: segment workers by skill profiles from survey data
+- **Firm-level analysis**: identify peer groups of firms with similar cost structures
+- **Macro**: classify countries by institutional or structural similarity
+- **Finance**: group assets by co-movement to build diversified portfolios
+
+&gt; Clustering is often a **pre-processing step**: the cluster label becomes a variable
+&gt; in a later regression.
+
+---
+
+class: middle
+
+# Similarity and distance
+
+---
+
+## The notion of similarity
+
+Clustering needs a formal answer to: *how far apart are two observations?*
+
+For observations `\(x_i, x_j \in \mathbb{R}^p\)`:
+
+**Euclidean distance**
+`$$d(x_i, x_j) = \sqrt{\sum_{k=1}^{p} (x_{ik} - x_{jk})^2}$$`
+
+**Manhattan distance**
+`$$d(x_i, x_j) = \sum_{k=1}^{p} |x_{ik} - x_{jk}|$$`
+
+**Correlation-based distance** treats two observations as similar if their *profiles*
+across variables move together, regardless of magnitude.
+
+---
+
+## Scaling is not optional
+
+Distance is dominated by whichever variable has the largest units.
+
+
+``` r
+data("USArrests")
+round(sapply(USArrests, sd), 2)
+```
+
+```
+##   Murder  Assault UrbanPop     Rape 
+##     4.36    83.34    14.47     9.37
+```
+
+`Assault` has a standard deviation roughly **80 times** that of `Murder`. Without
+scaling, the clustering would be an analysis of assault counts and nothing else.
+
+
+``` r
+arrests &lt;- scale(USArrests)
+round(sapply(as.data.frame(arrests), sd), 2)
+```
+
+```
+##   Murder  Assault UrbanPop     Rape 
+##        1        1        1        1
+```
+
+&gt; Rule of thumb: **standardise** unless the variables are already in comparable units.
+
+---
+
+## Looking at the distance matrix
+
+
+``` r
+fviz_dist(dist(arrests), show_labels = FALSE) +
+  labs(title = "Pairwise Euclidean distance, scaled US arrest data")
+```
+
+&lt;img src="7_week_p_files/figure-html/unnamed-chunk-4-1.png" alt="" width="52%" style="display: block; margin: auto;" /&gt;
+
+---
+
+class: middle
+
+# K-means clustering
+
+---
+
+## The K-means objective
+
+Partition observations into `\(K\)` non-overlapping clusters `\(C_1, \dots, C_K\)` that
+minimise the **total within-cluster variation**:
+
+`$$\min_{C_1,\dots,C_K} \sum_{k=1}^{K} W(C_k)$$`
+
+Using squared Euclidean distance, the within-cluster variation is
+
+`$$W(C_k) = \frac{1}{|C_k|} \sum_{i, i' \in C_k} \sum_{j=1}^{p} (x_{ij} - x_{i'j})^2
+ = 2 \sum_{i \in C_k} \sum_{j=1}^p (x_{ij} - \bar{x}_{kj})^2$$`
+
+where `\(\bar{x}_{kj}\)` is the mean of variable `\(j\)` in cluster `\(k\)` — the **centroid**.
+
+&gt; Searching all partitions is infeasible: there are roughly `\(K^n\)` of them.
+&gt; K-means uses a greedy algorithm instead.
+
+---
+
+## The algorithm
+
+1. Randomly assign each observation to one of `\(K\)` clusters.
+2. Repeat until assignments stop changing:
+   - **Update step**: compute the centroid of each cluster.
+   - **Assign step**: assign each observation to the nearest centroid.
+
+--
+
+Each step can only **decrease** the objective, so the algorithm always converges.
+
+.pull-left[
+**Guaranteed**: convergence to *a* local optimum
+]
+.pull-right[
+**Not guaranteed**: the *global* optimum
+]
+
+&gt; Because the starting assignment is random, different runs can give different answers.
+&gt; Always use `nstart` to run the algorithm many times and keep the best result.
+
+---
+
+## K-means in R
+
+
+``` r
+km4 &lt;- kmeans(arrests, centers = 4, nstart = 25)
+km4$size
+```
+
+```
+## [1] 13 13 16  8
+```
+
+``` r
+round(km4$centers, 2)
+```
+
+```
+##   Murder Assault UrbanPop  Rape
+## 1   0.70    1.04     0.72  1.28
+## 2  -0.96   -1.11    -0.93 -0.97
+## 3  -0.49   -0.38     0.58 -0.26
+## 4   1.41    0.87    -0.81  0.02
+```
+
+---
+
+## Visualising the clusters
+
+
+``` r
+fviz_cluster(km4, data = arrests, repel = TRUE, labelsize = 8) +
+  labs(title = "K-means, K = 4")
+```
+
+&lt;img src="7_week_p_files/figure-html/unnamed-chunk-6-1.png" alt="" width="55%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Why `nstart` matters
+
+
+``` r
+set.seed(1)
+bad  &lt;- kmeans(arrests, centers = 4, nstart = 1)
+good &lt;- kmeans(arrests, centers = 4, nstart = 50)
+
+c(nstart_1 = bad$tot.withinss, nstart_50 = good$tot.withinss)
+```
+
+```
+##  nstart_1 nstart_50 
+##  69.86858  56.40317
+```
+
+A single random start can land in a noticeably worse local optimum.
+
+&gt; Practical advice: `nstart = 25` or higher, and `set.seed()` for reproducibility.
+
+---
+
+class: middle
+
+# How many clusters?
+
+---
+
+## The elbow method
+
+Plot total within-cluster sum of squares against `\(K\)` and look for the kink.
+
+
+``` r
+fviz_nbclust(arrests, kmeans, method = "wss") +
+  labs(subtitle = "Elbow method")
+```
+
+&lt;img src="7_week_p_files/figure-html/unnamed-chunk-8-1.png" alt="" width="50%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## The silhouette
+
+For observation `\(i\)`, let `\(a(i)\)` be its mean distance to other points in its own
+cluster and `\(b(i)\)` the mean distance to the nearest *other* cluster:
+
+`$$s(i) = \frac{b(i) - a(i)}{\max\{a(i), b(i)\}} \in [-1, 1]$$`
+
+- `\(s(i)\)` near `\(1\)`: well clustered
+- `\(s(i)\)` near `\(0\)`: on the boundary between two clusters
+- `\(s(i) &lt; 0\)`: probably in the wrong cluster
+
+
+``` r
+fviz_nbclust(arrests, kmeans, method = "silhouette") +
+  labs(subtitle = "Average silhouette width")
+```
+
+&lt;img src="7_week_p_files/figure-html/unnamed-chunk-9-1.png" alt="" width="45%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## The gap statistic
+
+Compares the observed within-cluster dispersion to the dispersion expected under a
+**null reference distribution** with no clustering at all.
+
+
+``` r
+gap &lt;- clusGap(arrests, FUN = kmeans, nstart = 25, K.max = 8, B = 50)
+fviz_gap_stat(gap)
+```
+
+&lt;img src="7_week_p_files/figure-html/unnamed-chunk-10-1.png" alt="" width="50%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Reading the three criteria together
+
+The three methods frequently **disagree** — and that is informative, not a failure.
+
+- The elbow is often ambiguous on real data
+- The silhouette favours few, well-separated clusters
+- The gap statistic can favour `\(K = 1\)` when structure is weak
+
+&gt; Choose `\(K\)` with the **research question** in mind. If you need four policy groups,
+&gt; a defensible `\(K = 4\)` beats a statistically marginal `\(K = 2\)`.
+
+---
+
+class: middle
+
+# Hierarchical clustering
+
+---
+
+## No need to fix K in advance
+
+**Agglomerative** (bottom-up) hierarchical clustering:
+
+1. Start with each observation as its own cluster.
+2. Repeatedly merge the two **closest** clusters.
+3. Stop when one cluster remains.
+
+The result is a **dendrogram**: a tree that records the whole merge history.
+Cutting the tree at a given height yields a clustering — one tree gives you
+every `\(K\)` at once.
+
+---
+
+## Linkage: distance between *clusters*
+
+Distance between two observations is clear. Between two **groups** it is a choice.
+
+| Linkage | Definition | Behaviour |
+|---|---|---|
+| **Complete** | largest pairwise distance | compact, balanced clusters |
+| **Average** | mean pairwise distance | compact, balanced clusters |
+| **Single** | smallest pairwise distance | "chaining", trailing clusters |
+| **Centroid** | distance between centroids | can produce inversions |
+
+&gt; Complete and average linkage are the usual defaults; single linkage tends to
+&gt; produce long straggly clusters.
+
+---
+
+## Building the dendrogram
+
+
+``` r
+hc &lt;- hclust(dist(arrests), method = "complete")
+
+fviz_dend(hc, k = 4, cex = 0.55, rect = TRUE,
+          main = "Complete linkage, scaled US arrest data")
+```
+
+&lt;img src="7_week_p_files/figure-html/unnamed-chunk-11-1.png" alt="" width="58%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Cutting the tree
+
+
+``` r
+grp &lt;- cutree(hc, k = 4)
+table(grp)
+```
+
+```
+## grp
+##  1  2  3  4 
+##  8 11 21 10
+```
+
+``` r
+split(rownames(USArrests), grp)[[1]]
+```
+
+```
+## [1] "Alabama"        "Alaska"         "Georgia"        "Louisiana"     
+## [5] "Mississippi"    "North Carolina" "South Carolina" "Tennessee"
+```
+
+
+``` r
+# do the two methods agree?
+table(hierarchical = grp, kmeans = km4$cluster)
+```
+
+```
+##             kmeans
+## hierarchical  1  2  3  4
+##            1  1  0  0  7
+##            2 11  0  0  0
+##            3  1  3 16  1
+##            4  0 10  0  0
+```
+
+---
+
+## Comparing linkages
+
+
+``` r
+par(mfrow = c(1, 3), cex = 0.45)
+plot(hclust(dist(arrests), "complete"), main = "Complete", xlab = "", sub = "")
+plot(hclust(dist(arrests), "average"),  main = "Average",  xlab = "", sub = "")
+plot(hclust(dist(arrests), "single"),   main = "Single",   xlab = "", sub = "")
+```
+
+&lt;img src="7_week_p_files/figure-html/unnamed-chunk-14-1.png" alt="" width="70%" style="display: block; margin: auto;" /&gt;
+
+Note the chaining in the single-linkage tree.
+
+---
+
+class: middle
+
+# Principal component analysis
+
+---
+
+## Why reduce dimension first
+
+With `\(p\)` large:
+
+- distances become less informative (everything is far from everything)
+- we cannot plot the clusters
+- correlated variables are effectively **counted twice** in the distance
+
+**PCA** finds a small number of directions that capture most of the variance.
+
+The first principal component is the normalised linear combination
+
+`$$Z_1 = \phi_{11} X_1 + \phi_{21} X_2 + \dots + \phi_{p1} X_p$$`
+
+with `\(\sum_j \phi_{j1}^2 = 1\)` that has the **largest possible variance**. `\(Z_2\)` is the
+next such direction, **orthogonal** to `\(Z_1\)`, and so on.
+
+---
+
+## PCA in R
+
+
+``` r
+pca &lt;- prcomp(USArrests, scale. = TRUE)
+round(pca$rotation, 3)
+```
+
+```
+##             PC1    PC2    PC3    PC4
+## Murder   -0.536 -0.418  0.341  0.649
+## Assault  -0.583 -0.188  0.268 -0.743
+## UrbanPop -0.278  0.873  0.378  0.134
+## Rape     -0.543  0.167 -0.818  0.089
+```
+
+PC1 loads on all four crime variables with similar weight — an overall **crime rate**.
+PC2 is dominated by `UrbanPop` — **urbanisation**.
+
+---
+
+## How much variance is explained?
+
+
+``` r
+summary(pca)$importance[, 1:4] |&gt; round(3)
+```
+
+```
+##                          PC1   PC2   PC3   PC4
+## Standard deviation     1.575 0.995 0.597 0.416
+## Proportion of Variance 0.620 0.247 0.089 0.043
+## Cumulative Proportion  0.620 0.868 0.957 1.000
+```
+
+``` r
+fviz_eig(pca, addlabels = TRUE, barfill = "#002147", barcolor = "#002147")
+```
+
+&lt;img src="7_week_p_files/figure-html/unnamed-chunk-16-1.png" alt="" width="48%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## The biplot
+
+
+``` r
+fviz_pca_biplot(pca, repel = TRUE, labelsize = 3,
+                col.var = "#b22222", col.ind = "#002147")
+```
+
+&lt;img src="7_week_p_files/figure-html/unnamed-chunk-17-1.png" alt="" width="55%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Clustering in PCA space
+
+A common workflow: **PCA first, then cluster the leading components.**
+
+
+``` r
+scores  &lt;- pca$x[, 1:2]
+km_pca  &lt;- kmeans(scores, centers = 4, nstart = 25)
+
+fviz_cluster(km_pca, data = scores, repel = TRUE, labelsize = 8) +
+  labs(title = "K-means on the first two principal components")
+```
+
+&lt;img src="7_week_p_files/figure-html/unnamed-chunk-18-1.png" alt="" width="50%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Interpreting the groups
+
+
+``` r
+USArrests |&gt;
+  as_tibble(rownames = "state") |&gt;
+  mutate(cluster = factor(km4$cluster)) |&gt;
+  group_by(cluster) |&gt;
+  summarise(n = n(), across(Murder:Rape, ~ round(mean(.x), 1)))
+```
+
+```
+## # A tibble: 4 × 6
+##   cluster     n Murder Assault UrbanPop  Rape
+##   &lt;fct&gt;   &lt;int&gt;  &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;
+## 1 1          13   10.8   257.      76    33.2
+## 2 2          13    3.6    78.5     52.1  12.2
+## 3 3          16    5.7   139.      73.9  18.8
+## 4 4           8   13.9   244.      53.8  21.4
+```
+
+&gt; Clusters are only useful once you can **name** them. Profile each cluster on the
+&gt; original variables, not the scaled ones.
+
+---
+
+class: middle
+
+# Practical caveats
+
+---
+
+## What to watch out for
+
+* **Clustering always returns clusters.** The algorithm will happily partition pure
+  noise. Validate before you interpret.
+* **Scaling drives the result.** Report what you scaled and why.
+* **K-means assumes roughly spherical, equally sized clusters.** It struggles with
+  elongated or nested shapes.
+* **Outliers distort centroids.** Consider `pam()` (k-medoids), which is more robust.
+* **The choice of linkage and distance is a modelling assumption**, not a technicality.
+* **Results are not a test.** There is no p-value here — clustering generates
+  hypotheses, it does not confirm them.
+
+---
+
+## A robustness check you should always run
+
+
+``` r
+# k-medoids: medoids are actual observations, so outliers matter less
+pam4 &lt;- pam(arrests, k = 4)
+table(kmeans = km4$cluster, pam = pam4$clustering)
+```
+
+```
+##       pam
+## kmeans  1  2  3  4
+##      1  0 12  1  0
+##      2  0  0  3 10
+##      3  0  0 16  0
+##      4  8  0  0  0
+```
+
+If the partition collapses under a small change of method, it was never stable.
+
+---
+
+# Sources
+
+- [James, G., Witten, D., Hastie, T., Tibshirani, R. (2021). *An Introduction to Statistical Learning*, Ch. 12. Springer.](https://www.statlearning.com/)
+
+- [Kassambara, A., Mundt, F. *factoextra: Extract and Visualize the Results of Multivariate Data Analyses.*](https://cran.r-project.org/package=factoextra)
+
+- [Hastie, T., Tibshirani, R., Friedman, J. (2009). *The Elements of Statistical Learning*, Ch. 14.](https://hastie.su.domains/ElemStatLearn/)
+
+- Maechler, M. et al. *cluster: Cluster Analysis Basics and Extensions.*
+
+---
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "highlightStyle": "atom-one-light",
+  "highlightLines": true,
+  "countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

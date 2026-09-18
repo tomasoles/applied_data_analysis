@@ -1,0 +1,102 @@
+---
+title: "Vizualizacia - Palmer"
+author: "Tomas Oles"
+date: "2025-09-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(palmerpenguins)
+library(dplyr)
+library(tidyverse)
+penguins <- penguins
+glimpse(penguins)
+
+ggplot(data = penguins, mapping = aes(x = bill_length_mm, y = bill_depth_mm, color = species, shape = sex, size = body_mass_g)) +
+  geom_point(alpha = 0.6) +
+  labs(title = "Vyska a dlzka zobacika", subtitle= "Palmer Penguins dataset z roku 2007", x = "Dlzka zobacika (mm)", y = "Vyska zobacika (mm)", color = "Druh", shape = "Pohlavie") +
+   scale_color_viridis_d()
+
+
+ggplot(data = penguins, aes(x = bill_depth_mm, y = bill_length_mm)) +
+  geom_point() + 
+  facet_grid(~ species)
+```
+
+
+
+
+# Numericke a kategoricke premenne 
+
+
+
+```{r}
+library(dplyr)
+library(tidyverse)
+
+loans_full_schema <- read.csv("data/loans_data.csv")
+glimpse(loans_full_schema)
+
+ggplot(loans_full_schema, aes(x=loan_amount, fill = homeownership)) +
+  geom_histogram(alpha=0.5, binwidth = 5000)
+
+
+ggplot(loans_full_schema, aes(x=loan_amount, fill=homeownership)) +
+  geom_density(adjust = 2, alpha = 0.5)
+
+
+
+ggplot(loans_full_schema, aes(x=loan_amount)) +
+  geom_boxplot()
+
+ggplot(loans_full_schema, aes(x=annual_income)) +
+  geom_boxplot()
+
+
+ggplot(loans_full_schema, aes(x=interest_rate, y = grade)) +
+  geom_boxplot()
+
+
+ggplot(loans_full_schema, aes(x=debt_to_income, y=interest_rate)) +
+  geom_point(alpha=0.5) + 
+  geom_smooth()
+```
+# Kategoricke premenne 
+
+
+```{r}
+library(tidyverse)
+library(dplyr)
+starwars <- starwars
+glimpse(starwars)
+
+table(starwars$hair_color)
+
+starwars <- starwars %>%
+  mutate(hair_color2 =
+           fct_other(hair_color,
+                     keep = c("black", "brown", "grey", "blond")
+           )
+  )
+
+table(starwars$hair_color2)
+
+ggplot(starwars, aes(x = gender, fill=hair_color2)) +
+  geom_bar(position="fill") +
+  coord_flip()
+
+
+ggplot(loans_full_schema, aes(x=homeownership, y=loan_amount))+
+  geom_violin()
+
+library(ggridges)
+
+ggplot(loans_full_schema, aes(x=loan_amount, y=grade, fill=grade, color=grade))+
+  geom_density_ridges(alpha=0.5)
+
+
+```

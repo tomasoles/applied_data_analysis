@@ -1,0 +1,942 @@
+---
+title: "Aplikovaná dátová analýza"
+subtitle: "Upratovanie, spracovanie a spájanie údajov"
+author: "Tomáš Oleš"
+institute: "Katedra hospodárskej politiky"
+date: "2026"
+output:
+  xaringan::moon_reader:
+    css: xaringan-themer.css
+    lib_dir: libs
+    nature:
+      highlightStyle: atom-one-light
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+
+library(xaringanthemer)
+library(emoji)
+library(emojifont)
+
+#See slide on xaringanthemer
+library(xaringanthemer)
+# style_duo_accent(
+# primary_color = "#d19f2a",     # KHP color
+# secondary_color = "#e2c47c",   # KHP light
+style_mono_accent(
+base_color = "#002147",
+header_font_google = google_font("Josefin Sans"),
+text_font_google = google_font("Montserrat", "300", "300i"),
+code_font_google = google_font("Fira Mono")
+)
+
+```
+
+```{r  echo=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(fig.retina = 5, dev = "ragg_png")
+```
+
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+# Remember to compile
+#xaringan::inf_mr(cast_from = "..")
+#       slideNumberFormat: ""  
+library(tidyverse)
+if (!require("emo")) devtools::install_github("")
+library(emo)
+if (!require("jasmines")) devtools::install_github("djnavarro/jasmines")
+if (!require("mathart")) devtools::install_github("marcusvolz/mathart")
+
+
+library(knitr)
+options(
+  dplyr.print_min = 10, 
+  dplyr.print_max = 10
+  )
+
+
+```
+
+---
+class: middle, center
+#Upratovanie údajov
+![](https://media.giphy.com/media/NV4cSrRYXXwfUcYnua/giphy.gif)
+
+---
+## Usporiadané (tidy) údaje
+
+.pull-left[
+
+**Znaky usporiadaných údajov:**
+
+- Každá premenná tvorí stĺpec.
+- Každé pozorovanie tvorí riadok.
+- Každý typ pozorovanej jednotky tvorí tabuľku.
+]
+
+--
+.pull-right[
+**Znaky neusporiadaných údajov:**
+
+!@#$%^&*()
+]
+
+---
+
+
+## Zobrazovanie vs. sumarizovanie údajov
+
+
+.pull-left[
+```{r echo=FALSE}
+starwars %>%
+  select(name, height, mass)
+```
+]
+.pull-right[
+```{r echo=FALSE}
+starwars %>%
+  group_by(gender) %>%
+  summarize(avg_ht = mean(height, na.rm = TRUE))
+```
+]
+
+---
+## Zobrazovanie vs. sumarizovanie údajov
+.pull-left[
+```{r eval=FALSE}
+starwars %>%
+  select(name, height, mass)
+```
+]
+.pull-right[
+```{r eval=FALSE}
+starwars %>%
+  group_by(gender) %>%
+  summarize(
+    avg_ht = mean(height, na.rm = TRUE)
+    )
+```
+]
+---
+
+
+---
+
+class: middle
+
+# Dátové štruktúry v R
+
+---
+## Dátové štruktúry v R
+Tri hlavné spôsoby ukladania údajov:
+
+- Matica: 
+  - Vyžaduje, aby všetky prvky boli rovnakého typu (napr. numerické alebo znakové)
+- Dátový rámec: 
+  - Umožňuje kombinovať rôzne typy premenných
+- Tibble: 
+  - Podobný dátovému rámcu, ale správa sa konzistentnejšie
+
+---
+
+## Tibble nemení názvy stĺpcov
+
+. . .
+.midi[
+```{r}
+library(tidyverse)
+(df = data.frame("a" = 1:5, "b 2" = 5:1))
+(ti = tibble("a" = 1:5, "b 2" = 5:1))
+```
+]
+---
+
+## Tibble upozorní na nevhodné názvy stĺpcov
+
+. . .
+
+```{r}
+df$c
+ti$c
+```
+
+---
+
+## Tibble vyberá podmnožiny konzistentne
+
+. . .
+
+```{r}
+df[,1]
+ti[,1]
+```
+
+---
+
+## Tibble *nepoužíva* čiastočné porovnávanie názvov
+
+. . .
+
+```{r}
+df$b
+ti$b
+```
+---
+
+## Tibble neprevádza reťazce na faktory
+
+Predtým...
+```{r}
+df = data.frame(l1 = letters[1:5])
+```
+```{r,include=FALSE}
+df = data.frame(l1 = letters[1:5],stringsAsFactors = TRUE)
+```
+Najotravnejšia vlastnosť dátových rámcov:
+```{r}
+df$l2 = letters[1:5]
+class(df$l1)
+class(df$l2)
+```
+
+---
+
+# Tibble tento problém nemá
+```{r}
+## pri tibble je to však vždy rovnaké
+ti = tibble(l1 = letters[1:5])
+ti$l2 = letters[1:5]
+class(ti$l1)
+class(ti$l2)
+```
+
+---
+
+---
+class: middle, center
+## Spracovanie údajov
+![](https://media.giphy.com/media/l4q7WOA7pYUnNuiD6/giphy.gif)
+---
+
+## Gramatika spracovania údajov...
+
+... založená na myšlienke funkcií ako slovies, ktoré pracujú s dátovými rámcami
+
+
+.midi[
+- `select`: vyber stĺpce podľa názvu
+- `arrange`: usporiadaj riadky
+- `slice`: vyber riadky podľa indexov
+- `filter`: vyber riadky spĺňajúce podmienky
+- `distinct`: ponechaj jedinečné riadky
+- `mutate`: pridaj nové premenné
+- `summarize`: zredukuj premenné na hodnoty
+- `group_by`: na zoskupené operácie
+- ... (a mnoho ďalších)
+]
+
+
+---
+
+## Pravidlá funkcií balíka **dplyr**
+
+- Prvým argumentom je *vždy* dátový rámec
+- Ďalšie argumenty určujú, čo sa má s dátovým rámcom urobiť
+- Vždy vracajú dátový rámec
+- Nemenia údaje na mieste
+
+---
+
+## Údaje: rezervácie hotelov
+
+- Údaje z dvoch hotelov: jedného rezortného a jedného mestského
+- Pozorovania: každý riadok predstavuje jednu hotelovú rezerváciu
+- Cieľ pôvodného zberu údajov: vývoj predikčných modelov na klasifikáciu pravdepodobnosti zrušenia rezervácie ([Antonia et al., 2019](https://www.sciencedirect.com/science/article/pii/S2352340918315191#bib5))
+
+```{r message=FALSE}
+hotels <- read_csv("data/hotels.csv")
+```
+---
+
+
+## Prvý pohľad: premenné
+
+```{r output.lines=15}
+names(hotels)
+```
+
+---
+
+## Druhý pohľad: prehľad
+.medi[
+```{r output.lines=5}
+glimpse(hotels)
+```
+]
+---
+
+## Výber jedného stĺpca
+
+Zobraz iba `lead_time` (počet dní medzi rezerváciou a dátumom príchodu):
+
+```{r}
+select(hotels, lead_time)
+```
+
+---
+
+## Výber jedného stĺpca
+
+.pull-left[
+```{r eval=FALSE}
+select( #<<
+  hotels, 
+  lead_time
+  )
+```
+]
+.pull-right[
+- Začni funkciou (slovesom): `select()`
+]
+
+---
+
+## Výber jedného stĺpca
+
+.pull-left[
+```{r eval=FALSE}
+select( 
+  hotels, #<<
+  lead_time
+  )
+```
+]
+.pull-right[
+- Začni funkciou (slovesom): `select()`
+- Prvý argument: dátový rámec, s ktorým pracujeme, `hotels`
+]
+
+---
+
+## Výber jedného stĺpca
+
+.pull-left[
+```{r eval=FALSE}
+select( 
+  hotels, 
+  lead_time #<<
+  )
+```
+]
+.pull-right[
+- Začni funkciou (slovesom): `select()`
+- Prvý argument: dátový rámec, s ktorým pracujeme, `hotels`
+- Druhý argument: premenná, ktorú chceme vybrať, `lead_time`
+]
+
+---
+
+## Výber jedného stĺpca
+
+.pull-left[
+```{r}
+select( 
+  hotels, 
+  lead_time
+  )
+```
+]
+.pull-right[
+- Začni funkciou (slovesom): `select()`
+- Prvý argument: dátový rámec, s ktorým pracujeme, `hotels`
+- Druhý argument: premenná, ktorú chceme vybrať, `lead_time`
+- Výsledok: dátový rámec s `r nrow(hotels)` riadkami a 1 stĺpcom
+]
+
+---
+
+.tip[
+Funkcie balíka dplyr vždy očakávajú dátový rámec a vždy dátový rámec vracajú.
+]
+
+```{r}
+select(hotels, lead_time)
+```
+
+---
+
+## Výber viacerých stĺpcov
+
+
+Zobraz iba typ hotela `hotel` a `lead_time`:
+
+--
+
+.pull-left[
+```{r}
+select(hotels, hotel, lead_time)
+```
+]
+--
+.pull-right[
+.question[
+Čo ak by sme chceli vybrať tieto stĺpce a potom údaje zoradiť zostupne podľa lead_time?
+]
+]
+
+---
+
+## Spracovanie údajov krok za krokom
+
+.pull-left[
+Výber:
+```{r}
+hotels %>%
+  select(hotel, lead_time)
+```
+]
+
+--
+.pull-right[
+Výber, potom usporiadanie:
+```{r}
+hotels %>%
+  select(hotel, lead_time) %>%
+  arrange(desc(lead_time))
+```
+]
+
+----
+class: middle
+
+# Rúry (pipes)
+
+---
+
+## Čo je to rúra (pipe)?
+
+V programovaní je rúra technika na odovzdávanie informácií z jedného procesu do druhého.
+
+--
+
+.pull-left[
+- Začni dátovým rámcom `hotels` a odovzdaj ho funkcii `select()`,
+]
+.pull-right[
+.small[
+```{r}
+hotels %>% #<<
+  select(hotel, lead_time) %>%
+  arrange(desc(lead_time))
+```
+]
+]
+
+---
+
+## Čo je to rúra (pipe)?
+
+V programovaní je rúra technika na odovzdávanie informácií z jedného procesu do druhého.
+
+.pull-left[
+- Začni dátovým rámcom `hotels` a odovzdaj ho funkcii `select()`,
+- potom vyberieme premenné `hotel` a `lead_time`,
+]
+.pull-right[
+.small[
+```{r}
+hotels %>%
+  select(hotel, lead_time) %>% #<<
+  arrange(desc(lead_time))
+```
+]
+]
+
+---
+
+## Čo je to rúra (pipe)?
+
+V programovaní je rúra technika na odovzdávanie informácií z jedného procesu do druhého.
+
+.pull-left[
+- Začni dátovým rámcom `hotels` a odovzdaj ho funkcii `select()`,
+- potom vyberieme premenné `hotel` a `lead_time`,
+- a nakoniec zoradíme dátový rámec zostupne podľa `lead_time`.
+]
+.pull-right[
+.small[
+```{r}
+hotels %>%
+  select(hotel, lead_time) %>% 
+  arrange(desc(lead_time)) #<<
+```
+]
+]
+
+---
+
+
+
+## Ako rúra funguje?
+
+- Predstavte si takúto postupnosť činností — nájdi kľúče, 
+odomkni auto, naštartuj, choď do práce, zaparkuj.
+
+--
+- Zapísané ako vnorené funkcie v pseudokóde R by to vyzeralo takto:
+```{r eval=FALSE}
+park(drive(start_car(find("keys")), to = "work"))
+```
+
+--
+- Zápis pomocou rúr má prirodzenejšiu (a čitateľnejšiu) 
+štruktúru:
+```{r eval=FALSE}
+find("keys") %>%
+  start_car() %>%
+  drive(to = "work") %>%
+  park()
+```
+
+---
+## A čo ostatné argumenty?
+
+Bodku použite na to, aby ste
+
+- odoslali výsledok do iného než prvého argumentu funkcie, alebo 
+- použili predchádzajúci výsledok vo viacerých argumentoch
+
+```{r fig.height=1.8, fig.width = 3.75}
+hotels %>%
+  filter(hotel == "Resort Hotel") %>%
+  lm(adr ~ lead_time, data = .) #<<
+```
+
+---
+## Poznámka k rúram a vrstveniu
+
+- `%>%` sa používa najmä v reťazcoch balíka **dplyr**, *výstup predchádzajúceho riadku kódu posielame ako prvý vstup nasledujúceho riadku*
+
+--
+- `+` sa v grafoch balíka **ggplot2** používa na „vrstvenie“, *graf vytvárame po vrstvách oddelených znakom `+`*
+
+---
+
+## `select` na ponechanie premenných
+```{r message=FALSE,echo=FALSE}
+hotels <- read_csv("data/hotels.csv")
+```
+.medi[
+```{r}
+hotels %>%
+  select(hotel, lead_time) #<<
+```
+]
+---
+
+## `select` na vylúčenie premenných
+
+.small[
+```{r}
+hotels %>%
+  select(-agent) #<<
+```
+]
+
+---
+
+## `select` na rozsah premenných
+.medi[
+```{r}
+hotels %>%
+  select(hotel:arrival_date_month) #<<
+```
+]
+---
+
+## `select` premenných s určitými vlastnosťami
+.medi[
+```{r}
+hotels %>%
+  select(starts_with("arrival")) #<<
+```
+]
+---
+
+## `select` premenných s určitými vlastnosťami
+.medi[
+```{r}
+hotels %>%
+  select(ends_with("type")) #<<
+```
+]
+---
+
+## Pomocné funkcie pre `select`
+
+- `starts_with()`: začína daným prefixom
+- `ends_with()`: končí daným sufixom
+- `contains()`: obsahuje daný reťazec
+- `num_range()`: zodpovedá číselnému rozsahu ako x01, x02, x03
+- `one_of()`: zodpovedá názvom premenných v znakovom vektore
+- `everything()`: zodpovedá všetkým premenným
+- `last_col()`: vyberie poslednú premennú, prípadne s posunom
+- `matches()`: zodpovedá regulárnemu výrazu (postupnosti znakov vyjadrujúcej vzor, ktorý sa hľadá v texte)
+
+.footnote[
+Viac informácií nájdete v pomocníkovi ktorejkoľvek z týchto funkcií, napr. `?everything`.
+]
+
+---
+
+## `arrange` vzostupne / zostupne
+
+.pull-left[
+```{r}
+hotels %>%
+  select(adults, children, babies) %>%
+  arrange(babies) #<<
+```
+]
+.pull-right[
+```{r}
+hotels %>%
+  select(adults, children, babies) %>%
+  arrange(desc(babies)) #<<
+```
+]
+
+---
+
+## `slice` na výber konkrétnych riadkov
+
+.midi[
+```{r}
+# prvých päť
+hotels %>%
+  slice(1:5) #<<
+```
+]
+
+---
+
+
+
+## `slice` na výber konkrétnych riadkov
+
+.small[
+```{r}
+# posledných päť
+last_row <- nrow(hotels)         # nrow() vráti počet riadkov dátového rámca
+hotels %>%
+  slice((last_row - 4):last_row) #<<
+```
+]
+
+---
+
+## `filter` na výber podmnožiny riadkov
+
+.small[
+```{r}
+# rezervácie v mestských hoteloch
+hotels %>%
+  filter(hotel == "City Hotel") #<<
+```
+]
+
+---
+
+## `filter` pri viacerých podmienkach naraz
+.medi[
+```{r}
+hotels %>%
+  filter( 
+    adults == 0,     #<<
+    children >= 1    #<<
+    ) %>% 
+  select(adults, babies, children)
+```
+]
+---
+
+## `filter` pri zložitejších podmienkach
+.midi[
+```{r}
+# rezervácie bez dospelých a s deťmi alebo bábätkami na izbe
+hotels %>%
+  filter( 
+    adults == 0,     
+    children >= 1 | babies >= 1     # | znamená alebo  #<<
+    ) %>%
+  select(adults, babies, children)
+```
+]
+---
+
+
+
+```{r include=FALSE}
+options(dplyr.print_max = 20)
+```
+
+
+
+
+
+
+## `distinct` na výber jedinečných riadkov
+
+... a `arrange` na abecedné usporiadanie
+
+.small[
+.pull-left[
+```{r}
+hotels %>% 
+  distinct(market_segment) %>% #<<
+  arrange(market_segment)
+```
+]
+.pull-right[
+```{r}
+hotels %>% 
+  distinct(hotel, market_segment) %>% #<<
+  arrange(hotel, market_segment)
+```
+]
+]
+
+---
+
+## `count` na tvorbu frekvenčných tabuliek
+
+.pull-left[
+```{r}
+# predvolene v abecednom poradí
+hotels %>%
+  count(market_segment) #<<
+```
+]
+--
+.pull-right[
+```{r}
+# zostupne podľa početnosti
+hotels %>%
+  count(market_segment, sort = TRUE) #<<
+```
+]
+
+---
+
+## `count` a `arrange`
+
+.pull-left[
+```{r}
+# vzostupne podľa početnosti
+hotels %>%
+  count(market_segment) %>%
+  arrange(n) #<<
+```
+]
+.pull-right[
+```{r}
+# zostupne podľa početnosti
+# to isté ako pridať sort = TRUE
+hotels %>%
+  count(market_segment) %>%
+  arrange(desc(n)) #<<
+```
+]
+
+---
+
+## `count` pre viacero premenných
+.medi[
+```{r}
+hotels %>%
+  count(hotel, market_segment) #<<
+```
+]
+---
+
+## pri `count` záleží na poradí
+
+.midi[
+.pull-left[
+```{r}
+# najprv typ hotela
+hotels %>%
+  count(hotel, market_segment) #<<
+```
+]
+.pull-right[
+```{r}
+# najprv trhový segment
+hotels %>%
+  count(market_segment, hotel) #<<
+```
+]
+]
+
+---
+
+
+## `mutate` na pridanie novej premennej
+.medi[
+```{r}
+hotels %>%
+  mutate(little_ones = children + babies) %>% #<<
+  select(children, babies, little_ones) %>%
+  arrange(desc(little_ones))
+```
+]
+---
+
+
+
+## Malé deti v rezortných a mestských hoteloch
+
+.midi[
+.pull-left[
+```{r}
+# rezortný hotel
+hotels %>%
+  mutate(little_ones = children + babies) %>%
+  filter(
+    little_ones >= 1,
+    hotel == "Resort Hotel"
+    ) %>%
+  select(hotel, little_ones)
+```
+]
+.pull-right[
+```{r}
+# mestský hotel
+hotels %>%
+  mutate(little_ones = children + babies) %>%
+  filter(
+    little_ones > 1,
+    hotel == "City Hotel"
+    )  %>%
+  select(hotel, little_ones)
+```
+]
+]
+
+---
+
+.question[
+Čo sa deje v nasledujúcom bloku kódu?
+]
+
+.midi[
+```{r}
+hotels %>%
+  mutate(little_ones = children + babies) %>%
+  count(hotel, little_ones) %>%
+  mutate(prop = n / sum(n))
+```
+]
+
+---
+
+# `summarize` na súhrnné štatistiky
+
+```{r}
+# priemerná denná sadzba za všetky rezervácie
+hotels %>%
+  summarize(mean_adr = mean(adr)) #<<
+```
+
+--
+
+<br>
+
+.tip[
+`summarize()` úplne mení dátový rámec: zredukuje riadky na jedinú
+súhrnnú štatistiku a odstráni všetky stĺpce, ktoré nie sú pre výpočet podstatné.
+]
+
+---
+
+.tip[
+`summarize()` vám síce dovolí byť leniví a nový stĺpec nepomenovať,
+ale neodporúča sa to!
+]
+
+.midi[
+
+
+```{r}
+hotels %>%
+  summarize(mean(adr))
+```
+
+
+
+```{r}
+hotels %>%
+  summarize(mean_adr = mean(adr))
+```
+]
+
+---
+
+# `group_by` na zoskupené operácie
+
+```{r}
+# priemerná denná sadzba za rezervácie v mestských a rezortných hoteloch
+hotels %>%
+  group_by(hotel) %>% #<<
+  summarize(mean_adr = mean(adr))
+```
+
+---
+
+## Výpočet početností
+
+Nasledujúce dva zápisy dávajú rovnaký výsledok — `count` je teda len skratkou za `group_by` a následné určenie početností
+
+.pull-left[
+```{r}
+hotels %>%
+  group_by(hotel) %>%
+  summarize(n = n())
+```
+]
+.pull-right[
+```{r}
+hotels %>%
+  count(hotel)
+```
+]
+
+---
+
+# Viacero súhrnných štatistík
+
+`summarize` sa dá použiť aj na viacero súhrnných štatistík naraz
+
+```{r}
+hotels %>%
+  summarize(
+    min_adr = min(adr),
+    mean_adr = mean(adr),
+    median_adr = median(adr),
+    max_adr = max(adr)
+    )
+```
+
+
+
+---
+# Zdroje
+- [Data Science for Psychologists, S. Mason Garrison](https://datascience4psych.github.io/DataScience4Psych/)
+
+- [Data science in a Box](https://datasciencebox.org/)
+
+---

@@ -1,0 +1,683 @@
+---
+title: "Aplikovaná dátová analýza"
+subtitle: "Analýza geopriestorových údajov v R"
+author: "Sherrie Xie, Tomas Oles"
+date: "2026"
+output: 
+  html_document:
+    toc: true
+    toc_float: 
+        collapsed: false
+        smooth_scroll: true
+    depth: 4 
+    theme: paper 
+    highlight: tango
+---
+
+```{r global options, include=FALSE}
+knitr::opts_chunk$set(warning=FALSE, message=FALSE)
+```
+
+## Prehľad priestorových údajov
+
+Najprv si ukážeme, ako sa v R pracuje s rôznymi typmi priestorových údajov — začneme vektorovými údajmi (t. j. bodmi, líniami a polygónmi) a skončíme krátkym príkladom rastra.
+
+### Polygónové údaje
+Začneme polygónovými údajmi. Ako príklad si vezmime sčítacie obvody Philadelphie. Shapefily zo sčítania sú voľne na stiahnutie na [webe Census](https://www.census.gov/geo/maps-data/data/tiger-line.html), my však načítame verziu, ktorá už bola prevedená na objekt sf.
+
+```{r}
+library(sf)
+
+# načítaj údaje o obvodoch Philadelphie
+pt_sf <- readRDS("data/philadelphia_tracts.rds")
+
+# všimnite si, že philly.tracts je objekt sf („simple feature“) typu „MULTIPOLYGON“
+class(pt_sf) 
+
+# s objektmi sf sa dá pracovať ako s dátovými rámcami pomocou štandardných príkazov
+str(pt_sf)   # zobraz štruktúru
+head(pt_sf)  # zobraz prvých niekoľko riadkov
+dim(pt_sf)   # zobraz rozmery
+pt_sf[1,]    # vyber prvý riadok
+head(pt_sf$NAMELSAD10)  # vyber stĺpec podľa názvu
+head(pt_sf[,7])         # vyber stĺpec podľa čísla
+
+# geometriu objektu philly.tracts vieme získať funkciou st_geometry
+pt_geo <- st_geometry(pt_sf)
+class(pt_geo)
+pt_geo
+pt_geo[[1]]       # súradnice obvodu prvého sčítacieho obvodu
+pt_sf[1,]  # t. j. sčítací obvod 94
+
+pt_geo[[2]]        # súradnice obvodu druhého sčítacieho obvodu
+pt_sf[2,]  # t. j. sčítací obvod 95
+
+# vykresli geometriu philly.tracts základnou funkciou plot
+plot(pt_geo)
+
+# základná funkcia plot má estetické možnosti, ktorými vieme grafy doladiť
+plot(pt_geo, col = "lemonchiffon2")
+plot(pt_geo, lwd = 2, border = "red")
+
+```
+
+### Líniové údaje
+
+Ďalej si pozrime príklad líniových údajov: ulice vo Philadelphii s prístupom pre cyklistov. Tieto údaje pochádzajú priamo z [Philadelphia Bike Network](https://www.opendataphilly.org/dataset/bike-network).
+
+```{r}
+bn_sf <- st_read("data/Bike_Network/Bike_Network.shp")  # načítaj shapefile ako objekt sf
+
+class(bn_sf)  # bn_sf je objekt sf, ktorý je podtriedou data.frame
+
+# opäť si sprístupnime priestorové atribúty tohto objektu sf príkazom st_geometry
+bn_geo <- st_geometry(bn_sf)
+bn_geo[[2]]  # líniový segment 2
+bn_sf[2,]
+
+# vykreslime údaje o cyklistickej sieti
+plot(bn_geo, lwd=2)
+
+```
+
+### Bodové údaje
+Ako príklad bodových údajov použijeme trestné činy spáchané vo Philadelphii v septembri 2018. Celú verejne dostupnú databázu trestných činov pre Philadelphiu spravuje tamojšia polícia a je dostupná na webe [OpenDataPhilly](https://www.opendataphilly.org/dataset/crime-incidents).
+
+```{r}
+library(tidyverse)
+
+crime_aux <- read_csv("data/crime_incidents.csv")
+class(crime_aux)
+head(crime_aux)
+
+crime_aux <- crime_aux[which(!is.na(crime_aux$lat) & !is.na(crime_aux$lng)),]
+
+crime <- st_as_sf(crime_aux, coords = c("lng","lat"))
+
+# údaje o kriminalite sú objektom sf typu POINT a obsahujú dátum, čas a typ trestného činu pre každý prípad
+
+class(crime)
+head(crime)
+
+plot(st_geometry(crime))
+
+# pozrime sa na typy trestných činov a použime dplyr na filtrovanie podľa typu...
+table(crime$text_general_code)
+homicide <- filter(crime, text_general_code == "Homicide - Criminal")
+dim(homicide)
+fraud <- filter(crime, text_general_code == "Fraud")
+dim(fraud)
+# všimnite si, že podmnožiny objektu sf sú opäť objekty sf
+class(homicide)
+class(fraud)
+
+# vykreslenie vrážd a podvodov základnou funkciou plot
+plot(st_geometry(homicide))
+plot(st_geometry(fraud))
+
+
+```
+```{r warning=FALSE}
+# samotné body sa ťažko interpretujú; navrstvime ich na polygóny obvodov pomocou add = TRUE
+plot(pt_geo)
+plot(st_geometry(fraud), col = "blue", alpha = 0.1, add = TRUE)
+plot(st_geometry(homicide), col = "red", add = TRUE)
+legend("bottomright", legend = c("Podvod", "Vražda"), title = "Typ trestného činu:", col = c("blue", "red"), pch = 1, bty = "n")
+```
+
+### Rastrové údaje
+Doteraz sme sa venovali bodovým, líniovým a polygónovým údajom, ktoré všetky patria medzi vektorové typy. Rastre sú odlišným typom údajov GIS a budeme sa im venovať len stručne, keďže sa s nimi nedá pracovať metódami balíka `sf`. Pozrieme sa na súbor `volcano`, ktorý obsahuje topografické informácie o Maunga Whau (sopka v Aucklande na Novom Zélande) v mriežke 10 × 10 m. Keďže ide o pomerne malý raster, `volcano` zvládneme spracovať základnými funkciami. Väčšie rastre treba spracúvať balíkom _raster_.
+
+```{r}
+library(datasets)
+
+# súbor volcano je matica 87 × 61
+class(volcano)
+str(volcano)
+filled.contour(volcano, color = terrain.colors, asp = 1)
+```
+
+## Údaje o incidencii lymskej boreliózy v štáte New York
+
+Na precvičenie priestorovej analýzy použijeme incidenciu lymskej boreliózy agregovanú za okresy štátu New York za roky 2014 – 2016. Tieto údaje sú verejne dostupné na webe [Health Data NY](https://health.data.ny.gov/Health/Community-Health-Lyme-Disease-Incidence-Rate-per-1/6sxr-cqij). Surové údaje sa dajú stiahnuť vo formáte .csv. Ak vás zaujíma, ako sa tieto tabuľkové údaje spájajú so shapefilom okresov štátu New York (dostupným na [NYS GIS](https://gis.ny.gov/gisdata/inventories/details.cfm?DSID=927)), pozrite si skript „prep_nys_lyme_data.R“ v priečinku „data“ nášho projektu. Teraz však začneme s údajmi, ktoré už boli spojené a prevedené na objekt „sf“.
+
+```{r}
+library(sf)
+
+# načítaj údaje o incidencii boreliózy v štáte New York
+lyme <- readRDS("data/nys_lyme_data.rds")
+
+# pozrime sa na niektoré atribúty údajov
+class(lyme)
+head(lyme)
+# premenná Lyme.Incidence.Rate udáva incidenciu boreliózy na úrovni okresu na 100 000 obyvateľov
+
+# opäť si vieme vykresliť priestorové atribúty týchto údajov
+plot(st_geometry(lyme))
+
+```
+
+Ide o príklad regionálnych mier. Jednoduchým spôsobom, ako ich zobraziť na mape, je balík „tmap“. Načítajme „tmap“ a vytvorme interaktívnu mapu na niekoľko riadkov kódu.
+
+```{r}
+library(tmap)
+
+tmap_mode("view")  # prepni do interaktívneho režimu
+tm_shape(lyme) +    # zadaj objekt sf s požadovaným geografickým atribútom
+  tm_polygons("Lyme.Incidence.Rate")  # zadaj stĺpec so sledovanou hodnotou
+```
+
+V okrese St. Lawrence máme chýbajúcu hodnotu. Odstráňme tento riadok, aby nám neskôr v analýze nespôsobil chybu.
+
+```{r}
+lyme <- lyme[!is.na(lyme$Lyme.Incidence.Rate),]
+
+# zobrazme mapu znova
+tmap_mode("view")  # prepni do interaktívneho režimu
+tm_shape(lyme) +    # zadaj objekt sf s požadovaným geografickým atribútom
+  tm_polygons("Lyme.Incidence.Rate")  # zadaj stĺpec so sledovanou hodnotou
+```
+
+
+## Globálne zhlukovanie (Moranovo I)
+
+Táto časť je upravená podľa tutoriálu Manuela Gimmonda, ktorý nájdete na jeho [stránke na githube](https://mgimond.github.io/simple_moransI_example/).
+
+### Posúdenie rozdelenia údajov
+
+Začnime pohľadom na rozdelenie mier incidencie boreliózy. Štatistika Moranovo *I* nie je odolná voči extrémnym a odľahlým hodnotám, takže ak sa údaje výrazne odchyľujú od normálneho rozdelenia, budeme ich musieť transformovať.
+
+```{r}
+# päťčíselná charakteristika
+summary(lyme$Lyme.Incidence.Rate)
+
+# Histogram
+hist(lyme$Lyme.Incidence.Rate)
+
+# krabicový graf
+boxplot(lyme$Lyme.Incidence.Rate, horizontal = TRUE)
+
+```
+
+Naše údaje sú výrazne zošikmené doprava a obsahujú veľa odľahlých hodnôt oveľa vyšších než priemer. Pozrime sa, či logaritmická transformácia priblíži údaje k normálnemu rozdeleniu.
+
+```{r}
+
+# vytvor novú premennú — logaritmicky transformovanú mieru incidencie
+lyme$log_lyme_incidence <- log(lyme$Lyme.Incidence.Rate)
+
+# Histogram
+hist(lyme$log_lyme_incidence)
+
+
+# krabicový graf
+boxplot(lyme$log_lyme_incidence, horizontal = TRUE)
+
+summary(lyme$log_lyme_incidence)
+```
+
+To je oveľa lepšie! Pozrime sa, ako vyzerajú logaritmicky transformované hodnoty na mape.
+
+```{r}
+
+tm_shape(lyme) +    # zadaj objekt sf s požadovaným geografickým atribútom
+  tm_polygons("log_lyme_incidence")  # specify column with value of interest
+
+```
+
+### Definovanie susedných polygónov
+Teraz môžeme začať s analýzou. Prvým krokom je definovať „susedné“ polygóny. Pripomeňme, že susedov možno definovať na základe susednosti, vzdialenosti alebo ako *k* najbližších susedov každého polygónu. Použijeme definíciu založenú na susednosti typu **dáma**, pri ktorej sa za suseda považuje každý priľahlý polygón zdieľajúci aspoň jeden vrchol. Susedov každého polygónu si uložíme vytvorením objektu „nb“ funkciou „poly2nb“ z balíka „spdep“.
+
+```{r}
+library(spdep)
+
+# vytvor objekt nb zo súboru o borelióze
+lyme_nb <- poly2nb(lyme, queen = T) # prípad dámy
+class(lyme_nb)
+str(lyme_nb)
+
+# zobraz susedov prvého polygónu
+lyme_nb[[1]]
+lyme$NAME[1]
+lyme$NAME[c(11, 20, 42, 45, 46, 47)]
+```
+### Priradenie váh susedom
+
+Ďalej priradíme váhy jednotlivým susedným polygónom. Použijeme najjednoduchšiu možnosť („style = "W"“), ktorá priradí každému susednému polygónu rovnakú váhu. Inými slovami, váha susedov polygónu bude 1/(počet susedov daného polygónu).
+
+```{r}
+# vypočítaj váhy z objektu nb; style = "W" znamená rovnaké váhy
+lyme_weights <- nb2listw(lyme_nb, style = "W")
+class(lyme_weights)
+
+# zobraz váhy susedov prvého polygónu
+str(lyme_weights, max.level = 1) # štruktúra objektu; max.level = 1 pre prehľadnosť
+lyme_weights$weights[[1]]  # váhy susedov prvého polygónu (Albany)
+                 # pripomeňme, že Albany má 6 susedov
+
+lyme$NAME[2]     # Allegheny
+lyme_nb[[2]]          # Allegheny má 4 susedov
+lyme_weights$weights[[2]]  # váhy susedov okresu Allegheny
+
+```
+### Testovanie hypotéz
+Teraz vieme vypočítať štatistiku Moranovo *I* a otestovať hypotézu funkciami „moran.test“ (analytický výpočet) a „moran.mc“ (pomocou simulácií Monte Carlo). Tieto funkcie vyžadujú zadanie sledovanej premennej a zoznamu váh susedov pre každý polygón. Voľba „alternative = "greater"“ testuje *pozitívnu* priestorovú autokoreláciu, čo je zároveň predvolené nastavenie. Funkcia „moran.mc“ navyše vyžaduje zadať počet simulácií voľbou „nsim“.
+
+
+```{r}
+# analytický test — rýchlejší výpočet, ale citlivý na nepravidelne rozmiestnené polygóny
+moran.test(lyme$log_lyme_incidence, lyme_weights, alternative = "two.sided")
+
+# simulácia Monte Carlo (MC) je pomalšia, ale vhodnejšia na presný výpočet p-hodnoty
+MC <- moran.mc(lyme$log_lyme_incidence, lyme_weights, nsim = 999, alternative = "greater")
+MC
+```
+Ďalej necháme R vypočítať priemernú hodnotu susedov pre každý polygón. Tieto hodnoty sa označujú ako priestorovo oneskorené (spatially lagged).
+
+```{r}
+log_lyme_incidence.lag <- lag.listw(lyme_weights, lyme$log_lyme_incidence)
+log_lyme_incidence.lag
+
+plot(log_lyme_incidence.lag ~ lyme$log_lyme_incidence, pch=16, asp=1)
+M1 <- lm(log_lyme_incidence.lag ~ lyme$log_lyme_incidence)
+summary(M1)
+abline(M1, col="blue")
+
+coef(M1)[2]
+```
+Výsledky simulácií MC si vieme zobraziť graficky odovzdaním výstupu modelu MC funkcii „plot“.
+
+```{r}
+plot(MC)
+```
+
+
+
+## Lokálne zhlukovanie (lokálne Moranovo I)
+
+Lokálne Moranovo I je rozšírením Moranovho *I* na analýzu *lokálnej* (namiesto globálnej) priestorovej autokorelácie. Niektoré kroky sú spoločné s predchádzajúcou analýzou globálneho zhlukovania (napríklad opäť musíme vypočítať váhy susedov), sú tu však kľúčové rozdiely vyplývajúce zo špecifík balíka „rgeoda“.
+
+
+### Priradenie váh susedom
+Opäť určíme váhy susednosti typu dáma, v balíku „rgeoda“ však na to slúži funkcia „queen_weights“. Všimnite si, že namiesto zoznamu váh, aký sme videli pri funkcii „nb2listw“, vracia „queen_weights“ objekt „Weight“ z balíka „rgeoda“, ktorý má niekoľko užitočných vlastností.
+
+```{r}
+library(rgeoda)
+
+# nájdi váhy susednosti typu dáma
+lyme_gweights <- queen_weights(lyme)
+class(lyme_gweights)
+
+# funkcia str nám ukáže prehľadný súhrn objektu s váhami
+str(lyme_gweights)
+
+# zobraz susedov prvého polygónu (Albany)
+get_neighbors(lyme_gweights, 1)
+lyme$NAME[1]
+lyme$NAME[get_neighbors(lyme_gweights, 1)]
+
+# zobraz susedov druhého polygónu (Allegany)
+get_neighbors(lyme_gweights, 2)
+lyme$NAME[2]
+
+lyme$NAME[get_neighbors(lyme_gweights, 2)]
+
+# zobraz váhy susedov prvého a druhého polygónu
+get_neighbors_weights(lyme_gweights, 1)
+get_neighbors_weights(lyme_gweights, 2)
+
+```
+
+
+### Výpočet lokálneho Moranovho I
+
+Teraz môžete pomocou objektu „Weights“ z „geoda“ vypočítať lokálne Moranovo I pre každý polygón.
+```{r}
+# premennú prevedieme na jednostĺpcový dátový rámec, lebo taký formát vyžaduje funkcia local_moran
+log_lyme_df <- as.data.frame(lyme$log_lyme_incidence)
+
+# teraz môžeme spustiť funkciu local_moran
+lyme_lisa <- local_moran(lyme_gweights, log_lyme_df)
+
+# local_moran vracia objekt LISA
+class(lyme_lisa)
+
+# pozrime sa na objekt LISA bližšie
+lyme_lisa$lisa_vals  # hodnoty lokálneho Moranovho I pre každý polygón
+lyme_lisa$p_vals     # pseudo p-hodnoty
+
+```
+
+Nakoniec si výsledky zobrazíme na mape! Balík „rgeoda“ obsahuje šikovné funkcie („map_colors“, „map_labels“ a „map_clusters“), ktoré nám s mapovaním pomôžu.
+
+```{r}
+map_colors <- lisa_colors(lyme_lisa)
+map_labels <- lisa_labels(lyme_lisa)
+map_clusters <- lisa_clusters(lyme_lisa)
+
+plot(st_geometry(lyme), 
+     col=sapply(map_clusters, function(x){return(map_colors[[x+1]])}), 
+     border = "#333333", lwd=0.2)
+legend('topright', legend = map_labels, fill = map_colors, border = "#eeeeee", cex = 0.7)
+
+```
+
+# Mapovanie poklesu HDP v dôsledku obchodných sankcií voči Rusku
+
+Prebiehajúci konflikt medzi Ruskom a Ukrajinou spôsobil výrazné hospodárske otrasy, najmä prostredníctvom sankcií a zmien v obchodných tokoch. Jedným zo spôsobov, ako tieto otrasy analyzovať, je _input-output (I-O) analýza_, metóda modelujúca vzájomné väzby medzi odvetviami ekonomiky. Skúmaním _produkčných multiplikátorov_ vieme pochopiť, ako zmeny dopytu v jednom odvetví ovplyvnia celú ekonomiku.
+
+## Input-output analýza a produkčné multiplikátory
+
+Základný vzorec I-O analýzy na výpočet celkovej produkcie a produkčných multiplikátorov vychádza z _Leontiefovej inverznej matice_. Má tvar:
+
+$$
+\mathbf{X} = (\mathbf{I} - \mathbf{A})^{-1} \mathbf{F}
+$$
+
+Where:
+- $\mathbf{X}$ je _vektor produkcie_, ktorý predstavuje celkovú produkciu každého odvetvia.
+- $\mathbf{I}$ je _jednotková matica_.
+- $\mathbf{A}$ je _matica priamych vstupov_ (matica technických koeficientov), ktorá udáva vstupy potrebné z iných odvetví na výrobu jednej jednotky produkcie.
+- $(\mathbf{I} - \mathbf{A})^{-1}$ je _Leontiefova inverzná matica_, ktorá zachytáva celkové medziodvetvové závislosti.
+- $\mathbf{F}$ je _vektor konečného dopytu_, ktorý predstavuje dopyt po tovaroch a službách z vonkajších zdrojov (napr. domácnosti, vývoz).
+
+### Matica priamych vstupov $\mathbf{A}$
+
+Prvky _matice priamych vstupov_ $\mathbf{A}$ sa počítajú ako:
+
+$$
+A_{ij} = \frac{Z_{ij}}{X_j}
+$$
+
+Where:
+- $Z_{ij}$ je objem produkcie odvetvia $i$ použitý ako vstup v odvetví $j$.
+- $X_j$ je celková produkcia odvetvia $j$.
+
+### Leontiefova inverzná matica $(\mathbf{I} - \mathbf{A})^{-1}$
+
+Leontiefova inverzná matica zohľadňuje priame aj nepriame účinky zmien konečného dopytu. Ukazuje, ako sa zmeny v jednom odvetví prejavia v celej ekonomike prostredníctvom medziodvetvových väzieb.
+
+### Produkčné multiplikátory
+
+_Produkčné multiplikátory_ odvetvia $j$ vyjadrujú celkový nárast produkcie vo všetkých odvetviach pri jednotkovom zvýšení konečného dopytu odvetvia $j$. Počítajú sa ako súčet prvkov príslušného stĺpca Leontiefovej inverznej matice:
+
+$$
+\text{Produkčný multiplikátor odvetvia } j = \sum_{i} (\mathbf{I} - \mathbf{A})^{-1}_{ij}
+$$
+
+Tento vzorec pomáha kvantifikovať, ako sa zmeny dopytu po produktoch či službách jedného odvetvia premietnu do celkovej produkcie ekonomiky, a ukazuje reťazový efekt v dodávateľskom reťazci.
+
+```{r setup, include=TRUE}
+# načítaj potrebné balíky
+library(tidyverse)   # na spracovanie údajov
+library(tmaptools)   # nástroje na tematické mapovanie
+library(tmap)        # na tvorbu máp
+library(ggplot2)     # na vizualizáciu údajov
+library(leaflet)     # na interaktívne mapy
+library(sf)          # na prácu s priestorovými údajmi
+library(dplyr)       # na manipuláciu s údajmi
+library(raster)      # na prácu s rastrovými údajmi
+```
+
+## Načítanie údajov
+Poznámka: produkčné multiplikátory už boli vypočítané pre všetky ekonomiky.
+
+```{r, warning=FALSE}
+
+# načítaj CSV súbor s hlavičkou
+GVC_EU <- read.csv("data/outputs_Russia.csv", header = TRUE, sep=",", blank.lines.skip = FALSE)
+
+# premenuj prvý stĺpec na "CNTR_ID"
+names(GVC_EU)[1] <- "CNTR_ID"
+```
+
+## Načítanie shapefilu
+
+```{r, warning=FALSE}
+
+# načítaj shapefile krajín
+auxmap <- st_read("data/Countries_SHP1_3mil/CNTR_RG_03M_2016_3035.shp", 
+                  stringsAsFactors = FALSE)
+
+# zobraz štruktúru shapefilu, aby sme pochopili jeho obsah
+str(auxmap)
+```
+## Spojenie údajov o hospodárskom dopade so shapefilom
+
+```{r, warning=FALSE}
+# vykonaj inner join medzi údajmi shapefilu a GVC_EU
+aux_map_data <- inner_join(auxmap, GVC_EU)
+
+```
+
+
+## Vizualizácia poklesu HDP v dôsledku sankcií
+### Tvorba kvantilovej mapy
+
+```{r, warning=FALSE}
+# vytvor choropletovú mapu poklesu HDP s kvantilovým štýlom
+auxQmap1 <- tm_shape(aux_map_data) +
+  tm_fill(col = "gGDPc",   
+          style = "quantile", 
+          n = 8, 
+          legend.hist = TRUE, 
+          palette = "YlOrRd", 
+          title = "Pokles HDP v dôsledku obchodných sankcií voči Rusku", 
+          alpha = 0.6) +
+  tm_layout(legend.outside = TRUE)
+
+# prepni tmap do režimu view (interaktívna mapa)
+tmap_mode("view")
+
+# zobraz mapu s upraveným výrezom
+auxQmap1 + tm_view(set.view = c(7, 51, 4), text.size.variable = TRUE)
+
+# návrat do pôvodného režimu
+#tmap_mode(current.mode)
+
+```
+
+
+
+## Štýl hierarchického zhlukovania
+
+```{r eval=FALSE, warning=FALSE, include=TRUE}
+# vytvor choropletovú mapu so štýlom hierarchického zhlukovania pre iný pohľad
+auxQmap2 <- tm_shape(aux_map_data) +
+  tm_fill(col = "gGDPc",   
+          style = "hclust", 
+          n = 8, 
+          legend.hist = TRUE, 
+          palette = "YlOrRd", 
+          title = "Pokles HDP v dôsledku obchodných sankcií voči Rusku", 
+          alpha = 0.6) +
+  tm_layout(legend.outside = TRUE)
+
+# prepni tmap do režimu view (interaktívna mapa)
+tmap_mode("view")
+
+# zobraz mapu s hierarchickým zhlukovaním
+auxQmap2 + tm_view(set.view = c(7, 51, 4), text.size.variable = TRUE)
+```
+
+
+## Mapovanie obchodu s medziproduktmi a finálnymi produktmi
+### Medziprodukty
+
+
+```{r,eval=FALSE, warning=FALSE, include=TRUE}
+
+# vytvor mapu obchodu s medziproduktmi a jeho vplyvu na HDP
+auxQmap3 <- tm_shape(aux_map_data) +
+  tm_fill(col = "gGDPc_A",   
+          style = "hclust", 
+          n = 8, 
+          legend.hist = TRUE, 
+          palette = "YlOrRd", 
+          title = "Vplyv sankcií na HDP prostredníctvom medziproduktov", 
+          alpha = 0.6) +
+  tm_layout(legend.outside = TRUE)
+
+# zobraz mapu v interaktívnom režime
+tmap_mode("view")
+auxQmap3 + tm_view(set.view = c(7, 51, 4), text.size.variable = TRUE)
+
+```
+
+
+
+### Medziprodukty
+
+
+
+```{r eval=FALSE, warning=FALSE, include=TRUE}
+
+# vytvor mapu obchodu s medziproduktmi a jeho vplyvu na HDP
+auxQmap3 <- tm_shape(aux_map_data) +
+  tm_fill(col = "gGDPc_A",   
+          style = "hclust", 
+          n = 8, 
+          legend.hist = TRUE, 
+          palette = "YlOrRd", 
+          title = "Vplyv sankcií na HDP prostredníctvom medziproduktov", 
+          alpha = 0.6) +
+  tm_layout(legend.outside = TRUE)
+
+# zobraz mapu v interaktívnom režime
+tmap_mode("view")
+auxQmap3 + tm_view(set.view = c(7, 51, 4), text.size.variable = TRUE)
+
+
+```
+
+
+
+### Finálne produkty
+
+
+
+```{r, eval=FALSE, warning=FALSE, include=TRUE}
+
+# vytvor mapu obchodu s finálnymi produktmi a jeho vplyvu na HDP
+auxQmap4 <- tm_shape(aux_map_data) +
+  tm_fill(col = "gGDPc_Y",   
+          style = "hclust", 
+          n = 8, 
+          legend.hist = TRUE, 
+          palette = "YlOrRd", 
+          title = "Vplyv sankcií na HDP prostredníctvom finálnych produktov", 
+          alpha = 0.6) +
+  tm_layout(legend.outside = TRUE)
+
+# zobraz mapu v interaktívnom režime
+tmap_mode("view")
+auxQmap4 + tm_view(set.view = c(7, 51, 4), text.size.variable = TRUE)
+
+
+```
+
+## Mapy v ggplot
+
+
+```{r}
+library(maps)
+library(countrycode)
+library(gapminder)
+
+dat_map <- map_data("world")
+ggplot(dat_map, aes(x = long, y = lat,
+group = group)) +
+geom_polygon(fill = "white", colour = "black")
+
+# prvý pokus o graf
+gdp_map <- full_join(x=dat_map,y=gapminder, by= c("region"="country"))
+ggplot(gdp_map, aes(x = long, y = lat,
+                                       group = group, fill = log10(gdpPercap))) +
+  geom_polygon() +
+  scale_fill_gradient(low = "red", high = "green")
+
+# chýba príliš veľa krajín
+gapminder$ccode <- countrycode(gapminder$country,
+origin = "country.name",
+destination = "wb")
+dat_map$ccode <- countrycode(dat_map$region,
+origin = "country.name",
+destination = "wb")
+gdp_map_codes <- full_join(x=dat_map,y=gapminder, by="ccode")
+
+
+# vykresli znova po spojení
+ggplot(gdp_map_codes, aes(x = long, y = lat,
+                                       group = group, fill = log10(gdpPercap))) +
+  geom_polygon() +
+  scale_fill_gradient(low = "red", high = "green")
+
+```
+
+# Dynamické grafy (príklady)
+
+
+```{r echo=TRUE, fig.height=15, fig.width=20, message=FALSE, warning=FALSE, fig.retina=4}
+library(tidyverse)
+library(gapminder)
+library(echarts4r)
+library(gganimate)
+library(ggiraph)
+library(widgetframe)
+library(ggthemes)
+library(plotly)
+library(viridis)
+library(DT)
+
+# kódy krajín v gapminder::country_codes
+
+gapminder_codes <- gapminder::country_codes
+
+# krajiny s údajmi v gapminder::gapminder_unfiltered
+
+gapminder <-gapminder::gapminder_unfiltered
+
+# obidva súbory spojíme cez inner_join, aby sme získali údaje podľa krajiny, kontinentu a kódu krajiny
+
+gapminder <- gapminder %>%
+  inner_join(gapminder_codes, by= "country") %>%
+  mutate(code = iso_alpha)
+
+# mapa sveta (bez Antarktídy)
+
+world <- map_data("world") %>%
+  filter(region != "Antarctica")
+
+
+gapminder_data <- gapminder %>%
+  inner_join(maps::iso3166 %>%
+               select(a3, mapname), by= c(code = "a3")) %>%
+  mutate(mapname = str_remove(mapname, "\\(.*"))
+
+
+datagpmnd <- gapminder %>%
+  mutate(Name = recode_factor(country,
+                              `Congo, Dem. Rep.`= "Dem. Rep. Congo",
+                              `Congo, Rep.`= "Congo",
+                              `Cote d'Ivoire`= "Côte d'Ivoire",
+                              `Central African Republic`= "Central African Rep.",
+                              `Yemen, Rep.`= "Yemen",
+                              `Korea, Rep.`= "Korea",
+                              `Korea, Dem. Rep.`= "Dem. Rep. Korea",
+                              `Czech Republic`= "Czech Rep.",
+                              `Slovak Republic`= "Slovakia",
+                              `Dominican Republic`= "Dominican Rep.",
+                              `Equatorial Guinea`= "Eq. Guinea"))
+
+
+datagpmnd %>%
+  group_by(year) %>%
+  e_chart(Name, timeline = TRUE) %>%
+  e_map(lifeExp) %>%
+  e_visual_map(min= 30, max= 90,
+               type = 'piecewise') %>%
+  e_title("Stredná dĺžka života podľa krajiny a roku", left = "center") %>%
+  e_tooltip(
+    trigger = "item",
+    formatter = e_tooltip_choro_formatter())
+```
