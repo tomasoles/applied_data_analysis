@@ -1,0 +1,143 @@
+---
+title: "Palmer penguins"
+author: "Tomas Oles"
+date: "2025-09-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Palmer penguins
+
+
+```{r}
+#install.packages("tidyverse")
+#install.packages("palmerpenguins")
+
+library(tidyverse)
+library(palmerpenguins)
+
+penguis <- penguins
+View(penguins)
+
+glimpse(penguins)
+
+ggplot(data = penguins, mapping= aes(x = bill_depth_mm, y = bill_length_mm, color=species, shape = island)) +
+  geom_point() +
+  labs(title = "Palmer dataset", x = "Depth (mm)", y = "Length (mm)") 
+
+
+
+ggplot(data = penguins, mapping= aes(x = bill_depth_mm)) +
+geom_histogram()
+
+
+```
+
+
+
+```{r}
+library(palmerpenguins)
+penguins <- penguins
+
+ggplot(data = penguins, mapping= aes(x = bill_depth_mm, y = bill_length_mm, color=species, size = body_mass_g, shape = island)) +
+  geom_point(alpha=0.5, size = 3) +
+  labs(title = "Palmer dataset", x = "Depth (mm)", y = "Length (mm)") 
+
+
+ggplot(penguins, aes(x=bill_depth_mm, y = bill_length_mm)) +
+  geom_point() +
+  facet_grid(species ~ sex)
+
+ 
+```
+# Lending club
+
+```{r}
+library(openintro)
+library(tidyverse)
+library(dplyr)
+
+glimpse(loans_full_schema)
+
+loans <- loans_full_schema
+dim(loans)
+
+
+ggplot(loans, aes(x=loan_amount, fill = homeownership)) +
+  geom_histogram(binwidth = 10000)
+
+ggplot(loans, aes(x=loan_amount)) +
+  geom_density(adjust = 3)
+
+ggplot(loans, aes(x=loan_amount, fill=homeownership)) +
+  geom_density(adjust = 3, alpha=0.5)
+
+ggplot(loans, aes(x=loan_amount)) +
+  geom_boxplot()
+
+ggplot(loans, aes(x=interest_rate, y = grade)) +
+  geom_boxplot()
+
+summary(loans$loan_amount)
+
+
+ggplot(loans, aes(x = debt_to_income, y = interest_rate)) +
+  geom_point(alpha=0.05) + 
+  geom_smooth()
+
+#loans$debt_to_income_f <- loans[loans$debt_to_income<100,]
+
+
+```
+
+```{r}
+library(tidyverse)
+starwars <- starwars 
+dim(starwars)
+glimpse(starwars)
+
+ggplot(starwars, aes(x=gender)) + 
+  geom_bar()
+
+ggplot(starwars, aes(x=gender, fill = hair_color)) + 
+  geom_bar()
+
+table(starwars$hair_color)
+
+
+starwars <- starwars %>%
+  mutate(hair_color2 =
+           fct_other(hair_color,
+                     keep = c("black", "brown", "grey", "blond")
+           )
+  )
+
+
+ggplot(starwars, aes(x=gender, fill = hair_color2)) + 
+  geom_bar(position = "fill")
+
+ggplot(starwars, aes(x=gender, fill = hair_color2)) + 
+  geom_bar()
+
+```
+
+```{r}
+
+
+```
+
+```{r}
+
+
+```
+
+
+
+```{r}
+
+
+```
+

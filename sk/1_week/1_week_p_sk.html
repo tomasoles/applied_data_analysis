@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aplikovaná dátová analýza</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Tomáš Oleš, Lucia Širochmanová, Martin Vaško, Ella Sargsyan" />
+    <meta name="date" content="2026-01-01" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Aplikovaná dátová analýza
+]
+.subtitle[
+## Hello World!
+]
+.author[
+### Tomáš Oleš, Lucia Širochmanová, Martin Vaško, Ella Sargsyan
+]
+.institute[
+### Katedra hospodárskej politiky
+]
+.date[
+### 2026
+]
+
+---
+
+
+
+
+
+
+
+
+
+
+
+## Hello world! 😄
+
+- Konzultačné hodiny: streda 13:00 - 15:00 (Prosím, napíšte mi vopred 📆)
+
+- Miestnosť 4B.40; Stará budova
+
+- Kontakt: tomas.oles@euba.sk
+---
+
+# Vyučujúci
+
+&lt;div class="left"&gt;
+  &lt;img src="https://nhf.euba.sk/www_write/images/katedry/khp.png" width="100" height="100"&gt;
+  &lt;img src="https://nhf.euba.sk/www_write/files/katedry/khp/profilove_foto/nhf_foto/to.jpg" width="150"&gt;
+&lt;/div&gt;
+
+&lt;div class="left"&gt;
+  &lt;img src="https://upload.wikimedia.org/wikipedia/en/6/65/CERGE-EI_logo.jpg" width="160" height="100"&gt;
+    &lt;img src="https://lh7-us.googleusercontent.com/sitesv-images-rt/AMxu72skiCtlt-lGD6rVheebmKRZlzwGikSyzWxJNemPs63LB1MBS7WXSHJUqZdXYZawiUEgTecMgLKMccsFORgS6mKb7MjNbtJ9lo1ZXCMNqb3PpwnLox_UpTcJFAtj2R1ruHj6gJ3ix1sFypF9bYwD8IntEW_bZa00clQSub9pEwYLoGcqpa2gYNjmH9dvobZLADuosJi1hXORJzgahQcteV55juya9YGazSM5-WxH13M=w1280" width="190"&gt;
+&lt;/div&gt;
+
+.small[
+**Tomáš Oleš** — Katedra hospodárskej politiky (týždne 2 – 6)
+
+**Lucia Širochmanová** — Katedra hospodárskej politiky (týždeň 1)
+
+**Martin Vaško** — Katedra hospodárskej politiky (týždeň 7, zhluková analýza)
+
+**Ella Sargsyan, Ph.D.** — CERGE-EI Foundation (týždne 8 – 13, Ekonometria v kocke)
+]
+
+
+
+---
+
+## Dátová veda
+
+.pull-left-wide[
+- Dátová veda je podnetná disciplína, ktorá umožňuje premeniť surové údaje na porozumenie, vhľad a poznanie.
+
+- Naučíme sa to robiť `tidy` spôsobom -- o tom viac neskôr!
+
+- Toto je úvodný kurz dátovej vedy s dôrazom na štatistické myslenie.
+]
+
+
+## Ekonometria
+
+.pull-left-wide[
+- Ekonometria je odvetvie ekonómie, ktoré aplikuje štatistické a matematické metódy na analýzu ekonomických údajov.
+
+- Naučíme sa to robiť štruktúrovane a metodicky — podrobnosti postupne doplníme!
+
+- Tento kurz poskytuje úvod do ekonometrie so silným dôrazom na štatistické metódy a kauzálne výskumné dizajny v ekonomickej analýze.
+]
+
+---
+
+## Časté otázky ku kurzu
+
+.pull-left-wide[
+**Otázka — Akú predchádzajúcu znalosť dátovej vedy kurz predpokladá?**  
+Odpoveď — Žiadnu.
+
+**Otázka — Je toto úvodný kurz štatistiky?**  
+Odpoveď — Hoci štatistika `\(\ne\)` dátová veda či ekonometria, sú si veľmi blízke a výrazne sa prekrývajú. Tento kurz však *nie je* typickým vysokoškolským kurzom štatistiky; budeme mať jednu prednášku, ktorá zopakuje *základné štatistické pojmy* z vášho predchádzajúceho kurzu.
+
+**Otázka — Budeme programovať?**  
+Odpoveď — Áno.
+
+**Otázka — Budeme počítať matematiku?**  
+Odpoveď — Áno, v druhej časti.
+
+.pull-left-wide[
+**Otázka — Je toto úvodný kurz informatiky?**  
+Odpoveď — Nie, ale veľa tém je spoločných.
+
+**Otázka — Aký programovací jazyk sa naučíme?**  
+Odpoveď — R.
+
+**Otázka: Prečo nie jazyk X?**  
+Odpoveď: To si môžeme prebrať pri ☕.
+]
+]
+
+---
+
+
+# Softvér
+
+---
+
+&lt;img src="img/excel.png" alt="" width="100%" style="display: block; margin: auto auto auto 0;" /&gt;
+
+---
+
+&lt;img src="img/r.png" alt="" width="100%" style="display: block; margin: auto auto auto 0;" /&gt;
+
+---
+
+&lt;img src="img/rstudio.png" alt="" width="100%" style="display: block; margin: auto auto auto 0;" /&gt;
+
+---
+# Životný cyklus dátovej vedy a ekonometrie
+
+&lt;img src="img/data-science.png" alt="" width="100%" style="display: block; margin: auto auto auto 0;" /&gt;
+---
+
+&lt;img src="img/unvotes/unvotes.gif" alt="" width="100%" style="display: block; margin: auto auto auto 0;" /&gt;
+
+---
+
+class: middle
+
+# Poďme na to!
+
+---
+
+background-image: url("img/unvotes/unvotes-01.jpeg")
+
+---
+
+&lt;img src="img/unvotes/unvotes-02.jpeg" alt="" width="100%" /&gt;
+
+---
+
+&lt;img src="img/unvotes/unvotes-03.jpeg" alt="" width="100%" /&gt;
+
+---
+
+&lt;img src="img/unvotes/unvotes-04.jpeg" alt="" width="100%" /&gt;
+
+---
+
+
+&lt;img src="img/unvotes/unvotes-05.jpeg" alt="" width="100%" /&gt;
+
+---
+
+
+&lt;img src="img/unvotes/unvotes-06.jpeg" alt="" width="100%" /&gt;
+
+---
+
+
+&lt;img src="img/unvotes/unvotes-07.jpeg" alt="" width="100%" /&gt;
+
+---
+
+
+&lt;img src="img/unvotes/unvotes-08.jpeg" alt="" width="90%" /&gt;
+
+---
+
+
+&lt;img src="img/unvotes/unvotes-09.jpeg" alt="" width="90%" /&gt;
+
+---
+
+&lt;img src="img/unvotes/unvotes-10.jpeg" alt="" width="90%" /&gt;
+
+---
+
+
+&lt;img src="img/unvotes/unvotes-11.jpeg" alt="" width="90%" /&gt;
+
+---
+
+&lt;img src="img/unvotes/unvotes-12.jpeg" alt="" width="90%" /&gt;
+
+---
+
+&lt;img src="img/unvotes/unvotes-13.jpeg" alt="" width="100%" /&gt;
+
+---
+
+&lt;img src="img/unvotes/unvotes-14.jpeg" alt="" width="100%" /&gt;
+
+---
+
+.center[
+.large[
+[minecr.shinyapps.io/unvotes](https://minecr.shinyapps.io/unvotes/)
+]
+]
+
+&lt;img src="img/unvotes/unvotes-15.png" alt="" width="75%" /&gt;
+---
+
+# Organizácia kurzu
+
+**Časť I - Aplikovaná dátová analýza v R (týždne 1-7)** — úvod do dátovej vedy, vizualizácia, upratovanie a spracovanie údajov, analýza textu, klasifikácia a zhluková analýza. *Prednáška a cvičenie podľa rozvrhu v AIS.*
+
+**Časť II - Ekonometria v kocke (týždne 8-13)** — úvod do ekonometrie, lineárna regresia, metódy kauzálneho výskumného dizajnu, techniky panelových údajov. *Prednášky pondelok 11:00-12:30 a štvrtok 11:00-11:45 SEČ; cvičenie štvrtok 11:45-12:30 SEČ.*
+
+### Literatúra
+
+&lt;span style="font-size:90%"&gt;
+[Wickham, H., Çetinkaya-Rundel, M., Grolemund, G. (2023). R for Data Science. O'Reilly Media, Inc..](https://r4ds.hadley.nz/)
+
+&lt;span style="font-size:90%"&gt;
+[Gareth, J., Daniela, W., Trevor, H., Robert, T. (2013). An Introduction to Statistical Learning: With Applications in R. Springer.](https://www.statlearning.com/)
+
+&lt;span style="font-size:90%"&gt;
+[Silge, J., Robinson D. (2017). Text Mining with R!. O'Reilly](https://www.tidytextmining.com/)
+&lt;/span&gt;
+
+&lt;span style="font-size:90%"&gt;
+[Wooldridge, Jeffrey M. Introductory Econometrics: A Modern Approach. 5th ed., US, 2012]()
+&lt;/span&gt;
+
+&lt;span style="font-size:90%"&gt;
+[Angrist, J. D., Pischke, J. S. (2009). Mostly Harmless Econometrics: An Empiricist's Companion. Princeton University Press.]()
+&lt;/span&gt;
+
+
+---
+
+## Čo sa naučíte?
+
+- Získate poznatky o moderných metódach dátového výskumu a vizualizácie.
+- Osvojíte si techniky klasifikácie, zhlukovania, lineárnej regresie a všeobecnej dátovej analýzy.
+- Nadobudnete pokročilú zručnosť v používaní R v empirickom ekonomickom výskume.
+- Porozumiete základným ekonometrickým pojmom, metódam odhadu a testovaniu hypotéz.
+- Budete vedieť aplikovať štandardné postupy ekonometrického modelovania a interpretovať štatistické výsledky v R.
+
+&lt;div&gt;
+
+*„Sme tým, čo opakovane robíme. Dokonalosť teda nie je čin, ale zvyk.“*
+ **Aristoteles**
+
+---
+
+## Hodnotenie
+
+
+**6 kreditov + certifikát CERGE-EI z kurzu Econometrics in a Nutshell**
+
+Hodnotenie sa delí na dve časti:
+
+Tri online kvízy (30 %), dve domáce zadania (20 %), otázky a diskusia na hodine (10 %), záverečná skúška (40 %)
+
+**= certifikát CERGE-EI z kurzu Econometrics in a Nutshell**
+
+**= 60 % výslednej známky** — vyžaduje aspoň 50 % zo záverečnej skúšky a aspoň 50 % z tejto zložky
+
+
+Kvízy a domáce zadania (50 %)
+
+Dátový projekt s prezentáciou (50 %)
+
+**= 40 % výslednej známky**
+
+---
+
+# Kvíz
+Bonusový kvíz
+Prejdite na **kahoot.it** a zadajte poskytnutý kód. Zadajte, prosím, svoje **priezvisko**, keďže kvíz nie je anonymný — inak vám nevieme prideliť **body**.
+
+---
+
+
+# Zdroje
+
+- [Data science in a Box](https://datasciencebox.org/)
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "highlightStyle": "atom-one-light",
+  "highlightLines": true,
+  "countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

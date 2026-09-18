@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aplikovaná dátová analýza</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Tomáš Oleš" />
+    <meta name="date" content="2026-01-01" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Aplikovaná dátová analýza
+]
+.subtitle[
+## Úvod do vizualizácie údajov
+]
+.author[
+### Tomáš Oleš
+]
+.institute[
+### Katedra hospodárskej politiky
+]
+.date[
+### 2026
+]
+
+---
+
+
+
+
+
+
+
+
+## ggplot `\(\in\)` tidyverse
+
+.pull-right[ 
+- **ggplot2** je balík ekosystému tidyverse určený na vizualizáciu údajov
+- `gg` v názve „ggplot2“ znamená Grammar of Graphics (gramatika grafiky)
+]
+
+
+&lt;img src="img/gglayers.png" alt="" width="70%" style="display: block; margin: auto;" /&gt;
+---
+# Prvý (a reprodukovateľný) príklad
+
+---
+
+## Načítanie údajov
+
++ Výšky najvyšších bodov jednotlivých štátov
+
+
+``` r
+## 
+## načítaj potrebné balíky a údaje
+library(tidyverse)
+options(tibble.print_min = 10)
+heights = read_csv("data/highest-points-by-state.csv")
+```
+
+```
+## Rows: 50 Columns: 2
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: ","
+## chr (1): state
+## dbl (1): elevation
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+```
+
+``` r
+## prepočet zo stôp na metre
+heights$elevation = heights$elevation * .3048
+```
+---
+## Pozrime sa na údaje
+
+``` r
+heights
+```
+
+```
+## # A tibble: 50 × 2
+##    elevation state      
+##        &lt;dbl&gt; &lt;chr&gt;      
+##  1      733. Alabama    
+##  2     6168. Alaska     
+##  3     3851. Arizona    
+##  4      839. Arkansas   
+##  5     4418. California 
+##  6     4399. Colorado   
+##  7      725. Connecticut
+##  8      137. Delaware   
+##  9      105. Florida    
+## 10     1458. Georgia    
+## # ℹ 40 more rows
+```
+
+---
+## Pozrime sa ešte raz
+
+``` r
+arrange(heights, elevation)
+```
+
+```
+## # A tibble: 50 × 2
+##    elevation state       
+##        &lt;dbl&gt; &lt;chr&gt;       
+##  1      105. Florida     
+##  2      137. Delaware    
+##  3      163. Louisiana   
+##  4      246. Mississippi 
+##  5      247. Rhode Island
+##  6      376. Illinois    
+##  7      383. Indiana     
+##  8      472. Ohio        
+##  9      509. Iowa        
+## 10      540. Missouri    
+## # ℹ 40 more rows
+```
+
+---
+## A ešte raz inak
+
+``` r
+arrange(heights, desc(elevation))
+```
+
+```
+## # A tibble: 50 × 2
+##    elevation state     
+##        &lt;dbl&gt; &lt;chr&gt;     
+##  1     6168. Alaska    
+##  2     4418. California
+##  3     4399. Colorado  
+##  4     4392. Washington
+##  5     4207. Wyoming   
+##  6     4205. Hawaii    
+##  7     4123. Utah      
+##  8     4011. New Mexico
+##  9     4005. Nevada    
+## 10     3901. Montana   
+## # ℹ 40 more rows
+```
+
+---
+
+## Ďalší pohľad: hustota
+
+.pull-left[
+
+``` r
+ggplot(heights,  aes(x = elevation)) +
+    geom_density() +
+    geom_rug()
+```
+]
+
+.pull-right[
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-7-1.png" alt="" width="504" /&gt;
+]
+---
+
+---
+
+class: middle
+
+# Čo obsahuje dátový súbor?
+
+---
+
+## Terminológia dátového súboru
+
+- Každý riadok je **pozorovanie**
+- Každý stĺpec je **premenná**
+
+.small[
+
+``` r
+starwars
+```
+
+```
+## # A tibble: 87 × 14
+##    name     height  mass hair_color skin_color eye_color birth_year sex   gender
+##    &lt;chr&gt;     &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+##  1 Luke Sk…    172    77 blond      fair       blue            19   male  mascu…
+##  2 C-3PO       167    75 &lt;NA&gt;       gold       yellow         112   none  mascu…
+##  3 R2-D2        96    32 &lt;NA&gt;       white, bl… red             33   none  mascu…
+##  4 Darth V…    202   136 none       white      yellow          41.9 male  mascu…
+##  5 Leia Or…    150    49 brown      light      brown           19   fema… femin…
+##  6 Owen La…    178   120 brown, gr… light      blue            52   male  mascu…
+##  7 Beru Wh…    165    75 brown      light      blue            47   fema… femin…
+##  8 R5-D4        97    32 &lt;NA&gt;       white, red red             NA   none  mascu…
+##  9 Biggs D…    183    84 black      light      brown           24   male  mascu…
+## 10 Obi-Wan…    182    77 auburn, w… fair       blue-gray       57   male  mascu…
+## # ℹ 77 more rows
+## # ℹ 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;, films &lt;list&gt;,
+## #   vehicles &lt;list&gt;, starships &lt;list&gt;
+```
+]
+
+---
+
+## Luke Skywalker
+
+![luke-skywalker](img/luke-skywalker.png)
+
+---
+
+## Čo obsahujú údaje o Star Wars?
+
+Pozrime sa na údaje funkciou `glimpse`:
+.small[
+
+``` r
+glimpse(starwars)
+```
+
+```
+## Rows: 87
+## Columns: 14
+## $ name       &lt;chr&gt; "Luke Skywalker", "C-3PO", "R2-D2", "Darth Vader", "Leia Or…
+## $ height     &lt;int&gt; 172, 167, 96, 202, 150, 178, 165, 97, 183, 182, 188, 180, 2…
+## $ mass       &lt;dbl&gt; 77.0, 75.0, 32.0, 136.0, 49.0, 120.0, 75.0, 32.0, 84.0, 77.…
+## $ hair_color &lt;chr&gt; "blond", NA, NA, "none", "brown", "brown, grey", "brown", N…
+## $ skin_color &lt;chr&gt; "fair", "gold", "white, blue", "white", "light", "light", "…
+## $ eye_color  &lt;chr&gt; "blue", "yellow", "red", "yellow", "brown", "blue", "blue",…
+## $ birth_year &lt;dbl&gt; 19.0, 112.0, 33.0, 41.9, 19.0, 52.0, 47.0, NA, 24.0, 57.0, …
+## $ sex        &lt;chr&gt; "male", "none", "none", "male", "female", "male", "female",…
+## $ gender     &lt;chr&gt; "masculine", "masculine", "masculine", "masculine", "femini…
+## $ homeworld  &lt;chr&gt; "Tatooine", "Tatooine", "Naboo", "Tatooine", "Alderaan", "T…
+## $ species    &lt;chr&gt; "Human", "Droid", "Droid", "Human", "Human", "Human", "Huma…
+## $ films      &lt;list&gt; &lt;"A New Hope", "The Empire Strikes Back", "Return of the J…
+## $ vehicles   &lt;list&gt; &lt;"Snowspeeder", "Imperial Speeder Bike"&gt;, &lt;&gt;, &lt;&gt;, &lt;&gt;, "Imp…
+## $ starships  &lt;list&gt; &lt;"X-wing", "Imperial shuttle"&gt;, &lt;&gt;, &lt;&gt;, "TIE Advanced x1",…
+```
+]
+---
+
+.question[
+Koľko riadkov a stĺpcov má tento dátový súbor?
+Čo predstavuje každý riadok?
+Čo predstavuje každý stĺpec?
+]
+
+
+``` r
+?starwars
+```
+---
+## Vitaj, ggplot2!
+
+.pull-left-wide[
+- `ggplot()` je hlavnou funkciou balíka ggplot2
+- Grafy sa konštruujú vo vrstvách
+- Štruktúru kódu pre grafy možno zhrnúť takto
+
+
+``` r
+ggplot(data = [datovy_subor], 
+       mapping = aes(x = [premenna-x], y = [premenna-y])) +
+   geom_xxx() +
+   dalsie_moznosti
+```
+
+- Balík ggplot2 je súčasťou ekosystému tidyverse
+
+
+``` r
+library(tidyverse)
+```
+
+- Pomoc k ggplot2 nájdete na [ggplot2.tidyverse.org](http://ggplot2.tidyverse.org/)
+]
+
+---
+## Hmotnosť vs. výška
+
+.question[ 
+Ako by ste opísali vzťah medzi hmotnosťou a výškou postáv zo Star Wars?
+Ktoré ďalšie premenné by nám pomohli pochopiť body, ktoré nesledujú celkový trend?
+Ktorá postava nie je až taká vysoká, ale je poriadne zavalitá?
+]
+
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-13-1.png" alt="" width="95%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Hmotnosť vs. výška
+
+
+``` r
+ggplot(data = starwars, mapping = aes(x = height, y = mass)) +
+  geom_point() +
+  labs(title = "Hmotnosť vs. výška postáv zo Star Wars",
+       x = "Výška (cm)", y = "Hmotnosť (kg)")
+```
+
+```
+## Warning: Removed 28 rows containing missing values or values outside the scale range
+## (`geom_point()`).
+```
+
+
+
+.question[ 
+- Ktoré funkcie vykresľujú graf?
+- Ktorý dátový súbor sa vykresľuje?
+- Ktoré premenné sa mapujú na ktoré vlastnosti (estetiky) grafu?
+- Čo znamená to upozornenie?
+]
+
+
+
+---
+
+
+class: middle
+
+# Prečo vizualizujeme?
+
+---
+
+## Anscombeho kvarteto
+
+
+
+.pull-left[
+
+```
+##    set  x     y
+## 1    I 10  8.04
+## 2    I  8  6.95
+## 3    I 13  7.58
+## 4    I  9  8.81
+## 5    I 11  8.33
+## 6    I 14  9.96
+## 7    I  6  7.24
+## 8    I  4  4.26
+## 9    I 12 10.84
+## 10   I  7  4.82
+## 11   I  5  5.68
+## 12  II 10  9.14
+## 13  II  8  8.14
+## 14  II 13  8.74
+## 15  II  9  8.77
+## 16  II 11  9.26
+## 17  II 14  8.10
+## 18  II  6  6.13
+## 19  II  4  3.10
+## 20  II 12  9.13
+## 21  II  7  7.26
+## 22  II  5  4.74
+```
+] 
+.pull-right[
+
+```
+##    set  x     y
+## 23 III 10  7.46
+## 24 III  8  6.77
+## 25 III 13 12.74
+## 26 III  9  7.11
+## 27 III 11  7.81
+## 28 III 14  8.84
+## 29 III  6  6.08
+## 30 III  4  5.39
+## 31 III 12  8.15
+## 32 III  7  6.42
+## 33 III  5  5.73
+## 34  IV  8  6.58
+## 35  IV  8  5.76
+## 36  IV  8  7.71
+## 37  IV  8  8.84
+## 38  IV  8  8.47
+## 39  IV  8  7.04
+## 40  IV  8  5.25
+## 41  IV 19 12.50
+## 42  IV  8  5.56
+## 43  IV  8  7.91
+## 44  IV  8  6.89
+```
+]
+
+---
+
+## Sumarizácia Anscombeho kvarteta
+
+
+``` r
+quartet %&gt;%
+  group_by(set) %&gt;%
+  summarize(
+    mean_x = mean(x), 
+    mean_y = mean(y),
+    sd_x = sd(x),
+    sd_y = sd(y),
+    r = cor(x, y)
+  )
+```
+
+```
+## # A tibble: 4 × 6
+##   set   mean_x mean_y  sd_x  sd_y     r
+##   &lt;fct&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1 I          9   7.50  3.32  2.03 0.816
+## 2 II         9   7.50  3.32  2.03 0.816
+## 3 III        9   7.5   3.32  2.03 0.816
+## 4 IV         9   7.50  3.32  2.03 0.817
+```
+
+---
+
+## Vizualizácia Anscombeho kvarteta
+
+&lt;img src="2_week_p_sk_files/figure-html/quartet-plot-1.png" alt="" width="80%" /&gt;
+
+---
+
+## Vek pri prvom bozku
+
+.question[ 
+Nevidíte niečo nezvyčajné?
+]
+
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-14-1.png" alt="" width="504" /&gt;
+
+---
+
+## Návštevy Facebooku
+
+.question[ 
+Ako ľudia uvádzajú nižšie a ako vyššie hodnoty počtu návštev FB?
+]
+
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-15-1.png" alt="" width="504" /&gt;
+
+---
+
+## Údaje: Palmer Penguins
+
+Merania druhov tučniakov, ostrov v Palmerovom súostroví, veľkosť (dĺžka plutvy, telesná hmotnosť, rozmery zobáka) a pohlavie.
+
+
+.pull-left[
+&lt;img src="img/penguins.png" alt="" width="80%" /&gt;
+]
+
+---
+
+## Údaje: Palmer Penguins
+
+Merania druhov tučniakov, ostrov v Palmerovom súostroví, veľkosť (dĺžka plutvy, telesná hmotnosť, rozmery zobáka) a pohlavie.
+
+
+
+``` r
+library(palmerpenguins)
+glimpse(penguins)
+```
+
+```
+## Rows: 344
+## Columns: 8
+## $ species           &lt;fct&gt; Adelie, Adelie, Adelie, Adelie, Adelie, Adelie, Adel…
+## $ island            &lt;fct&gt; Torgersen, Torgersen, Torgersen, Torgersen, Torgerse…
+## $ bill_length_mm    &lt;dbl&gt; 39.1, 39.5, 40.3, NA, 36.7, 39.3, 38.9, 39.2, 34.1, …
+## $ bill_depth_mm     &lt;dbl&gt; 18.7, 17.4, 18.0, NA, 19.3, 20.6, 17.8, 19.6, 18.1, …
+## $ flipper_length_mm &lt;int&gt; 181, 186, 195, NA, 193, 190, 181, 195, 193, 190, 186…
+## $ body_mass_g       &lt;int&gt; 3750, 3800, 3250, NA, 3450, 3650, 3625, 4675, 3475, …
+## $ sex               &lt;fct&gt; male, female, female, NA, female, male, female, male…
+## $ year              &lt;int&gt; 2007, 2007, 2007, 2007, 2007, 2007, 2007, 2007, 2007…
+```
+
+
+---
+
+# Graf
+
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-18-1.png" alt="" width="70%" /&gt;
+
+
+---
+
+# Kód
+
+
+``` r
+ggplot(data = penguins, 
+       mapping = aes(x = bill_depth_mm, y = bill_length_mm,
+                     color = species)) +
+  geom_point() +
+  labs(title = "Hĺbka a dĺžka zobáka",
+       subtitle = "Rozmery pre tučniaky Adelie, Chinstrap a Gentoo",
+       x = "Hĺbka zobáka (mm)", y = "Dĺžka zobáka (mm)",
+       color = "Druh")
+```
+
+```
+## Warning: Removed 2 rows containing missing values or values outside the scale range
+## (`geom_point()`).
+```
+
+---
+
+
+# Kódovanie nahlas
+
+---
+
+.midi[
+&gt; **Začni dátovým rámcom `penguins`**
+]
+
+.pull-left[
+
+``` r
+*ggplot(data = penguins)
+```
+]
+.pull-right[
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" /&gt;
+]
+
+---
+
+.midi[
+&gt; Začni dátovým rámcom `penguins`,
+&gt; **namapuj hĺbku zobáka na os x**
+]
+
+.pull-left[
+
+``` r
+ggplot(data = penguins,
+*      mapping = aes(x = bill_depth_mm))
+```
+]
+.pull-right[
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" /&gt;
+]
+
+---
+
+.midi[
+&gt; Začni dátovým rámcom `penguins`,
+&gt; namapuj hĺbku zobáka na os x
+&gt; **a namapuj dĺžku zobáka na os y.**
+]
+
+.pull-left[
+
+``` r
+ggplot(data = penguins,
+       mapping = aes(x = bill_depth_mm,
+*                    y = bill_length_mm))
+```
+]
+.pull-right[
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" /&gt;
+]
+
+---
+
+.midi[
+&gt; Začni dátovým rámcom `penguins`,
+&gt; namapuj hĺbku zobáka na os x
+&gt; a namapuj dĺžku zobáka na os y.
+&gt; **Každé pozorovanie znázorni bodom**
+]
+
+.pull-left[
+
+``` r
+ggplot(data = penguins,
+       mapping = aes(x = bill_depth_mm,
+                     y = bill_length_mm)) + 
+* geom_point()
+```
+]
+.pull-right[
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" /&gt;
+]
+
+---
+
+.midi[
+&gt; Začni dátovým rámcom `penguins`,
+&gt; namapuj hĺbku zobáka na os x
+&gt; a namapuj dĺžku zobáka na os y.
+&gt; Každé pozorovanie znázorni bodom
+&gt; **a namapuj druh na farbu jednotlivých bodov.**
+]
+
+.pull-left[
+
+``` r
+ggplot(data = penguins,
+       mapping = aes(x = bill_depth_mm,
+                     y = bill_length_mm,
+*                    color = species)) +
+  geom_point()
+```
+]
+.pull-right[
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" /&gt;
+]
+
+---
+
+.midi[
+&gt; Začni dátovým rámcom `penguins`,
+&gt; namapuj hĺbku zobáka na os x
+&gt; a namapuj dĺžku zobáka na os y.
+&gt; Každé pozorovanie znázorni bodom
+&gt; a namapuj druh na farbu jednotlivých bodov.
+&gt; **Graf nazvi „Hĺbka a dĺžka zobáka“**
+]
+
+.pull-left[
+
+``` r
+ggplot(data = penguins,
+       mapping = aes(x = bill_depth_mm,
+                     y = bill_length_mm,
+                     color = species)) +
+  geom_point() +
+* labs(title = "Hĺbka a dĺžka zobáka")
+```
+]
+.pull-right[
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-24-1.png" alt="" width="100%" /&gt;
+]
+
+---
+
+.midi[
+&gt; Začni dátovým rámcom `penguins`,
+&gt; namapuj hĺbku zobáka na os x
+&gt; a namapuj dĺžku zobáka na os y.
+&gt; Každé pozorovanie znázorni bodom
+&gt; a namapuj druh na farbu jednotlivých bodov.
+&gt; Graf nazvi „Hĺbka a dĺžka zobáka“,
+&gt; **pridaj podnadpis „Rozmery pre tučniaky Adelie, Chinstrap a Gentoo“**
+]
+
+.pull-left[
+
+``` r
+ggplot(data = penguins,
+       mapping = aes(x = bill_depth_mm,
+                     y = bill_length_mm,
+                     color = species)) +
+  geom_point() +
+  labs(title = "Hĺbka a dĺžka zobáka",
+*      subtitle = "Rozmery pre tučniaky Adelie, Chinstrap a Gentoo")
+```
+]
+.pull-right[
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-25-1.png" alt="" width="100%" /&gt;
+]
+
+---
+
+.midi[
+&gt; Začni dátovým rámcom `penguins`,
+&gt; namapuj hĺbku zobáka na os x
+&gt; a namapuj dĺžku zobáka na os y.
+&gt; Každé pozorovanie znázorni bodom
+&gt; a namapuj druh na farbu jednotlivých bodov.
+&gt; Graf nazvi „Hĺbka a dĺžka zobáka“,
+&gt; pridaj podnadpis „Rozmery pre tučniaky Adelie, Chinstrap a Gentoo“,
+&gt; **osi x a y označ ako „Hĺbka zobáka (mm)“ a „Dĺžka zobáka (mm)“**
+]
+
+.pull-left[
+
+``` r
+ggplot(data = penguins,
+       mapping = aes(x = bill_depth_mm,
+                     y = bill_length_mm,
+                     color = species)) +
+  geom_point() +
+  labs(title = "Hĺbka a dĺžka zobáka",
+       subtitle = "Rozmery pre tučniaky Adelie, Chinstrap a Gentoo",
+*      x = "Hĺbka zobáka (mm)", y = "Dĺžka zobáka (mm)")
+```
+]
+.pull-right[
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-26-1.png" alt="" width="100%" /&gt;
+]
+
+---
+
+.midi[
+&gt; Začni dátovým rámcom `penguins`,
+&gt; namapuj hĺbku zobáka na os x
+&gt; a namapuj dĺžku zobáka na os y.
+&gt; Každé pozorovanie znázorni bodom
+&gt; a namapuj druh na farbu jednotlivých bodov.
+&gt; Graf nazvi „Hĺbka a dĺžka zobáka“,
+&gt; pridaj podnadpis „Rozmery pre tučniaky Adelie, Chinstrap a Gentoo“,
+&gt; osi x a y označ ako „Hĺbka zobáka (mm)“ a „Dĺžka zobáka (mm)“,
+&gt; **legendu označ ako „Druh“**
+]
+
+.pull-left[
+
+``` r
+ggplot(data = penguins,
+       mapping = aes(x = bill_depth_mm,
+                     y = bill_length_mm,
+                     color = species)) +
+  geom_point() +
+  labs(title = "Hĺbka a dĺžka zobáka",
+       subtitle = "Rozmery pre tučniaky Adelie, Chinstrap a Gentoo",
+       x = "Hĺbka zobáka (mm)", y = "Dĺžka zobáka (mm)",
+*      color = "Druh")
+```
+]
+.pull-right[
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-27-1.png" alt="" width="100%" /&gt;
+]
+
+---
+
+.midi[
+&gt; Začni dátovým rámcom `penguins`,
+&gt; namapuj hĺbku zobáka na os x
+&gt; a namapuj dĺžku zobáka na os y.
+&gt; Každé pozorovanie znázorni bodom
+&gt; a namapuj druh na farbu jednotlivých bodov.
+&gt; Graf nazvi „Hĺbka a dĺžka zobáka“,
+&gt; pridaj podnadpis „Rozmery pre tučniaky Adelie, Chinstrap a Gentoo“,
+&gt; osi x a y označ ako „Hĺbka zobáka (mm)“ a „Dĺžka zobáka (mm)“,
+&gt; legendu označ ako „Druh“
+&gt; **a pridaj popisok so zdrojom údajov.**
+]
+
+.pull-left[
+
+``` r
+ggplot(data = penguins,
+       mapping = aes(x = bill_depth_mm,
+                     y = bill_length_mm,
+                     color = species)) +
+  geom_point() +
+  labs(title = "Hĺbka a dĺžka zobáka",
+       subtitle = "Rozmery pre tučniaky Adelie, Chinstrap a Gentoo",
+       x = "Hĺbka zobáka (mm)", y = "Dĺžka zobáka (mm)",
+       color = "Druh",
+*      caption = "Zdroj: Palmer Station LTER / balík palmerpenguins")
+```
+]
+.pull-right[
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-28-1.png" alt="" width="100%" /&gt;
+]
+
+---
+
+.midi[
+&gt; Začni dátovým rámcom `penguins`,
+&gt; namapuj hĺbku zobáka na os x
+&gt; a namapuj dĺžku zobáka na os y.
+&gt; Každé pozorovanie znázorni bodom
+&gt; a namapuj druh na farbu jednotlivých bodov.
+&gt; Graf nazvi „Hĺbka a dĺžka zobáka“,
+&gt; pridaj podnadpis „Rozmery pre tučniaky Adelie, Chinstrap a Gentoo“,
+&gt; osi x a y označ ako „Hĺbka zobáka (mm)“ a „Dĺžka zobáka (mm)“,
+&gt; legendu označ ako „Druh“
+&gt; a pridaj popisok so zdrojom údajov.
+&gt; **Nakoniec použi diskrétnu farebnú škálu navrhnutú tak, aby ju rozlíšili aj ľudia s bežnými formami farbosleposti.**
+]
+
+.pull-left[
+
+``` r
+ggplot(data = penguins,
+       mapping = aes(x = bill_depth_mm,
+                     y = bill_length_mm,
+                     color = species)) +
+  geom_point() +
+  labs(title = "Hĺbka a dĺžka zobáka",
+       subtitle = "Rozmery pre tučniaky Adelie, Chinstrap a Gentoo",
+       x = "Hĺbka zobáka (mm)", y = "Dĺžka zobáka (mm)",
+       color = "Druh",
+       caption = "Zdroj: Palmer Station LTER / balík palmerpenguins") +
+* scale_color_viridis_d()
+```
+]
+.pull-right[
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-29-1.png" alt="" width="100%" /&gt;
+]
+
+---
+
+# Graf
+
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-30-1.png" alt="" width="70%" /&gt;
+
+---
+
+# Kód
+
+
+``` r
+ggplot(data = penguins,
+       mapping = aes(x = bill_depth_mm,
+                     y = bill_length_mm,
+                     color = species)) +
+  geom_point() +
+  labs(title = "Hĺbka a dĺžka zobáka",
+       subtitle = "Rozmery pre tučniaky Adelie, Chinstrap a Gentoo",
+       x = "Hĺbka zobáka (mm)", y = "Dĺžka zobáka (mm)",
+       color = "Druh",
+       caption = "Zdroj: Palmer Station LTER / balík palmerpenguins") +
+  scale_color_viridis_d()
+```
+
+```
+## Warning: Removed 2 rows containing missing values or values outside the scale range
+## (`geom_point()`).
+```
+
+
+
+---
+
+## Názvy argumentov
+
+.tip[
+Názvy prvých dvoch argumentov môžete pri tvorbe grafov funkciou `ggplot()` vynechať.
+]
+
+.pull-left[
+
+``` r
+ggplot(data = penguins,
+       mapping = aes(x = bill_depth_mm,
+                     y = bill_length_mm,
+                     color = species)) +
+  geom_point() +
+  scale_color_viridis_d()
+```
+]
+.pull-right[
+
+``` r
+ggplot(penguins,
+       aes(x = bill_depth_mm,
+           y = bill_length_mm,
+           color = species)) +
+  geom_point() +
+  scale_color_viridis_d()
+```
+]
+
+
+
+---
+
+class: middle
+
+# Estetiky
+
+---
+
+## Možnosti estetík
+
+Bežne používané vlastnosti vykresľovaných znakov, ktoré možno **namapovať na konkrétnu premennú** v údajoch, sú
+
+- `color` (farba)
+- `shape` (tvar)
+- `size` (veľkosť)
+- `alpha` (priehľadnosť)
+
+---
+
+## Farba
+
+.pull-left[
+
+``` r
+ggplot(penguins,
+       aes(x = bill_depth_mm, 
+           y = bill_length_mm,
+*          color = species)) +
+  geom_point() +
+  scale_color_viridis_d()
+```
+]
+.pull-right[
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-31-1.png" alt="" width="100%" /&gt;
+]
+
+---
+
+## Tvar
+
+Namapovaný na inú premennú než `color`
+
+.pull-left[
+
+``` r
+ggplot(penguins,
+       aes(x = bill_depth_mm, 
+           y = bill_length_mm,
+           color = species,
+*          shape = island)) +
+  geom_point() +
+  scale_color_viridis_d()
+```
+]
+.pull-right[
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-32-1.png" alt="" width="100%" /&gt;
+]
+
+---
+
+## Tvar
+
+Namapovaný na tú istú premennú ako `color`
+
+.pull-left[
+
+``` r
+ggplot(penguins,
+       aes(x = bill_depth_mm, 
+           y = bill_length_mm,
+           color = species,
+*          shape = species)) +
+  geom_point() +
+  scale_color_viridis_d()
+```
+]
+.pull-right[
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-33-1.png" alt="" width="100%" /&gt;
+]
+
+---
+
+## Veľkosť
+
+.pull-left[
+
+``` r
+ggplot(penguins,
+       aes(x = bill_depth_mm, 
+           y = bill_length_mm,
+           color = species,
+           shape = species,
+*          size = body_mass_g)) +
+  geom_point() +
+  scale_color_viridis_d()
+```
+]
+.pull-right[
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-34-1.png" alt="" width="100%" /&gt;
+]
+
+---
+
+## Alfa (priehľadnosť)
+
+.pull-left[
+
+``` r
+ggplot(penguins,
+       aes(x = bill_depth_mm, 
+           y = bill_length_mm,
+           color = species,
+           shape = species,
+           size = body_mass_g,
+*          alpha = flipper_length_mm)) +
+  geom_point() +
+  scale_color_viridis_d()
+```
+]
+.pull-right[
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-35-1.png" alt="" width="100%" /&gt;
+]
+
+---
+
+.pull-left[
+**Mapovanie**
+
+
+``` r
+ggplot(penguins,
+       aes(x = bill_depth_mm,
+           y = bill_length_mm,
+*          size = body_mass_g,
+*          alpha = flipper_length_mm)) +
+  geom_point()
+```
+
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-36-1.png" alt="" width="100%" /&gt;
+]
+.pull-right[
+**Nastavenie**
+
+
+``` r
+ggplot(penguins,
+       aes(x = bill_depth_mm,
+           y = bill_length_mm)) + 
+* geom_point(size = 2, alpha = 0.5)
+```
+
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-37-1.png" alt="" width="100%" /&gt;
+]
+
+---
+
+## Mapovanie vs. nastavenie
+
+- **Mapovanie:** veľkosť, priehľadnosť a podobne sa určujú podľa hodnôt premennej v údajoch
+  - patrí do `aes()`
+- **Nastavenie:** veľkosť, priehľadnosť a podobne sa **neurčujú** podľa hodnôt premennej v údajoch
+  - patrí do `geom_*()` 
+     - (v predchádzajúcom príklade sme použili `geom_point()`, 
+         - ale čoskoro spoznáme aj ďalšie geómy!)
+  
+---
+
+class: middle
+
+# Fazetovanie
+
+---
+
+## Fazetovanie
+
+- Menšie grafy zobrazujúce rôzne podmnožiny údajov
+- Užitočné pri skúmaní podmienených vzťahov a rozsiahlych údajov
+
+---
+
+### Graf
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-38-1.png" alt="" width="70%" /&gt;
+
+---
+
+### Kód
+
+
+``` r
+ggplot(penguins, aes(x = bill_depth_mm, y = bill_length_mm)) + 
+  geom_point() +
+* facet_grid(species ~ island)
+```
+
+```
+## Warning: Removed 2 rows containing missing values or values outside the scale range
+## (`geom_point()`).
+```
+
+
+
+---
+
+
+``` r
+ggplot(penguins, aes(x = bill_depth_mm, y = bill_length_mm)) + 
+  geom_point() +
+* facet_grid(species ~ sex)
+```
+
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-39-1.png" alt="" width="504" /&gt;
+
+---
+
+
+``` r
+ggplot(penguins, aes(x = bill_depth_mm, y = bill_length_mm)) + 
+  geom_point() +
+* facet_grid(sex ~ species)
+```
+
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-40-1.png" alt="" width="504" /&gt;
+
+---
+
+
+``` r
+ggplot(penguins, aes(x = bill_depth_mm, y = bill_length_mm)) + 
+  geom_point() +
+* facet_wrap(~ species)
+```
+
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-41-1.png" alt="" width="504" /&gt;
+
+---
+
+
+``` r
+ggplot(penguins, aes(x = bill_depth_mm, y = bill_length_mm)) + 
+  geom_point() +
+* facet_grid(. ~ species)
+```
+
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-42-1.png" alt="" width="504" /&gt;
+
+---
+
+
+``` r
+ggplot(penguins, aes(x = bill_depth_mm, y = bill_length_mm)) + 
+  geom_point() +
+* facet_wrap(~ species, ncol = 2)
+```
+
+&lt;img src="2_week_p_sk_files/figure-html/unnamed-chunk-43-1.png" alt="" width="504" /&gt;
+
+---
+
+## Zhrnutie fazetovania
+
+- `facet_grid()`:
+    - dvojrozmerná mriežka
+    - `riadky ~ stĺpce`
+    - použite `.`, ak sa v danom smere nemá deliť
+- `facet_wrap()`: jednorozmerný pás zalomený podľa zadaného počtu riadkov a stĺpcov alebo podľa dostupnej plochy
+
+
+---
+
+# Zdroje
+- [Data Science for Psychologists, S. Mason Garrison](https://datascience4psych.github.io/DataScience4Psych/)
+
+- [Data science in a Box](https://datasciencebox.org/)
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "highlightStyle": "atom-one-light",
+  "highlightLines": true,
+  "countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

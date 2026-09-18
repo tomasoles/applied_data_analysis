@@ -1,0 +1,56 @@
+---
+title: "Text as a data"
+author: "Tomas Oles"
+date: "2025-10-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidytext)
+library(janeaustenr)
+library(dplyr)
+
+original_books <- austen_books() 
+
+tidy_books <- original_books%>%
+  unnest_tokens(word, text)
+
+data(stop_words)
+tidy_books <- tidy_books %>%
+  anti_join(stop_words, by = join_by(word))
+
+library(wordcloud)
+set.seed(42)
+tidy_books %>%
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 100))
+
+
+book_words <- austen_books() %>%
+  unnest_tokens(word, text) %>%
+  count(book, word, sort = TRUE)
+
+
+total_words <- book_words %>% 
+  group_by(book) %>% 
+  summarize(total = sum(n))
+
+
+book_words <- left_join(book_words, total_words)
+
+library(dplyr)
+library(tidytext)
+library(janeaustenr)
+austen_bigrams <- austen_books() 
+
+
+%>%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
+  filter(!is.na(bigram))
+head(austen_bigrams, 5)
+
+```

@@ -1,0 +1,342 @@
+%% Applied Data Analysis -- Syllabus, Fall 2026 (English)
+%% Compile with: pdflatex syllabus_ADA_2026_en.tex
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,top=2.2cm,bottom=2.2cm,left=2.2cm,right=2.2cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{oxfordblue}{HTML}{002147}
+
+\titleformat{\section}{\large\bfseries\color{oxfordblue}}{}{0pt}{\MakeUppercase}
+\titlespacing*{\section}{0pt}{12pt}{4pt}
+
+\newcommand{\hdivider}{\noindent\rule{\textwidth}{0.8pt}}
+\newcommand{\readings}[1]{\par\vspace{3pt}{\footnotesize\itshape #1\par}}
+
+\setlist[itemize]{leftmargin=1.4em,topsep=2pt,itemsep=1pt}
+\setlength{\LTpre}{4pt}
+\setlength{\LTpost}{4pt}
+
+\newcolumntype{W}{>{\raggedright\arraybackslash}p{0.8cm}}
+\newcolumntype{T}{>{\raggedright\arraybackslash}p{10.6cm}}
+\newcolumntype{D}{>{\raggedright\arraybackslash}p{4.1cm}}
+
+\pagestyle{plain}
+
+\begin{document}
+
+%% ---------------------------------------------------------------- HEADER
+\begin{center}
+{\LARGE\bfseries\color{oxfordblue} APPLIED DATA ANALYSIS}\\[2pt]
+{\large Faculty of National Economy}\\[1pt]
+{\large Bratislava University of Economics and Business}\\[1pt]
+{\large Department of Economic Policy}
+\end{center}
+
+\hdivider
+\smallskip
+
+\noindent
+\begin{tabular}{@{}>{\bfseries}p{3.1cm}p{12.9cm}@{}}
+Instructors: & Tomáš Oleš, Martin Vaško, Ella Sargsyan \\
+Email: & tomas.oles@euba.sk; martin.vasko@euba.sk;\newline esargsyan@cerge-ei-foundation.org \\
+Office Hours: & Wednesday: 1--3:00 PM \\
+Office Location: & Old Building, 4B40 \\
+Credit Hours: & 6 \\
+Term: & Fall 2026 \\
+\end{tabular}
+
+\smallskip
+\hdivider
+
+%% ---------------------------------------------------------------- DESCRIPTION
+\section{Course Description}
+
+The first goal of the course is to teach students knowledge and skills in modern methods of applied data
+analysis and statistical learning, including the use of R software, to conduct empirical economic research
+and design research approaches and methods for solving economic problems.
+
+The second aim of this course is to acquaint students with basic econometric concepts and methods which
+are necessary to read and understand current empirical research in economics, as well as plan and execute
+independent research projects. The course will introduce the idea of regression analysis and cover some of
+the most recent econometric techniques central to modern econometric practice, which aims to identify
+causal relationships.
+
+The course is delivered in two parts. \textbf{Part I -- Applied Data Analysis in R} (Weeks 1--7) covers the
+data-analytic toolkit: the R language, data visualization, data wrangling, text analysis, and an
+introduction to statistical learning through classification and clustering. \textbf{Part II -- Econometrics
+in a Nutshell} (Weeks 8--13) is delivered as a self-contained module by Ella Sargsyan, Ph.D.\
+(CERGE-EI Foundation), and covers regression analysis and modern causal-inference techniques.
+
+%% ---------------------------------------------------------------- OUTCOMES
+\section{Student Learning Outcomes}
+
+Upon completing the course, students should acquire knowledge of modern methods of data research and
+visualization, classification, clustering, linear regression, and general data analysis. Skills in working
+with data, which they will be able to apply in their own empirical research. They will also gain advanced
+skills in using modern software (R) in empirical economic research and will be able to write their own
+functions.
+
+Students will know basic econometric concepts, basic estimation methods, and methods for testing statistical
+hypotheses. They will be able to apply standard methods of constructing econometric models, process
+statistical information, obtain statistically sound conclusions, and give meaningful interpretation to the
+results of the estimated econometric models. In addition, students will gain real data processing skills,
+using econometric packages for building and estimating regression models in R.
+
+%% ---------------------------------------------------------------- PREREQS
+\section{Prerequisites}
+
+Introduction to Statistics.
+
+%% ---------------------------------------------------------------- TEXTBOOKS
+\section{Textbooks and Course Material}
+
+\begin{itemize}
+  \item Wickham, H., Çetinkaya-Rundel, M., Grolemund, G. (2023). \textit{R for Data Science}. O'Reilly
+        Media, Inc. Freely available at \url{https://r4ds.hadley.nz/}.
+  \item Gareth, J., Daniela, W., Trevor, H., Robert, T. (2013). \textit{An Introduction to Statistical
+        Learning: With Applications in R}. Springer. Freely available at \url{https://www.statlearning.com/}.
+  \item Silge, J., Robinson, D. (2017). \textit{Text Mining with R: A Tidy Approach}. O'Reilly Media, Inc.
+        Freely available at \url{https://www.tidytextmining.com/}.
+  \item Wooldridge, Jeffrey M. \textit{Introductory Econometrics: A Modern Approach}. 5th ed., US, 2012.
+  \item Angrist, J. D., Pischke, J.-S. (2009). \textit{Mostly Harmless Econometrics: An Empiricist's
+        Companion}. Princeton University Press.
+  \item Tutorial on basic R: \url{https://cran.r-project.org/doc/contrib/Paradis-rdebuts_en.pdf}.
+\end{itemize}
+
+All course material (relevant textbook chapters, reading papers and lecture slides) will be uploaded on the
+Moodle course webpage.
+
+%% ---------------------------------------------------------------- GRADING
+\section{Grading and Evaluation}
+
+The course evaluation is based on two components, which together determine the final grade.
+
+\smallskip
+\noindent\textbf{Component 1 --- condition for obtaining the CERGE-EI certificate (60\% of the final grade).}
+This component follows the evaluation criteria of the \textit{Econometrics in a Nutshell} module (Part II).
+To pass, a student needs to score 50\% and higher on the final exam and secure 50\% and higher of this
+component's grade.
+
+\begin{itemize}
+  \item \textbf{Three online quizzes --- 30\%}
+  \item \textbf{Two home assignments (mostly based on R) --- 20\%}
+  \item \textbf{In-class questions and discussions --- 10\%}
+  \item \textbf{Final exam --- 40\%.} The final exam covers the properties, derivation, assumptions and
+        interpretation of linear regression, as well as basic causal research designs and panel data
+        techniques.
+\end{itemize}
+
+\smallskip
+\noindent\textbf{Component 2 --- to obtain the full number of points from the course (40\% of the final grade).}
+This component covers Part I of the course.
+
+\begin{itemize}
+  \item \textbf{Quizzes and assignments --- 50\%.} Throughout the course, students will receive quizzes or
+        short assignments during and after lectures. Active participation and extra involvement in these
+        quizzes or assignments may also positively influence this portion of the grade at the instructor's
+        discretion.
+  \item \textbf{Final data science project --- 50\%.} The final presentation of a data science project.
+\end{itemize}
+
+\smallskip
+\noindent\textbf{Final Grade Calculation:} Students do not need to achieve at least 50\% in each individual
+component of Part I. The final grade will be based on the cumulative score across all components, subject to
+the passing condition of Component 1 stated above.
+
+%% ---------------------------------------------------------------- DATES
+\section{Important Dates}
+
+\begin{itemize}
+  \item \textbf{Part I (Applied Data Analysis in R):} September 22 -- November 4, 2026
+  \item \textbf{Part II (Econometrics in a Nutshell):} October 26 -- December 4, 2026
+  \item \textbf{Final exam week:} December 7 -- 11, 2026
+  \item \textbf{Make-up exam week:} December 14 -- 18, 2026
+\end{itemize}
+
+\noindent\textbf{Class times.}
+
+\smallskip
+\noindent\begin{tabular}{@{}>{\bfseries}p{2.4cm}p{6.4cm}p{6.4cm}@{}}
+\toprule
+ & \textbf{Part I} --- Applied Data Analysis in R & \textbf{Part II} --- Econometrics in a Nutshell \\
+\midrule
+Course code & NND21254/21 (English class) & CERGE-EI module \\
+Day & Wednesday, from 23 Sep 2026 & Lecture: Mon + Thu, from 26 Oct 2026\newline Exercise: Wednesday \\
+Lecture & 11:00--12:30, room 4B26 & 11:00--12:30 CET, \textbf{online} \\
+Exercise & 13:30--15:00, room D203 & 13:30--15:00, room D203 (in person) \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+\noindent This syllabus states the times for the \textbf{English class}. The Slovak class
+(NND21210/21) meets on Tuesdays --- see the Slovak version of this syllabus.
+
+\smallskip
+\noindent In Part II the lectures are delivered \textbf{online} by Ella Sargsyan, while the
+exercise session remains \textbf{in person} in room D203 at the usual Wednesday time.
+
+\smallskip
+\noindent\footnotesize The instructor reserves the right to change the content of the course material if he
+perceives a need due to postponement of class caused by inclement weather, instructor illness, etc., or due
+to the pace of the course.\normalsize
+
+%% ---------------------------------------------------------------- INTEGRITY
+\section{Academic Integrity}
+
+Academic integrity is essential to the pursuit of learning and scholarship in a university, and to ensuring
+that a degree from the Bratislava University of Economics and Business is a strong signal of each student's individual
+academic achievement. As a result, the University treats cases of cheating and plagiarism very seriously.
+The Bratislava University of Economics and Business Ethical Code (\url{https://euba.sk/univerzita/eticky-kodex})
+outlines the behaviors that constitute academic dishonesty and the processes for addressing academic
+offenses. Potential offenses include, but are not limited to:
+
+\smallskip
+\noindent\textit{In papers and assignments:} Using someone else's ideas or words without appropriate
+acknowledgment; submitting your own work in more than one course without the permission of the instructor;
+making up sources or facts; obtaining or providing unauthorized assistance on any assignment.
+
+\noindent\textit{On tests and exams:} Using or possessing unauthorized aids; looking at someone else's
+answers during an exam or test; misrepresenting your identity / pretending to be someone else.
+
+\noindent\textit{In academic work:} Falsifying documents or grades; falsifying or altering any documentation
+required by the University, including (but not limited to) medical forms.
+
+\smallskip
+All suspected cases of academic dishonesty will be investigated following procedures outlined in the Ethical
+Code. If students have questions or concerns about what constitutes appropriate academic behavior or
+appropriate research and citation methods, they are expected to seek out additional information on academic
+integrity from their instructors or from other institutional resources.
+
+\clearpage
+
+%% ---------------------------------------------------------------- SCHEDULE
+\section{Class Schedule}
+
+\begin{longtable}{@{}WTD@{}}
+\toprule
+\textbf{Wk} & \textbf{Topic Description} & \textbf{Dates \& Instructor} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Wk} & \textbf{Topic Description} & \textbf{Dates \& Instructor} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+
+\multicolumn{3}{@{}l}{\textbf{\color{oxfordblue} PART I --- APPLIED DATA ANALYSIS IN R}}\\
+\midrule
+
+1 & \textbf{R basics.} Basic R syntax, data types, vectors arithmetic, indexing, sorting, sorting using
+\texttt{dplyr}, and plotting using basic packages. GitHub.
+\readings{Reading: Gareth et al. (2013), Ch.~1. Wickham et al. (2023), Ch.~1, 2, 4--6.}
+& Wed 23 Sep 2026\newline Lecture 11:00--12:30, 4B26\newline Exercise 13:30--15:00, D203\newline \textit{T. Oleš} \\
+\midrule
+
+2 & \textbf{Visualization Part 1.} Data visualization principles, creating custom plots with
+\texttt{ggplot2}, and studying the advantages and pitfalls of widely-used plots.
+\readings{Reading: Wickham et al. (2023), Ch.~3, 7.}
+& Wed 30 Sep 2026\newline Lecture 11:00--12:30, 4B26\newline Exercise 13:30--15:00, D203\newline \textit{T. Oleš} \\
+\midrule
+
+3 & \textbf{Visualization Part 2.} Spatial visualization principles, creating custom plots with
+\texttt{tmap}. Spatial data overview (i.e.\ points, lines and polygons) and ending with a brief raster
+example.
+\readings{Reading: Wickham et al. (2023), Ch.~3, 7.}
+& Wed 7 Oct 2026\newline Lecture 11:00--12:30, 4B26\newline Exercise 13:30--15:00, D203\newline \textit{T. Oleš} \\
+\midrule
+
+4 & \textbf{Data Summarizing, Tidying and Joining.} Importing data from different file formats, web
+scraping, tidy data with \texttt{tidyverse}, wrangling data with \texttt{dplyr}, handling date and time
+formats.
+\readings{Reading: Wickham et al. (2023), Ch.~9--16.}
+& Wed 14 Oct 2026\newline Lecture 11:00--12:30, 4B26\newline Exercise 13:30--15:00, D203\newline \textit{T. Oleš} \\
+\midrule
+
+5 & \textbf{Text Analysis.} The tidy text format and tokenization. Stop words and word frequencies.
+Sentiment analysis with tidy data (Bing, AFINN, NRC lexicons). Term frequency, inverse document frequency
+and \texttt{tf-idf}.
+\readings{Reading: Silge and Robinson (2017), Ch.~1--3.}
+& Wed 21 Oct 2026\newline Lecture 11:00--12:30, 4B26\newline Exercise 13:30--15:00, D203\newline \textit{T. Oleš} \\
+\midrule
+
+6 & \textbf{Classification.} Introduction to qualitative classification. Classifiers: logistic regression,
+naive Bayes, K-nearest neighbors, generalized linear models. Classification concepts: overfitting, confusion
+matrix, specificity and sensitivity of the analysis.
+\readings{Reading: Gareth et al. (2013), Ch.~4.}
+& Wed 28 Oct 2026\newline Lecture 11:00--12:30, 4B26\newline Exercise 13:30--15:00, D203\newline \textit{T. Oleš} \\
+\midrule
+
+7 & \textbf{Clustering.} Unsupervised learning and the notion of similarity. K-means clustering.
+Hierarchical clustering and dendrograms. Choosing the number of clusters. Principal component analysis and
+its use in cluster analysis. Applications to economic data.
+\readings{Reading: Gareth et al. (2013), Ch.~12.}
+& Wed 4 Nov 2026\newline Lecture 11:00--12:30, 4B26\newline Exercise 13:30--15:00, D203\newline \textit{M. Vaško} \\
+\midrule
+
+\multicolumn{3}{@{}l}{\textbf{\color{oxfordblue} PART II --- ECONOMETRICS IN A NUTSHELL}}\\
+\midrule
+
+8 & \textbf{The Nature of Econometrics and Economic Data.} What is Econometrics and why do we need it?
+Steps in empirical economic analysis. The structure of economics data. Causality and the notion of
+``ceteris paribus'' in econometric data. Definition of simple regression model.
+\readings{Reading: Wooldridge (2012), Ch.~1; Ch.~2 (2.1).}
+& \footnotesize\textbf{Lecture (online)}\normalsize\newline Mon 26 Oct 11:00--12:30\newline Thu 29 Oct 11:00--12:30\newline \footnotesize\textbf{Exercise (in person)}\normalsize\newline Wed 28 Oct 13:30--15:00, D203\newline \textit{E. Sargsyan} \\
+\midrule
+
+9 & \textbf{Regression Analysis with Cross-Sectional Data: Part 1.} Ordinary Least Squares. Properties of
+Ordinary Least Squares. Assumptions of the simple regression model.
+\readings{Reading: Wooldridge (2012), Ch.~2 (2.2--2.5).}
+& \footnotesize\textbf{Lecture (online)}\normalsize\newline Mon 2 Nov 11:00--12:30\newline Thu 5 Nov 11:00--12:30\newline \footnotesize\textbf{Exercise (in person)}\normalsize\newline Wed 4 Nov 13:30--15:00, D203\newline \textit{E. Sargsyan} \\
+\midrule
+
+10 & \textbf{Regression Analysis with Cross-Sectional Data: Part 2.} Multiple regression analysis.
+Hypothesis testing. Reporting regression results.
+\readings{Reading: Wooldridge (2012), Ch.~3; Ch.~4 (4.2--4.6).}
+& \footnotesize\textbf{Lecture (online)}\normalsize\newline Mon 9 Nov 11:00--12:30\newline Thu 12 Nov 11:00--12:30\newline \footnotesize\textbf{Exercise (in person)}\normalsize\newline Wed 11 Nov 13:30--15:00, D203\newline \textit{E. Sargsyan} \\
+\midrule
+
+11 & \textbf{Regression Analysis: Further Topics and Issues.} Units of measurement and functional forms.
+Regression analysis with qualitative information. Heteroskedasticity and serial correlation. Endogeneity:
+omitted variables, selection, and reverse causality.
+\readings{Reading: Wooldridge (2012), Ch.~2 (2.4); Ch.~3 (3.3); Ch.~7 (7.1--7.4); Ch.~8.}
+& \footnotesize\textbf{Lecture (online)}\normalsize\newline Mon 16 Nov 11:00--12:30\newline Thu 19 Nov 11:00--12:30\newline \footnotesize\textbf{Exercise (in person)}\normalsize\newline Wed 18 Nov 13:30--15:00, D203\newline \textit{E. Sargsyan} \\
+\midrule
+
+12 & \textbf{Solving Endogeneity.} Instrumental Variables. Regression Discontinuity Design.
+\readings{Reading: Wooldridge (2012), Ch.~15 (15.1--15.3); Angrist and Pischke (2009), Ch.~6 (pp.~189--195).
+\newline Papers to be discussed: Acemoglu, D., \& Johnson, S. (2005). ``Unbundling institutions.''
+\textit{Journal of Political Economy}, 113(5), 949--995. Carpenter, C., \& Dobkin, C. (2009). ``The effect
+of alcohol consumption on mortality: regression discontinuity evidence from the minimum drinking age.''
+\textit{American Economic Journal: Applied Economics}, 1(1), 164--182.}
+& \footnotesize\textbf{Lecture (online)}\normalsize\newline Mon 23 Nov 11:00--12:30\newline Thu 26 Nov 11:00--12:30\newline \footnotesize\textbf{Exercise (in person)}\normalsize\newline Wed 25 Nov 13:30--15:00, D203\newline \textit{E. Sargsyan} \\
+\midrule
+
+13 & \textbf{Panel Data Methods.} Introducing time dimension. Fixed effects model.
+Differences-in-Differences.
+\readings{Reading: Wooldridge (2012), Ch.~14 (14.1); Angrist and Pischke (2009), Ch.~5 (pp.~169--182).
+\newline Paper to be discussed: Card, D., \& Krueger, A. B. (1994). ``Minimum Wages and Employment: A Case
+Study of the Fast-Food Industry in New Jersey and Pennsylvania.'' \textit{The American Economic Review},
+84(4), 772--793.}
+& \footnotesize\textbf{Lecture (online)}\normalsize\newline Mon 30 Nov 11:00--12:30\newline Thu 3 Dec 11:00--12:30\newline \footnotesize\textbf{Exercise (in person)}\normalsize\newline Wed 2 Dec 13:30--15:00, D203\newline \textit{E. Sargsyan} \\
+
+\end{longtable}
+
+\vfill
+\begin{center}
+\itshape ``We are what we repeatedly do. Excellence, then, is not an act, but a habit.'' --- Aristotle
+\end{center}
+
+\end{document}

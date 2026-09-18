@@ -1,0 +1,489 @@
+---
+title: "Aplikovaná dátová analýza"
+subtitle: "Zhluková analýza"
+author: "Martin Vaško"
+institute: "Katedra hospodárskej politiky"
+date: "2026"
+output:
+  xaringan::moon_reader:
+    css: xaringan-themer.css
+    lib_dir: libs
+    nature:
+      highlightStyle: atom-one-light
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+library(xaringanthemer)
+style_mono_accent(
+base_color = "#002147",
+header_font_google = google_font("Josefin Sans"),
+text_font_google = google_font("Montserrat", "300", "300i"),
+code_font_google = google_font("Fira Mono")
+)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(fig.retina = 5, message = FALSE, warning = FALSE,
+                      dev = "ragg_png")
+```
+
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+library(knitr)
+library(tidyverse)
+library(cluster)
+library(factoextra)
+options(dplyr.print_min = 8, dplyr.print_max = 8)
+set.seed(2026)
+```
+
+---
+
+## Prehľad prednášky
+
+1. **Učenie bez učiteľa**: čo sa mení, keď chýba $y$
+2. **Podobnosť a vzdialenosť**: ako meriame „blízkosť“
+3. **Metóda k-priemerov**: algoritmus, účelová funkcia, úskalia
+4. **Voľba počtu zhlukov**: lakeť, siluety, gap štatistika
+5. **Hierarchické zhlukovanie**: dendrogramy a metódy spájania
+6. **Analýza hlavných komponentov**: redukcia dimenzie pred zhlukovaním
+7. **Aplikácia**: zoskupovanie ekonomík podľa štrukturálnych ukazovateľov
+
+---
+
+class: middle
+
+# Učenie bez učiteľa
+
+---
+
+## Učenie s učiteľom vs. bez učiteľa
+
+Doteraz mala každá metóda **cieľovú premennú**.
+
+| | S učiteľom | Bez učiteľa |
+|---|---|---|
+| Údaje | $(X, y)$ | iba $X$ |
+| Cieľ | predpovedať $y$ | nájsť štruktúru v $X$ |
+| Úspech | testovacia chyba, presnosť | niet jedinej správnej odpovede |
+| Príklady | regresia, logistická regresia, KNN | **zhlukovanie**, PCA |
+
+--
+
+Pri učení bez učiteľa neexistuje **kľúč so správnymi odpoveďami**. Nevieme vypočítať
+testovaciu chybu, takže analýza je viac *exploratívna* — a výsledky si vyžadujú viac úsudku.
+
+---
+
+## Prečo ekonómovia zhlukujú
+
+- **Regionálna ekonómia**: rozdelenie regiónov do vývojových typov pred modelovaním konvergencie
+- **Ekonómia práce**: segmentácia pracovníkov podľa profilov zručností z prieskumov
+- **Analýza na úrovni firiem**: identifikácia porovnateľných skupín firiem s podobnou nákladovou štruktúrou
+- **Makroekonómia**: klasifikácia krajín podľa inštitucionálnej alebo štrukturálnej podobnosti
+- **Financie**: zoskupenie aktív podľa spoločného pohybu pri tvorbe diverzifikovaného portfólia
+
+> Zhlukovanie býva často **prípravným krokom**: označenie zhluku sa stane premennou
+> v neskoršej regresii.
+
+---
+
+class: middle
+
+# Podobnosť a vzdialenosť
+
+---
+
+## Pojem podobnosti
+
+Zhlukovanie potrebuje formálnu odpoveď na otázku: *ako ďaleko od seba sú dve pozorovania?*
+
+Pre pozorovania $x_i, x_j \in \mathbb{R}^p$:
+
+**Euklidovská vzdialenosť**
+$$d(x_i, x_j) = \sqrt{\sum_{k=1}^{p} (x_{ik} - x_{jk})^2}$$
+
+**Manhattanská vzdialenosť**
+$$d(x_i, x_j) = \sum_{k=1}^{p} |x_{ik} - x_{jk}|$$
+
+**Korelačná vzdialenosť** považuje dve pozorovania za podobné vtedy, keď sa ich *profily*
+naprieč premennými pohybujú spoločne, bez ohľadu na veľkosť hodnôt.
+
+---
+
+## Škálovanie nie je voliteľné
+
+Vzdialenosť ovládne tá premenná, ktorá má najväčšie jednotky.
+
+```{r}
+data("USArrests")
+round(sapply(USArrests, sd), 2)
+```
+
+Premenná `Assault` má smerodajnú odchýlku približne **80-násobne** väčšiu než `Murder`. Bez
+škálovania by zhlukovanie bolo analýzou počtu napadnutí a ničoho iného.
+
+```{r}
+arrests <- scale(USArrests)
+round(sapply(as.data.frame(arrests), sd), 2)
+```
+
+> Praktické pravidlo: **štandardizujte**, pokiaľ premenné nie sú už v porovnateľných jednotkách.
+
+---
+
+## Pohľad na maticu vzdialeností
+
+```{r out.width='52%', fig.align="center", fig.width=7, fig.height=6}
+fviz_dist(dist(arrests), show_labels = FALSE) +
+  labs(title = "Párové euklidovské vzdialenosti, škálované údaje")
+```
+
+---
+
+class: middle
+
+# Metóda k-priemerov
+
+---
+
+## Účelová funkcia metódy k-priemerov
+
+Rozdeľ pozorovania do $K$ neprekrývajúcich sa zhlukov $C_1, \dots, C_K$ tak, aby sa
+minimalizovala **celková vnútrozhluková variabilita**:
+
+$$\min_{C_1,\dots,C_K} \sum_{k=1}^{K} W(C_k)$$
+
+Pri použití štvorca euklidovskej vzdialenosti je vnútrozhluková variabilita
+
+$$W(C_k) = \frac{1}{|C_k|} \sum_{i, i' \in C_k} \sum_{j=1}^{p} (x_{ij} - x_{i'j})^2
+ = 2 \sum_{i \in C_k} \sum_{j=1}^p (x_{ij} - \bar{x}_{kj})^2$$
+
+kde $\bar{x}_{kj}$ je priemer premennej $j$ v zhluku $k$ — **centroid**.
+
+> Prehľadávanie všetkých rozkladov je nezvládnuteľné: je ich približne $K^n$.
+> Metóda k-priemerov preto používa hladový algoritmus.
+
+---
+
+## Algoritmus
+
+1. Náhodne prirad' každé pozorovanie do jedného z $K$ zhlukov.
+2. Opakuj, kým sa priradenia menia:
+   - **Krok aktualizácie**: vypočítaj centroid každého zhluku.
+   - **Krok priradenia**: prirad' každé pozorovanie k najbližšiemu centroidu.
+
+--
+
+Každý krok môže hodnotu účelovej funkcie iba **znížiť**, takže algoritmus vždy konverguje.
+
+.pull-left[
+**Zaručené**: konvergencia do *nejakého* lokálneho optima
+]
+.pull-right[
+**Nezaručené**: dosiahnutie *globálneho* optima
+]
+
+> Keďže počiatočné priradenie je náhodné, rôzne spustenia môžu dať rôzne výsledky.
+> Vždy použite `nstart`, aby sa algoritmus spustil viackrát a ponechal najlepší výsledok.
+
+---
+
+## Metóda k-priemerov v R
+
+```{r}
+km4 <- kmeans(arrests, centers = 4, nstart = 25)
+km4$size
+round(km4$centers, 2)
+```
+
+---
+
+## Vizualizácia zhlukov
+
+```{r out.width='55%', fig.align="center", fig.width=8, fig.height=5.5}
+fviz_cluster(km4, data = arrests, repel = TRUE, labelsize = 8) +
+  labs(title = "Metóda k-priemerov, K = 4")
+```
+
+---
+
+## Prečo záleží na `nstart`
+
+```{r}
+set.seed(1)
+bad  <- kmeans(arrests, centers = 4, nstart = 1)
+good <- kmeans(arrests, centers = 4, nstart = 50)
+
+c(nstart_1 = bad$tot.withinss, nstart_50 = good$tot.withinss)
+```
+
+Jediný náhodný štart môže skončiť v citeľne horšom lokálnom optime.
+
+> Praktická rada: `nstart = 25` alebo viac a `set.seed()` kvôli reprodukovateľnosti.
+
+---
+
+class: middle
+
+# Koľko zhlukov?
+
+---
+
+## Metóda lakťa
+
+Vynesieme celkový vnútrozhlukový súčet štvorcov proti $K$ a hľadáme zlom.
+
+```{r out.width='50%', fig.align="center", fig.width=7, fig.height=4.5}
+fviz_nbclust(arrests, kmeans, method = "wss") +
+  labs(subtitle = "Metóda lakťa")
+```
+
+---
+
+## Siluetový koeficient
+
+Pre pozorovanie $i$ nech $a(i)$ je jeho priemerná vzdialenosť k ostatným bodom vo vlastnom
+zhluku a $b(i)$ priemerná vzdialenosť k najbližšiemu *inému* zhluku:
+
+$$s(i) = \frac{b(i) - a(i)}{\max\{a(i), b(i)\}} \in [-1, 1]$$
+
+- $s(i)$ blízko $1$: dobre zaradené
+- $s(i)$ blízko $0$: na hranici medzi dvoma zhlukmi
+- $s(i) < 0$: pravdepodobne v nesprávnom zhluku
+
+```{r out.width='45%', fig.align="center", fig.width=7, fig.height=3.6}
+fviz_nbclust(arrests, kmeans, method = "silhouette") +
+  labs(subtitle = "Priemerná šírka siluety")
+```
+
+---
+
+## Gap štatistika
+
+Porovnáva pozorovanú vnútrozhlukovú rozptýlenosť s rozptýlenosťou očakávanou pri
+**nulovom referenčnom rozdelení**, v ktorom nijaká zhluková štruktúra nie je.
+
+```{r out.width='50%', fig.align="center", fig.width=7, fig.height=4.2}
+gap <- clusGap(arrests, FUN = kmeans, nstart = 25, K.max = 8, B = 50)
+fviz_gap_stat(gap)
+```
+
+---
+
+## Ako čítať tri kritériá spoločne
+
+Tieto tri metódy si často **protirečia** — a to je informácia, nie zlyhanie.
+
+- Lakeť býva na reálnych údajoch nejednoznačný
+- Siluety uprednostňujú málo dobre oddelených zhlukov
+- Gap štatistika môže uprednostniť $K = 1$, keď je štruktúra slabá
+
+> Voľte $K$ s ohľadom na **výskumnú otázku**. Ak potrebujete štyri skupiny pre potreby
+> politiky, obhájiteľné $K = 4$ je lepšie než štatisticky hraničné $K = 2$.
+
+---
+
+class: middle
+
+# Hierarchické zhlukovanie
+
+---
+
+## Netreba vopred určiť K
+
+**Aglomeratívne** (zdola nahor) hierarchické zhlukovanie:
+
+1. Začni s každým pozorovaním ako samostatným zhlukom.
+2. Opakovane spájaj dva **najbližšie** zhluky.
+3. Skonči, keď ostane jeden zhluk.
+
+Výsledkom je **dendrogram**: strom, ktorý zaznamenáva celú históriu spájania.
+Rez stromu v danej výške dáva jedno rozdelenie — jeden strom vám teda naraz
+poskytne každé $K$.
+
+---
+
+## Metódy spájania: vzdialenosť medzi *zhlukmi*
+
+Vzdialenosť medzi dvoma pozorovaniami je jasná. Medzi dvoma **skupinami** je to voľba.
+
+| Metóda spájania | Definícia | Správanie |
+|---|---|---|
+| **Úplná** | najväčšia párová vzdialenosť | kompaktné, vyvážené zhluky |
+| **Priemerná** | priemerná párová vzdialenosť | kompaktné, vyvážené zhluky |
+| **Jednoduchá** | najmenšia párová vzdialenosť | „reťazenie“, natiahnuté zhluky |
+| **Centroidná** | vzdialenosť medzi centroidmi | môže spôsobiť inverzie |
+
+> Úplná a priemerná väzba sú bežné predvoľby; jednoduchá väzba má sklon vytvárať
+> dlhé natiahnuté zhluky.
+
+---
+
+## Zostrojenie dendrogramu
+
+```{r out.width='58%', fig.align="center", fig.width=10, fig.height=5}
+hc <- hclust(dist(arrests), method = "complete")
+
+fviz_dend(hc, k = 4, cex = 0.55, rect = TRUE,
+          main = "Úplná väzba, škálované údaje")
+```
+
+---
+
+## Rezanie stromu
+
+```{r}
+grp <- cutree(hc, k = 4)
+table(grp)
+split(rownames(USArrests), grp)[[1]]
+```
+
+```{r}
+# zhodnú sa obe metódy?
+table(hierarchicke = grp, kmeans = km4$cluster)
+```
+
+---
+
+## Porovnanie metód spájania
+
+```{r out.width='70%', fig.align="center", fig.width=12, fig.height=4}
+par(mfrow = c(1, 3), cex = 0.45)
+plot(hclust(dist(arrests), "complete"), main = "Úplná", xlab = "", sub = "")
+plot(hclust(dist(arrests), "average"),  main = "Priemerná", xlab = "", sub = "")
+plot(hclust(dist(arrests), "single"),   main = "Jednoduchá", xlab = "", sub = "")
+```
+
+Všimnite si reťazenie v strome s jednoduchou väzbou.
+
+---
+
+class: middle
+
+# Analýza hlavných komponentov
+
+---
+
+## Prečo najprv redukovať dimenziu
+
+Pri veľkom $p$:
+
+- vzdialenosti strácajú výpovednú hodnotu (všetko je ďaleko od všetkého)
+- zhluky sa nedajú zobraziť
+- korelované premenné sa vo vzdialenosti fakticky **započítajú dvakrát**
+
+**PCA** nájde malý počet smerov, ktoré zachytávajú väčšinu variability.
+
+Prvý hlavný komponent je normalizovaná lineárna kombinácia
+
+$$Z_1 = \phi_{11} X_1 + \phi_{21} X_2 + \dots + \phi_{p1} X_p$$
+
+s $\sum_j \phi_{j1}^2 = 1$, ktorá má **najväčšiu možnú varianciu**. $Z_2$ je ďalší taký
+smer, **ortogonálny** na $Z_1$, a tak ďalej.
+
+---
+
+## PCA v R
+
+```{r}
+pca <- prcomp(USArrests, scale. = TRUE)
+round(pca$rotation, 3)
+```
+
+PC1 zaťažuje všetky štyri kriminálne premenné podobnou váhou — ide o celkovú
+**mieru kriminality**. PC2 je ovládaný premennou `UrbanPop` — **urbanizácia**.
+
+---
+
+## Koľko variability je vysvetlenej?
+
+```{r out.width='48%', fig.align="center", fig.width=7, fig.height=4}
+summary(pca)$importance[, 1:4] |> round(3)
+fviz_eig(pca, addlabels = TRUE, barfill = "#002147", barcolor = "#002147")
+```
+
+---
+
+## Biplot
+
+```{r out.width='55%', fig.align="center", fig.width=8, fig.height=5.5}
+fviz_pca_biplot(pca, repel = TRUE, labelsize = 3,
+                col.var = "#b22222", col.ind = "#002147")
+```
+
+---
+
+## Zhlukovanie v priestore hlavných komponentov
+
+Bežný postup: **najprv PCA, potom zhlukovanie vedúcich komponentov.**
+
+```{r out.width='50%', fig.align="center", fig.width=8, fig.height=4.6}
+scores  <- pca$x[, 1:2]
+km_pca  <- kmeans(scores, centers = 4, nstart = 25)
+
+fviz_cluster(km_pca, data = scores, repel = TRUE, labelsize = 8) +
+  labs(title = "K-priemerov na prvých dvoch hlavných komponentoch")
+```
+
+---
+
+## Interpretácia skupín
+
+```{r}
+USArrests |>
+  as_tibble(rownames = "state") |>
+  mutate(cluster = factor(km4$cluster)) |>
+  group_by(cluster) |>
+  summarise(n = n(), across(Murder:Rape, ~ round(mean(.x), 1)))
+```
+
+> Zhluky sú užitočné až vtedy, keď ich viete **pomenovať**. Profilujte každý zhluk na
+> pôvodných premenných, nie na škálovaných.
+
+---
+
+class: middle
+
+# Praktické úskalia
+
+---
+
+## Na čo si dať pozor
+
+* **Zhlukovanie vždy vráti zhluky.** Algoritmus ochotne rozdelí aj čistý šum.
+  Validujte skôr, než začnete interpretovať.
+* **Výsledok určuje škálovanie.** Uveďte, čo ste škálovali a prečo.
+* **Metóda k-priemerov predpokladá približne guľovité, rovnako veľké zhluky.** S pretiahnutými
+  alebo vnorenými tvarmi si neporadí.
+* **Odľahlé pozorovania skresľujú centroidy.** Zvážte `pam()` (k-medoidy), ktorá je odolnejšia.
+* **Voľba metódy spájania a vzdialenosti je modelovým predpokladom**, nie technickou drobnosťou.
+* **Výsledky nie sú test.** Niet tu p-hodnoty — zhlukovanie generuje hypotézy, nepotvrdzuje ich.
+
+---
+
+## Kontrola robustnosti, ktorú treba robiť vždy
+
+```{r out.width='45%', fig.align="center", fig.width=7, fig.height=3.6}
+# k-medoidy: medoidy sú skutočné pozorovania, odľahlé hodnoty preto vadia menej
+pam4 <- pam(arrests, k = 4)
+table(kmeans = km4$cluster, pam = pam4$clustering)
+```
+
+Ak sa rozdelenie rozpadne pri malej zmene metódy, nikdy nebolo stabilné.
+
+---
+
+# Zdroje
+
+- [James, G., Witten, D., Hastie, T., Tibshirani, R. (2021). *An Introduction to Statistical Learning*, kap. 12. Springer.](https://www.statlearning.com/)
+
+- [Kassambara, A., Mundt, F. *factoextra: Extract and Visualize the Results of Multivariate Data Analyses.*](https://cran.r-project.org/package=factoextra)
+
+- [Hastie, T., Tibshirani, R., Friedman, J. (2009). *The Elements of Statistical Learning*, kap. 14.](https://hastie.su.domains/ElemStatLearn/)
+
+- Maechler, M. et al. *cluster: Cluster Analysis Basics and Extensions.*
+
+---

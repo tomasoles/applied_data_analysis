@@ -1,4 +1,26 @@
+# ---------------------------------------------------------------
+# Student data — MUST NEVER be committed. This repository is public.
+# ---------------------------------------------------------------
+*List_Students*.xlsx
+grades/
+**/grades/
+*_grades.xlsx
+final_grade.xlsx
+
+# R
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
+*.Rproj
+
+# LaTeX build artefacts
+*.aux
+*.log
+*.out
+*.synctex.gz
+
+# OS / editor cruft
+.DS_Store
+**/.DS_Store
+Thumbs.db

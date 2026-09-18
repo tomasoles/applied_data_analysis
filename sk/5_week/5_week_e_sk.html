@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aplikovaná dátová analýza</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Tomáš Oleš" />
+    <meta name="date" content="2026-01-01" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Aplikovaná dátová analýza
+]
+.subtitle[
+## Analýza frekvencie slov a dokumentov: tf-idf
+]
+.author[
+### Tomáš Oleš
+]
+.institute[
+### Katedra hospodárskej politiky
+]
+.date[
+### 2026
+]
+
+---
+
+
+
+
+
+
+
+
+# Motivácia (i.)
+
+Ústrednou otázkou **dolovania v texte** a **spracovania prirodzeného jazyka (NLP)** je:
+
+&gt; Ako môžeme kvantifikovať, *o čom dokument je*?
+
+---
+---
+
+class: middle
+
+# Analýza frekvencie slov a dokumentov: tf-idf
+
+---
+
+## Dôležitosť slova
+
+- Jedna myšlienka: pozrieť sa, ktoré slová sa v dokumente vyskytujú
+- **Frekvencia termínu (tf):** ako často sa slovo vyskytuje
+- Lenže: niektoré slová sa vyskytujú v každom dokumente
+  - „the“, „is“, „of“ a podobne
+- Tie nenesú nijakú informáciu!
+
+---
+
+## Za hranicou stop slov
+
+Bežné slová (stop slová) vieme odstrániť,
+ale je to hrubý prístup.
+
+&gt; Potrebujeme dynamický spôsob, ako **znížiť váhu všadeprítomných slov**.
+
+---
+
+# Inverzná dokumentová frekvencia (idf)
+
+Ďalšia myšlienka: prideliť menšiu váhu slovám,
+ktoré sa vyskytujú v mnohých dokumentoch.
+
+`$$idf(\text{term}) = \ln{\left(\frac{n_{\text{dokumentov}}}{n_{\text{dokumentov obsahujúcich term}}}\right)}$$`
+
+---
+
+## Spojenie tf a idf
+
+Skóre **tf–idf** = frekvencia termínu × inverzná dokumentová frekvencia
+
+- Vysoké tf–idf → časté v tomto dokumente, zriedkavé inde
+- Nízke tf–idf → bežné slovo spoločné pre všetky dokumenty
+
+---
+
+## Interpretácia
+
+&gt; tf–idf meria, aké dôležité je slovo pre daný dokument
+&gt; v rámci kolekcie dokumentov (*korpusu*).
+
+Ide o **heuristiku** — užitočnú vo vyhľadávačoch, tematickom modelovaní a NLP.
+
+---
+
+# Príklad: romány Jane Austenovej
+
+Začneme publikovanými románmi **Jane Austenovej**
+a preskúmame frekvenciu termínov, potom tf–idf.
+
+---
+
+## Príprava údajov
+
+
+``` r
+library(dplyr)
+library(janeaustenr)
+library(tidytext)
+
+book_words &lt;- austen_books() %&gt;%
+  unnest_tokens(word, text) %&gt;%
+  count(book, word, sort = TRUE)
+
+total_words &lt;- book_words %&gt;% 
+  group_by(book) %&gt;% 
+  summarize(total = sum(n))
+
+book_words &lt;- left_join(book_words, total_words)
+```
+
+```
+## Joining with `by = join_by(book)`
+```
+
+``` r
+book_words
+```
+
+```
+## # A tibble: 40,379 × 4
+##   book           word      n  total
+##   &lt;fct&gt;          &lt;chr&gt; &lt;int&gt;  &lt;int&gt;
+## 1 Mansfield Park the    6206 160460
+## 2 Mansfield Park to     5475 160460
+## 3 Mansfield Park and    5438 160460
+## # ℹ 40,376 more rows
+```
+---
+### Rozdelenie frekvencie termínov
+
+
+``` r
+library(ggplot2)
+
+ggplot(book_words, aes(n/total, fill = book)) +
+  geom_histogram(show.legend = FALSE) +
+  xlim(NA, 0.0009) +
+  facet_wrap(~book, ncol = 2, scales = "free_y")
+```
+
+```
+## `stat_bin()` using `bins = 30`. Pick better value `binwidth`.
+```
+
+&lt;img src="5_week_e_sk_files/figure-html/unnamed-chunk-3-1.png" alt="" width="38%" style="display: block; margin: auto;" /&gt;
+
+---
+### Zipfov zákon
+
+ &gt; Frekvencia slova je nepriamo úmerná jeho poradiu.
+
+ Tento vzťah je v korpusoch prirodzeného jazyka bežný.
+
+``` r
+freq_by_rank &lt;- book_words %&gt;%
+  group_by(book) %&gt;%
+  mutate(rank = row_number(),
+         term_frequency = n/total)
+freq_by_rank
+```
+
+```
+## # A tibble: 40,379 × 6
+## # Groups:   book [6]
+##   book           word      n  total  rank term_frequency
+##   &lt;fct&gt;          &lt;chr&gt; &lt;int&gt;  &lt;int&gt; &lt;int&gt;          &lt;dbl&gt;
+## 1 Mansfield Park the    6206 160460     1         0.0387
+## 2 Mansfield Park to     5475 160460     2         0.0341
+## 3 Mansfield Park and    5438 160460     3         0.0339
+## # ℹ 40,376 more rows
+```
+---
+### Zipfov zákon
+
+
+``` r
+freq_by_rank %&gt;% 
+  ggplot(aes(rank, term_frequency, color = book)) + 
+  geom_line(linewidth = 1.1, alpha = 0.8, show.legend = FALSE) + 
+  scale_x_log10() +
+  scale_y_log10()
+```
+
+&lt;img src="5_week_e_sk_files/figure-html/unnamed-chunk-5-1.png" alt="" width="50%" style="display: block; margin: auto;" /&gt;
+
+
+
+---
+### Rozdelenie frekvencie termínov
+
+
+``` r
+rank_subset &lt;- freq_by_rank %&gt;%
+  filter(rank &lt; 500, rank &gt; 10)
+
+lm(log10(term_frequency) ~ log10(rank), data = rank_subset)
+```
+
+```
+## 
+## Call:
+## lm(formula = log10(term_frequency) ~ log10(rank), data = rank_subset)
+## 
+## Coefficients:
+## (Intercept)  log10(rank)  
+##     -0.6226      -1.1125
+```
+
+
+---
+### Vizualizácia s preloženou priamkou
+
+
+``` r
+freq_by_rank %&gt;% 
+  ggplot(aes(rank, term_frequency, color = book)) + 
+  geom_abline(intercept = -0.62, slope = -1.1, 
+              color = "gray50", linetype = 2) +
+  geom_line(linewidth = 1.1, alpha = 0.8, show.legend = FALSE) + 
+  scale_x_log10() +
+  scale_y_log10()
+```
+
+&lt;img src="5_week_e_sk_files/figure-html/unnamed-chunk-7-1.png" alt="" width="40%" style="display: block; margin: auto;" /&gt;
+
+---
+
+### Výpočet tf-idf
+
+Použijeme `bind_tf_idf()` z balíka `tidytext`.
+
+
+``` r
+book_tf_idf &lt;- book_words %&gt;%
+  bind_tf_idf(word, book, n)
+
+# prezrime si tf-idf
+book_tf_idf %&gt;%
+  arrange(desc(tf_idf))
+```
+
+```
+## # A tibble: 40,379 × 7
+##   book                word         n  total      tf   idf  tf_idf
+##   &lt;fct&gt;               &lt;chr&gt;    &lt;int&gt;  &lt;int&gt;   &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;
+## 1 Sense &amp; Sensibility elinor     623 119957 0.00519  1.79 0.00931
+## 2 Sense &amp; Sensibility marianne   492 119957 0.00410  1.79 0.00735
+## 3 Mansfield Park      crawford   493 160460 0.00307  1.79 0.00551
+## # ℹ 40,376 more rows
+```
+
+---
+
+
+``` r
+book_tf_idf %&gt;%
+  group_by(book) %&gt;%
+  slice_max(tf_idf, n = 15) %&gt;%
+  ungroup() %&gt;%
+  ggplot(aes(tf_idf, fct_reorder(word, tf_idf), fill = book)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~book, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+```
+
+&lt;img src="5_week_e_sk_files/figure-html/unnamed-chunk-9-1.png" alt="" width="50%" style="display: block; margin: auto;" /&gt;
+---
+
+### Príklad: klasické fyzikálne texty
+
+
+Skúsme to isté na vedeckých dielach:
+
+ + Galileo: Rozprava o plávajúcich telesách
+
+ + Huygens: Pojednanie o svetle
+
+ + Tesla: Pokusy so striedavými prúdmi
+
+ + Einstein: Teória relativity: špeciálna a všeobecná
+
+
+``` r
+library(gutenbergr)
+
+physics &lt;- gutenberg_download(
+  c(37729, 14725, 13476, 30155),
+  meta_fields = "author"
+)
+```
+
+```
+## Using mirror https://gutenberg.pglaf.org.
+```
+
+``` r
+physics_words &lt;- physics %&gt;%
+  unnest_tokens(word, text) %&gt;%
+  count(author, word, sort = TRUE)
+```
+
+---
+
+
+``` r
+physics_words
+```
+
+```
+## # A tibble: 12,668 × 3
+##   author              word      n
+##   &lt;chr&gt;               &lt;chr&gt; &lt;int&gt;
+## 1 Galilei, Galileo    the    3760
+## 2 Tesla, Nikola       the    3604
+## 3 Huygens, Christiaan the    3553
+## # ℹ 12,665 more rows
+```
+
+
+``` r
+plot_physics &lt;- physics_words %&gt;%
+  bind_tf_idf(word, author, n) %&gt;%
+  mutate(author = factor(author, levels = c("Galilei, Galileo",
+                                            "Huygens, Christiaan", 
+                                            "Tesla, Nikola",
+                                            "Einstein, Albert")))
+```
+
+---
+
+
+``` r
+plot_physics %&gt;% 
+  group_by(author) %&gt;% 
+  slice_max(tf_idf, n = 15) %&gt;% 
+  ungroup() %&gt;%
+  mutate(word = reorder(word, tf_idf)) %&gt;%
+  ggplot(aes(tf_idf, word, fill = author)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = "tf-idf", y = NULL) +
+  facet_wrap(~author, ncol = 2, scales = "free")
+```
+
+&lt;img src="5_week_e_sk_files/figure-html/unnamed-chunk-13-1.png" alt="" width="40%" style="display: block; margin: auto;" /&gt;
+---
+--- 
+
+
+``` r
+library(stringr)
+
+physics %&gt;% 
+  filter(str_detect(text, "_k_")) %&gt;% 
+  select(text)
+```
+
+```
+## # A tibble: 7 × 1
+##   text                                                                
+##   &lt;chr&gt;                                                               
+## 1 surface AB at the points AK_k_B. Then instead of the hemispherical  
+## 2 would needs be that from all the other points K_k_B there should    
+## 3 necessarily be equal to CD, because C_k_ is equal to CK, and C_g_ to
+## # ℹ 4 more rows
+```
+
+---
+--- 
+### Odstránenie vlastných stop slov
+
+``` r
+mystopwords &lt;- tibble(word = c("eq", "co", "rc", "ac", "ak", "bn", 
+                                   "fig", "file", "cg", "cb", "cm",
+                               "ab", "_k", "_k_", "_x"))
+
+physics_words &lt;- anti_join(physics_words, mystopwords, 
+                           by = "word")
+```
+
+---
+--- 
+
+
+``` r
+plot_physics &lt;- physics_words %&gt;%
+  bind_tf_idf(word, author, n) %&gt;%
+  mutate(word = str_remove_all(word, "_")) %&gt;%
+  group_by(author) %&gt;% 
+  slice_max(tf_idf, n = 15) %&gt;%
+  ungroup() %&gt;%
+  mutate(word = fct_reorder(word, tf_idf)) %&gt;%
+  mutate(author = factor(author, levels = c("Galilei, Galileo",
+                                            "Huygens, Christiaan",
+                                            "Tesla, Nikola",
+                                            "Einstein, Albert")))
+
+ggplot(plot_physics, aes(tf_idf, word, fill = author)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~author, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+```
+
+&lt;img src="5_week_e_sk_files/figure-html/unnamed-chunk-16-1.png" alt="" width="30%" style="display: block; margin: auto;" /&gt;
+---
+### Využitie v ekonómii
+
+- **Aplikácie:**
+  - **Ekonómia práce:** identifikácia obsahu zručností v pracovných ponukách alebo životopisoch (napr. Deming a Kahn, 2018; Modestino et al., 2020).  
+    → Váhy TF–IDF odrážajú intenzitu dopytu po jednotlivých zručnostiach.
+  - **Inovácie a produktivita:** meranie technologickej podobnosti medzi patentmi a textovými zverejneniami firiem.  
+    → Používa sa na prepojenie inovačných zhlukov a preliatí produktivity.
+  - **Politická ekonómia a financie:** extrakcia tém z prejavov, vyhlásení centrálnych bánk či správ.  
+    → TF–IDF pomáha odhaliť posuny pozornosti alebo zmeny sentimentu v čase.
+
+- **Výhody:**
+  - Jednoduchá, interpretovateľná váhovacia schéma  
+  - Znižuje dominanciu častých, ale neinformatívnych slov  
+  - Užitočné ako vstup do zhlukovania, tematického modelovania alebo regresnej analýzy
+  
+&gt; Po osvojení niektorých regresných techník založených na TF-IDF budeme klasifikovať e-maily ako spam alebo ham (týždeň 6). Toto sa dá ľahko rozšíriť na automatizačné a neautomatizačné inovácie, ako to prvýkrát urobili Mann a Putman (2023).
+---
+
+# Zdroje
+
+- [Deming, D. J., &amp; Kahn, L. B. (2018). *Skill Requirements across Firms and Labor Markets: Evidence from Job Postings.* The Journal of Labor Economics.](https://doi.org/10.1086/694106)
+
+- [Modestino, A. S., Shoag, D., &amp; Ballance, J. (2020). *Downskilling: Changes in Employer Skill Requirements over the Business Cycle.* Labour Economics, 65, 101821.](https://doi.org/10.1016/j.labeco.2020.101821)
+
+- [Mann, K., &amp; Putman, L. (2023). *Benign Effects of Automation.* Working Paper, CBS.](https://research-api.cbs.dk/ws/portalfiles/portal/71105288/katja_mann_et_al_benign_effects_of_automation_acceptedversion.pdf)
+
+- [Silge, J., &amp; Robinson, D. (2017). *Text Mining with R: A Tidy Approach.* O'Reilly.](https://www.tidytextmining.com/)
+
+---
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "highlightStyle": "atom-one-light",
+  "highlightLines": true,
+  "countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

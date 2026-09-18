@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aplikovaná dátová analýza</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Tomáš Oleš" />
+    <meta name="date" content="2026-01-01" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Aplikovaná dátová analýza
+]
+.subtitle[
+## Klasifikácia
+]
+.author[
+### Tomáš Oleš
+]
+.institute[
+### Katedra hospodárskej politiky
+]
+.date[
+### 2026
+]
+
+---
+
+
+
+
+
+
+
+## Prehľad prednášky
+
+
+ - Problém klasifikácie vs. regresie
+ 
+ - Logistická regresia
+  + dve triedy
+  + viac ako dve triedy
+  
+- Diskriminačná analýza
+
+- Logistická regresia vs. lineárna diskriminačná analýza
+
+
+
+---
+
+## Klasifikácia
+
+Kvalitatívne premenné nadobúdajú hodnoty z neusporiadanej množiny `\(C\)`, napríklad:
+   $$ \text{farba očí} \in {\{} \text{hnedá, modrá, zelená} \} $$
+  $$ \text{e-mail} \in \{ \text{spam, ham} \} $$
+
+Majme vektor príznakov `\(X\)` a kvalitatívnu odozvu `\(Y \in \mathcal{C}\)`. Úlohou klasifikácie je zostrojiť funkciu `\(C(X)\)`, ktorá na vstupe vezme vektor príznakov `\(X\)` a predpovie jeho hodnotu `\(Y\)`, t. j. `\(C(X) \in \mathcal{C}\)`
+
+Často odhadujeme *pravdepodobnosti* toho, že `\(X\)` patrí do jednotlivých kategórií množiny `\(\mathcal{C}\)`
+
+--
+
+Napríklad je cennejšie mať odhad pravdepodobnosti, že poistná udalosť je podvodná, než len zaradenie „podvod / nie podvod“.
+
+---
+
+
+## Príklad: nesplácanie kreditnej karty
+.pull-left[
+&lt;img src="6_week_p_sk_files/figure-html/unnamed-chunk-2-1.png" alt="" width="504" /&gt;
+]
+
+
+.pull-right[
+&lt;img src="6_week_p_sk_files/figure-html/unnamed-chunk-3-1.png" alt="" width="504" /&gt;
+]
+---
+## Môžeme použiť lineárnu regresiu?
+
+Predpokladajme, že pri klasifikačnej úlohe `Default` zakódujeme
+
+$$
+Y =
+`\begin{cases}
+0, &amp; \text{ak Nie} \\
+1, &amp; \text{ak Áno.}
+\end{cases}`
+$$
+Môžeme jednoducho urobiť lineárnu regresiu `\(Y\)` na `\(X\)` a klasifikovať ako `Yes`, ak `\(\hat{Y} &gt; 0.5\)`?
+--
+  + Pri binárnom výsledku si lineárna regresia ako klasifikátor počína dobre a je ekvivalentná lineárnej diskriminačnej analýze, o ktorej hovoríme neskôr.
+  
+  + Keďže v populácii platí `\(E(Y | X = x) = \Pr(Y = 1 | X = x)\)`, mohlo by sa zdať, že regresia je na túto úlohu ideálna.
+  
+  + Lineárna regresia však môže dávať pravdepodobnosti menšie než nula alebo väčšie než jedna. Vhodnejšia je logistická regresia.
+
+---
+
+## Lineárna verzus logistická regresia
+
+&lt;img src="6_week_p_sk_files/figure-html/unnamed-chunk-4-1.png" alt="" width="720" /&gt;
+
+Oranžové značky znázorňujú odozvu `\(Y\)`, teda 0 alebo 1. Lineárna regresia odhaduje `\(Pr(Y = 1|X)\)` zle. Logistická regresia sa na túto úlohu hodí oveľa lepšie.
+
+---
+## Lineárna regresia — pokračovanie
+
+Predpokladajme teraz, že odozva má tri možné hodnoty. Na pohotovosť príde pacient a my ho musíme zaradiť podľa príznakov.
+
+$$
+Y =
+`\begin{cases}
+1, &amp; \text{ak mozgová príhoda;} \\
+2, &amp; \text{ak predávkovanie liekmi;} \\
+3, &amp; \text{ak epileptický záchvat.}
+\end{cases}`
+$$
+Toto kódovanie naznačuje usporiadanie a fakticky implikuje, že rozdiel medzi **mozgovou príhodou** a **predávkovaním** je rovnaký ako medzi **predávkovaním** a **epileptickým záchvatom**.
+
+&lt;br&gt;
+--
+
+Lineárna regresia tu nie je vhodná. Vhodnejšia je **viactriedna logistická regresia** alebo **diskriminačná analýza**.
+
+---
+## Logistická regresia
+
+Označme si v skratke `\(p(X) = \Pr(Y = 1 | X)\)` a skúsme predpovedať nesplácanie pomocou zostatku. Logistická regresia má tvar
+
+`$$p(X) = \frac{e^{\beta_0 + \beta_1 X}}{1 + e^{\beta_0 + \beta_1 X}}.$$`
+( `\(e \approx 2.71828\)` je matematická konštanta, Eulerovo číslo.)
+
+Ľahko vidno, že nech `\(\beta_0\)`, `\(\beta_1\)` či `\(X\)` nadobúdajú akékoľvek hodnoty, `\(p(X)\)` bude vždy medzi 0 a 1.
+
+--
+Menšou úpravou dostaneme
+
+`$$\log \left( \frac{p(X)}{1 - p(X)} \right) = \beta_0 + \beta_1 X.$$`
+Táto monotónna transformácia sa nazýva **logaritmus šancí (log odds)** alebo **logitová transformácia** `\(p(X)\)`. (`\(\log\)` tu znamená prirodzený logaritmus `\(\ln\)`.)
+
+---
+
+## Lineárna verzus logistická regresia
+
+&lt;img src="6_week_p_sk_files/figure-html/unnamed-chunk-5-1.png" alt="" width="720" /&gt;
+
+Logistická regresia zabezpečí, že náš odhad `\(p(X)\)` leží medzi 0 a 1.
+---
+
+## Metóda maximálnej vierohodnosti
+
+Na odhad parametrov používame metódu maximálnej vierohodnosti.
+
+`$$\mathcal{l}(\beta_0, \beta_1) = \prod_{i : y_i = 1} p(x_i) \prod_{i : y_i = 0} (1 - p(x_i)).$$`
+
+Táto vierohodnostná funkcia udáva pravdepodobnosť pozorovaných núl a jednotiek v údajoch. `\(\beta_0\)` a `\(\beta_1\)` volíme tak, aby sme vierohodnosť pozorovaných údajov maximalizovali.
+
+Väčšina štatistických balíkov dokáže odhadnúť logistické regresné modely
+metódou maximálnej vierohodnosti. V `R` používame funkciu `glm`
+
+
+---
+## Tvorba predpovede
+
+`$$\begin{array}{c c c c c }
+\hline
+&amp; \text{Koeficient} &amp; \text{Št. chyba} &amp; \text{Z-štatistika} &amp; \text{P-hodnota} \\
+\hline
+\text{Konštanta} &amp; -10.6513 &amp; 0.3612 &amp; -29.5 &amp; &lt; 0.0001 \\
+\text{Zostatok} &amp; 0.0055 &amp; 0.0002 &amp; 24.9 &amp; &lt; 0.0001 \\\hline
+\end{array}$$`
+Aká je naša odhadovaná pravdepodobnosť nesplácania pre osobu so zostatkom 1000 $?
+
+`$$\hat{p}(X) = \frac{e^{\hat{\beta}_0 + \hat{\beta}_1 X}}{1 + e^{\hat{\beta}_0 + \hat{\beta}_1 X}} = \frac{e^{-10.6513 + 0.0055 \times 1000}}{1 + e^{-10.6513 + 0.0055 \times 1000}} = 0.006.$$`
+A so zostatkom 2000 $?
+
+--
+
+`$$\hat{p}(X) = \frac{e^{\hat{\beta}_0 + \hat{\beta}_1 X}}{1 + e^{\hat{\beta}_0 + \hat{\beta}_1 X}} = \frac{e^{-10.6513 + 0.0055 \times 2000}}{1 + e^{-10.6513 + 0.0055 \times 2000}} = 0.586$$`
+
+
+---
+Urobme to znova, tentoraz s prediktorom **student**.
+
+`$$\begin{array}{c c c c c }
+\hline
+&amp; \text{Koeficient} &amp; \text{Št. chyba} &amp; \text{Z-štatistika} &amp; \text{P-hodnota} \\
+\hline
+\text{Konštanta} &amp; -3.5041 &amp; 0.0707 &amp; -49.55 &amp; &lt; 0.0001 \\
+\text{student[Yes]} &amp; 0.4049 &amp; 0.1150 &amp; 3.52 &amp; 0.0004 \\
+\hline
+\end{array}$$`
+
+`$$\Pr(\text{default} = \text{Yes} | \text{student} = \text{Yes}) = \frac{e^{-3.5041 + 0.4049 \times 1}}{1 + e^{-3.5041 + 0.4049 \times 1}} = 0.0431$$`
+
+`$$\Pr(\text{default} = \text{Yes} | \text{student} = \text{No}) = \frac{e^{-3.5041 + 0.4049 \times 0}}{1 + e^{-3.5041 + 0.4049 \times 0}} = 0.0292$$`
+---
+## Logistická regresia with several variables 
+`$$\log \left( \frac{p(X)}{1 - p(X)} \right) = \beta_0 + \beta_1 X_1 + \cdots + \beta_p X_p$$`
+
+`$$p(X) = \frac{e^{\beta_0 + \beta_1 X_1 + \cdots + \beta_p X_p}}{1 + e^{\beta_0 + \beta_1 X_1 + \cdots + \beta_p X_p}}$$`
+`$$\begin{array}{c c c c c }
+\hline
+&amp; \text{Koeficient} &amp; \text{Št. chyba} &amp; \text{Z-štatistika} &amp; \text{P-hodnota} \\
+\hline
+\text{Konštanta} &amp; -10.8690 &amp; 0.4923 &amp; -22.08 &amp; &lt; 0.0001 \\
+\text{balance} &amp; 0.0057 &amp; 0.0002 &amp; 24.74 &amp; &lt; 0.0001 \\
+\text{income} &amp; 0.0030 &amp; 0.0082 &amp; 0.37 &amp; 0.7115 \\
+\text{student[Yes]} &amp; -0.6468 &amp; 0.2362 &amp; -2.74 &amp; 0.0062 \\
+\hline
+\end{array}$$`
+Prečo je koeficient pri **student** záporný, hoci predtým bol kladný?
+---
+## Skreslenie tretím faktorom (confounding)
+
+&lt;img src="6_week_p_sk_files/figure-html/unnamed-chunk-6-1.png" alt="" width="720" /&gt;
+ - Študenti mávajú vyššie zostatky než neštudenti, takže ich marginálna miera nesplácania je vyššia.
+ - Pri danej úrovni zostatku však študenti nesplácajú menej často než neštudenti.
+ - Viacnásobná logistická regresia dokáže tento efekt oddeliť.
+
+---
+## Príklad: srdcové ochorenia v Južnej Afrike
+
+- 160 prípadov infarktu myokardu (IM) a 302 kontrol (samí muži vo veku 15 – 64 rokov) zo Západného Kapska v Južnej Afrike zo začiatku 80. rokov.
+-  Celková prevalencia je v tomto regióne veľmi vysoká: 5,1 %.
+- Merania siedmich prediktorov (rizikových faktorov), zobrazené v matici bodových grafov.
+- Cieľom je určiť relatívnu silu a smer pôsobenia rizikových faktorov.
+- Išlo o súčasť intervenčnej štúdie zameranej na osvetu o zdravšom stravovaní.
+
+
+``` r
+#install.packages('bestglm')
+data(SAheart)
+```
+
+---
+
+&lt;img src="6_week_p_sk_files/figure-html/unnamed-chunk-8-1.png" alt="" width="720" /&gt;
+Matica bodových grafov údajov o srdcových ochoreniach v Južnej Afrike. Odozva je farebne
+odlíšená — prípady (IM) sú červené, kontroly tyrkysové. `famhist` je binárna premenná, kde 1 znamená výskyt IM v rodine.
+---
+
+
+``` r
+data(SAheart)
+heartfit &lt;- glm (chd ~ ., data = SAheart , family = binomial)
+summary(heartfit)
+```
+
+```
+## 
+## Call:
+## glm(formula = chd ~ ., family = binomial, data = SAheart)
+## 
+## Coefficients:
+##                  Estimate Std. Error z value Pr(&gt;|z|)
+## (Intercept)    -2.657e+01  1.745e+05   0.000    1.000
+## sbp             5.853e-13  8.978e+02   0.000    1.000
+## tobacco         9.404e-12  4.170e+03   0.000    1.000
+## ldl            -2.543e-11  9.138e+03   0.000    1.000
+## adiposity      -7.700e-12  4.041e+03   0.000    1.000
+## famhistPresent  2.235e-12  3.564e+04   0.000    1.000
+## typea          -3.439e-12  1.742e+03   0.000    1.000
+## obesity         4.909e-13  5.972e+03   0.000    1.000
+## alcohol         3.051e-12  7.017e+02   0.000    1.000
+## age             1.203e-12  1.705e+03   0.000    1.000
+## MI1             5.313e+01  3.984e+04   0.001    0.999
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 5.9611e+02  on 461  degrees of freedom
+## Residual deviance: 2.6803e-09  on 451  degrees of freedom
+## AIC: 22
+## 
+## Number of Fisher Scoring iterations: 25
+```
+---
+## Štúdia prípadov a kontrol
+
+- V juhoafrických údajoch je 160 prípadov a 302 kontrol — podiel prípadov je `\(\tilde{\pi} = 0.35\)`. Prevalencia IM v tomto regióne je pritom `\(\pi = 0.05\)`.
+
+- Pri výberoch typu prípad-kontrola vieme regresné parametre `\(\beta_j\)` odhadnúť presne (ak je model správny), konštanta `\(\beta_0\)` je však nesprávna.
+
+- Odhadnutú konštantu vieme opraviť jednoduchou transformáciou:
+
+`$$\hat{\beta}_0^* = \hat{\beta}_0 + \log \frac{\pi}{1 - \pi} - \log \frac{\tilde{\pi}}{1 - \tilde{\pi}}.$$`
+---
+
+## Logistická regresia with more than two classes
+
+Doteraz sme hovorili o logistickej regresii s dvoma triedami. Ľahko sa zovšeobecňuje na viac tried. Jedna verzia (používaná v balíku `glmnet`) má symetrický tvar:
+
+`$$\Pr(Y = k | X) = \frac{e^{\beta_{0k} + \beta_{1k} X_1 + \dots + \beta_{pk} X_p}}{\sum_{k'=1}^{K} e^{\beta_{0k'} + \beta_{1k'} X_1 + \dots + \beta_{pk'} X_p}}$$`
+
+Tu máme lineárnu funkciu pre **každú** triedu.
+
+Viactriedna logistická regresia sa označuje aj ako **multinomická regresia**.
+---
+## Diskriminačná analýza
+
+- Prístup spočíva v tom, že rozdelenie `\(X\)` modelujeme v každej triede samostatne a potom pomocou **Bayesovej vety** vzťah obrátime a získame `\(\Pr(Y | X)\)`.
+
+- Ak pre každú triedu použijeme normálne (Gaussovo) rozdelenie, dostaneme lineárnu alebo kvadratickú diskriminačnú analýzu.
+
+- Tento prístup je však veľmi všeobecný a dajú sa použiť aj iné rozdelenia. My sa sústredíme na normálne rozdelenie.
+---
+## Bayesova veta v klasifikácii
+
+Thomas Bayes bol slávny matematik, ktorého meno dnes označuje významnú oblasť štatistického a pravdepodobnostného modelovania. Sústredíme sa na jednoduchý výsledok známy ako Bayesova veta:
+
+`$$\Pr(Y = k | X = x) = \frac{\Pr(X = x | Y = k) \cdot \Pr(Y = k)}{\Pr(X = x)}.$$`
+
+V diskriminačnej analýze sa zapisuje mierne odlišne:
+
+`$$\Pr(Y = k | X = x) = \frac{\pi_k f_k(x)}{\sum_{l=1}^{K} \pi_l f_l(x)},$$`
+
+- `\(f_k(x) = \Pr(X = x | Y = k)\)` je ***hustota*** `\(X\)` v triede `\(k\)`. Použijeme pre ne normálne hustoty, samostatne v každej triede.
+- `\(\pi_k = \Pr(Y = k)\)` je marginálna alebo **apriórna** pravdepodobnosť triedy `\(k\)`.
+---
+## Zaraďujeme podľa najvyššej hustoty
+&lt;img src="6_week_p_sk_files/figure-html/unnamed-chunk-10-1.png" alt="" width="720" /&gt;
+Nový bod zaradíme podľa toho, ktorá hustota je najvyššia.
+Ak sú apriórne pravdepodobnosti rôzne, zohľadníme aj ich a porovnávame `\(\pi_k f_k(x)\)`. Vpravo uprednostňujeme oranžovú triedu — rozhodovacia hranica sa posunula doľava.
+---
+## Prečo diskriminačná analýza?
+
+ Keď sú triedy dobre oddelené, odhady parametrov logistickej regresie sú prekvapivo nestabilné. Lineárna diskriminačná analýza týmto problémom netrpí.
+
+Ak je `\(n\)` malé a rozdelenie prediktorov `\(X\)` je v každej triede približne normálne, lineárny diskriminačný model je opäť stabilnejší než logistická regresia.
+
+ Lineárna diskriminačná analýza je obľúbená pri viac ako dvoch triedach odozvy, pretože poskytuje aj nízkorozmerné pohľady na údaje.
+
+---
+### Lineárna diskriminačná analýza pre `\(p = 1\)`
+
+Gaussova hustota má tvar:
+$$    f_k(x) = \frac{1}{\sqrt{2\pi\sigma_k}} e^{-\frac{1}{2} \left( \frac{x - \mu_k}{\sigma_k} \right)^2}$$
+kde `\(\mu_k\)` je stredná hodnota a `\(\sigma_k^2\)` rozptyl (v triede `\(k\)`). Predpokladáme, že všetky `\(\sigma_k = \sigma\)` sú rovnaké.
+
+Po dosadení do Bayesovho vzorca dostaneme pomerne zložitý výraz pre `\(p_k(x) = \Pr(Y = k | X = x)\)`:
+
+`$$p_k(x) = \frac{\pi_k \frac{1}{\sqrt{2\pi\sigma}} e^{-\frac{1}{2} \left( \frac{x - \mu_k}{\sigma} \right)^2}}{\sum_{l=1}^K \pi_l \frac{1}{\sqrt{2\pi\sigma}} e^{-\frac{1}{2} \left( \frac{x - \mu_l}{\sigma} \right)^2}}$$`
+Našťastie sa dá veľa zjednodušiť a poskracovať.
+
+---
+### Diskriminačná funkcia
+
+Na zaradenie pri hodnote `\(X = x\)` potrebujeme zistiť, ktoré `\(p_k(x)\)` je najväčšie. Po zlogaritmovaní a vynechaní členov nezávislých od `\(k\)` zistíme, že je to ekvivalentné priradeniu `\(x\)` do triedy s najväčším **diskriminačným skóre**:
+
+`$$\delta_k(x) = x \cdot \frac{\mu_k}{\sigma^2} - \frac{\mu_k^2}{2\sigma^2} + \log(\pi_k)$$`
+
+Všimnite si, že `\(\delta_k(x)\)` je lineárnou funkciou `\(x\)`.
+
+Ak máme `\(K = 2\)` triedy a `\(\pi_1 = \pi_2 = 0.5\)`, rozhodovacia hranica je v bode:
+
+`$$x = \frac{\mu_1 + \mu_2}{2}$$`
+---
+
+```
+## Warning: The dot-dot notation (`..density..`) was deprecated in ggplot2 3.4.0.
+## ℹ Please use `after_stat(density)` instead.
+## This warning is displayed once per session.
+## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+## generated.
+```
+
+&lt;img src="6_week_p_sk_files/figure-html/unnamed-chunk-11-1.png" alt="" width="720" /&gt;
+Príklad s `\(\mu_1=-2, \mu_2 = 2, \sigma^2 = 1\)`
+
+Tieto parametre zvyčajne nepoznáme, máme len tréningové údaje. V takom prípade parametre jednoducho odhadneme a dosadíme do pravidla.
+
+---
+## Odhad parametrov
+
+`$$\hat{k} = \frac{n_k}{n}$$`
+`$$\hat{\mu}_k = \frac{1}{n_k} \sum_{i: y_i = k} x_i$$`
+
+`$$\hat{\sigma}^2 = \frac{1}{n - K} \sum_{k=1}^{K} \sum_{i: y_i = k} (x_i - \hat{\mu}_k)^2 = \sum_{k=1}^{K} \frac{n_k - 1}{n - K} \cdot \hat{\sigma_k}^2$$`
+
+
+kde 
+`$$\hat{\sigma}^2_k = \frac{1}{n_k - 1} \sum_{i: y_i = k} (x_i - \hat{\mu}_k)^2$$`
+je obvyklý vzorec pre odhad rozptylu v `\(k\)`-tej triede.
+
+---
+## Lineárna diskriminačná analýza pre `\(p &gt; 1\)` 
+
+&lt;center&gt;
+&lt;img src="img/multivariate_gauss.png" width="800" height="250" /&gt;
+Zdroj: ISLR
+&lt;/center&gt;
+
+Hustota: `\(f(x) = \frac{1}{(2\pi)^{p/2} |\Sigma|^{1/2}} e^{-\frac{1}{2} (x - \mu)^T \Sigma^{-1} (x - \mu)}\)`
+
+Diskriminačná funkcia: `\(\delta_k(x) = x^T \Sigma^{-1} \mu_k - \frac{1}{2} \mu_k^T \Sigma^{-1} \mu_k + \log \pi_k\)`
+
+Napriek zložitému tvaru je `\(\delta_k(x) = c_{k0} + c_{k1} x_1 + c_{k2} x_2 + \dots + c_{kp} x_p\)` — teda lineárna funkcia.
+
+---
+### Ilustrácia: p = 2 a K = 3 triedy
+
+&lt;center&gt;
+&lt;img src="img/decision_boundaries.png" width="800" height="300" /&gt;
+Zdroj: ISLR
+
+
+&lt;/center&gt;
+
+Tu `\(\pi_1 = \pi_2 = \pi_3 = 1/3\)`
+
+Prerušované čiary sa nazývajú Bayesove rozhodovacie hranice. Keby sme ich poznali, dávali by najmenej chýb v klasifikácii spomedzi všetkých možných klasifikátorov.
+
+---
+&lt;img src="6_week_p_sk_files/figure-html/unnamed-chunk-12-1.png" alt="" width="720" /&gt;
+
+4 premenné, 3 druhy, 50 vzoriek na triedu.
+
+LDA správne zaradí všetkých okrem 3 zo 150 tréningových vzoriek
+
+---
+&lt;img src="6_week_p_sk_files/figure-html/unnamed-chunk-13-1.png" alt="" width="720" /&gt;
+
+---
+# Od `\(\delta_{k}(x)\)` k pravdepodobnostiam
+
+Od `\(\delta_{k}(x)\)` k pravdepodobnostiam
+
+Keď máme odhady `\(\delta_{k}(x)\)`, vieme ich premeniť na odhady pravdepodobností tried:
+
+`$$\Pr(Y = k \mid X = x) = \frac{e^{\delta_{k}(x)}}{\sum_{l=1}^{K} e^{\delta_{l}(x)}}.$$`
+
+Zaradenie podľa najväčšieho `\(\delta_{k}(x)\)` teda zodpovedá zaradeniu do triedy, pre ktorú je `\(\Pr(Y = k \mid X = x)\)` najväčšie.
+
+Ak `\(K = 2\)`, zaradíme do triedy 2, keď `\(\Pr(Y = 2 \mid X = x) \geq 0.5\)`, 
+inak do triedy 1.
+
+---
+# LDA na údajoch o kreditoch
+
+`$$\begin{array}{l|ccc}
+\textit{Predpovedaný stav} &amp; {\textit{Skutočný stav nesplácania}} \\
+&amp; \textit{Nie} &amp; \textit{Áno} &amp; \textbf{Spolu} \\
+\hline
+\textit{Nie} &amp; 9644 &amp; \mathbf{252} &amp; 9896 \\
+\textit{Áno} &amp; \mathbf{23} &amp; 81 &amp; 104 \\
+\hline
+\textbf{Spolu} &amp; 9667 &amp; \mathbf{333} &amp; 10000
+\end{array}$$`
+
+  + Ide o \textbf{tréningovú chybu} a môžeme model pretrénovať. Tu to nie je veľký problém, keďže `\(n = 10000\)` a `\(p = 2\)`.
+  + Ak by sme zaraďovali podľa apriórnej pravdepodobnosti (t. j. vždy do triedy Nie), dopustili by sme sa `\(\frac{333}{10000} = 3.33\%\)` chýb.
+  + Zo skutočných „Nie“ urobíme `\(\frac{23}{9667} \approx 0.2\%\)` chýb.
+  + Zo skutočných „Áno“ urobíme `\(\frac{252}{333} \approx 75.7\%\)` chýb.
+
+
+---
+## Typy chýb
+
+**Miera falošne pozitívnych:** podiel negatívnych prípadov zaradených ako pozitívne — v tomto príklade `\(0.2\%\)`.  
+
+**Miera falošne negatívnych:** podiel pozitívnych prípadov zaradených ako negatívne — v tomto príklade `\(75.7\%\)`.
+
+Túto tabuľku sme získali zaradením do triedy \textit{Áno}, ak:
+`$$\Pr(\text{Default = Yes} \mid \text{Balance, Student}) \geq 0.5.$$`
+
+Obidve miery chybovosti vieme meniť zmenou prahu z `\(0.5\)` na inú hodnotu z `\([0, 1]\)`:
+`$$\Pr(\text{Default = Yes} \mid \text{Balance, Student}) \geq \text{threshold};$$`
+a prah meniť.
+
+---
+## Ďalšie formy diskriminačnej analýzy
+
+`$$\Pr(Y = k \mid X = x) = \frac{\pi_k f_k(x)}{\sum_{l=1}^{K} \pi_l f_l(x)}.$$`
+
+Keď sú `\(f_k(x)\)` Gaussove hustoty s rovnakou kovariančnou maticou `\(\Sigma\)` v každej triede, dostaneme lineárnu diskriminačnú analýzu (LDA).
+
+Zmenou tvaru `\(f_k(x)\)` získame rôzne klasifikátory:
+
+  + Pri Gaussových hustotách s odlišnými `\(\Sigma_k\)` v každej triede dostaneme **kvadratickú diskriminačnú analýzu (QDA)**.
+  + Pri `\(f_k(x) = \prod_{j=1}^p f_{jk}(x_j)\)` (model podmienenej nezávislosti) v každej triede dostaneme **naivný Bayesov klasifikátor**. Pri Gaussových hustotách to znamená, že `\(\Sigma_k\)` sú diagonálne.
+  + Mnoho ďalších foriem vznikne návrhom konkrétnych modelov hustoty `\(f_k(x)\)` vrátane **neparametrických prístupov**.
+
+--- 
+---
+# Naivný Bayesov klasifikátor
+
+Predpokladá, že príznaky sú v každej triede nezávislé.  
+Užitočný pri veľkom `\(p\)`, keď viacrozmerné metódy ako QDA a dokonca aj LDA zlyhávajú.
+
+Gaussov naivný Bayes predpokladá, že každá `\(\Sigma_k\)` je diagonálna:  
+`$$\delta_k(x) \propto \log \left( \pi_k \prod_{j=1}^p f_{kj}(x_j) \right)
+= -\frac{1}{2} \sum_{j=1}^p \left[ \frac{(x_j - \mu_{kj})^2}{\sigma_{kj}^2} + \log \sigma_{kj}^2 \right] + \log \pi_k.$$`
+
+Dá sa použiť aj na **zmiešané** vektory príznakov (kvalitatívne aj kvantitatívne).  
+Ak je `\(X_j\)` kvalitatívna, nahradíme `\(f_{kj}(x_j)\)` pravdepodobnostnou funkciou (histogramom) nad diskrétnymi kategóriami.
+
+Napriek silným predpokladom dáva naivný Bayes často dobré výsledky klasifikácie.
+
+--- 
+---
+## Logistická regresia verzus LDA
+
+Pri dvojtriednej úlohe sa dá pre LDA ukázať, že:
+`$$\log \frac{p_1(x)}{1 - p_1(x)} = \log \frac{p_1(x)}{p_2(x)} = c_0 + c_1 x_1 + \dots + c_p x_p.$$`
+
+Má teda rovnaký tvar ako logistická regresia.  
+Rozdiel je v tom, ako sa odhadujú parametre.
+
+
+  + Logistická regresia využíva podmienenú vierohodnosť založenú na `\(\Pr(Y \mid X)\)` (tzv. diskriminatívne učenie).
+  + LDA využíva plnú vierohodnosť založenú na `\(\Pr(X, Y)\)` (tzv. generatívne učenie).
+
+Napriek týmto rozdielom bývajú výsledky v praxi často veľmi podobné.
+
+Poznámka: logistická regresia dokáže odhadnúť aj kvadratické hranice, ak do modelu explicitne zahrnieme kvadratické členy.
+
+---
+---
+# Zhrnutie
+Logistická regresia je pri klasifikácii veľmi obľúbená, najmä keď `\(K = 2\)`.
+
+LDA je užitočná pri malom `\(n\)`, pri dobre oddelených triedach a keď sú Gaussove predpoklady rozumné. Hodí sa aj pri `\(K &gt; 2\)`.
+
+Naivný Bayes je užitočný, keď je `\(p\)` veľmi veľké.
+
+---
+# Zdroje
+
+- [Introduction to Statistical Learning, Gareth James, Daniela Witten, Trevor Hasie, Robert Tibshirani](https://www.statlearning.com/)
+---
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "highlightStyle": "atom-one-light",
+  "highlightLines": true,
+  "countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
