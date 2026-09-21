@@ -314,20 +314,17 @@ knitr::include_graphics("img/unvotes/unvotes-15.png")
 
 **6 credits + CERGE-EI Certificate of Course Econometrics in a Nutshell**
 
-Which is split into two parts:
+Part I — quizzes and home assignments — **30%**
 
-Three online quizzes (30%), Two home assignments (20%), In-class questions and discussions (10%), Final exam (40%)
+Part II — Econometrics in a Nutshell — **35%**
 
-**= CERGE-EI Certificate of Course Econometrics in a Nutshell**
+Final data project with a presentation — **35%**
 
-**= 60% of Your Final Grade** — requires 50%+ on the final exam and 50%+ of this component
+In-class questions and discussion — **not graded**
 
+The final data project concludes both Part I and Part II.
 
-Quizzes and Home Assignments (50%)
-
-Data Science Project with a Presentation (50%)
-
-**= 40% of Your Final Grade**
+**There is no final written exam.**
 
 ---
 

@@ -318,20 +318,17 @@ knitr::include_graphics("img/unvotes/unvotes-15.png")
 
 **6 kreditov + certifikát CERGE-EI z kurzu Econometrics in a Nutshell**
 
-Hodnotenie sa delí na dve časti:
+Časť I — kvízy a domáce zadania — **30 %**
 
-Tri online kvízy (30 %), dve domáce zadania (20 %), otázky a diskusia na hodine (10 %), záverečná skúška (40 %)
+Časť II — Ekonometria v kocke — **35 %**
 
-**= certifikát CERGE-EI z kurzu Econometrics in a Nutshell**
+Záverečný dátový projekt s prezentáciou — **35 %**
 
-**= 60 % výslednej známky** — vyžaduje aspoň 50 % zo záverečnej skúšky a aspoň 50 % z tejto zložky
+Otázky a diskusia na hodine — **bez bodov**
 
+Záverečný dátový projekt je záverom Časti I aj Časti II.
 
-Kvízy a domáce zadania (50 %)
-
-Dátový projekt s prezentáciou (50 %)
-
-**= 40 % výslednej známky**
+**Záverečná písomná skúška sa nekoná.**
 
 ---
 
