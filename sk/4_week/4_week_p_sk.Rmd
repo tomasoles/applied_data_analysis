@@ -413,13 +413,13 @@ hotels %>%
 ----
 class: middle
 
-# Rúry (pipes)
+# Operátor pipe
 
 ---
 
-## Čo je to rúra (pipe)?
+## Čo je operátor pipe?
 
-V programovaní je rúra technika na odovzdávanie informácií z jedného procesu do druhého.
+V programovaní je pipe technika na odovzdávanie informácií z jedného procesu do druhého.
 
 --
 
@@ -438,9 +438,9 @@ hotels %>% #<<
 
 ---
 
-## Čo je to rúra (pipe)?
+## Čo je operátor pipe?
 
-V programovaní je rúra technika na odovzdávanie informácií z jedného procesu do druhého.
+V programovaní je pipe technika na odovzdávanie informácií z jedného procesu do druhého.
 
 .pull-left[
 - Začni dátovým rámcom `hotels` a odovzdaj ho funkcii `select()`,
@@ -458,9 +458,9 @@ hotels %>%
 
 ---
 
-## Čo je to rúra (pipe)?
+## Čo je operátor pipe?
 
-V programovaní je rúra technika na odovzdávanie informácií z jedného procesu do druhého.
+V programovaní je pipe technika na odovzdávanie informácií z jedného procesu do druhého.
 
 .pull-left[
 - Začni dátovým rámcom `hotels` a odovzdaj ho funkcii `select()`,
@@ -481,7 +481,7 @@ hotels %>%
 
 
 
-## Ako rúra funguje?
+## Ako pipe funguje?
 
 - Predstavte si takúto postupnosť činností — nájdi kľúče, 
 odomkni auto, naštartuj, choď do práce, zaparkuj.
@@ -493,7 +493,7 @@ park(drive(start_car(find("keys")), to = "work"))
 ```
 
 --
-- Zápis pomocou rúr má prirodzenejšiu (a čitateľnejšiu) 
+- Zápis pomocou pipe má prirodzenejšiu (a čitateľnejšiu) 
 štruktúru:
 ```{r eval=FALSE}
 find("keys") %>%
@@ -517,7 +517,7 @@ hotels %>%
 ```
 
 ---
-## Poznámka k rúram a vrstveniu
+## Poznámka k pipe a vrstveniu
 
 - `%>%` sa používa najmä v reťazcoch balíka **dplyr**, *výstup predchádzajúceho riadku kódu posielame ako prvý vstup nasledujúceho riadku*
 

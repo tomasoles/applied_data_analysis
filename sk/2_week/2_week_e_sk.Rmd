@@ -602,7 +602,7 @@ ggplot(loans, aes(x = homeownership, y = loan_amount)) +
 
 ---
 
-## Hrebeňové grafy
+## Ridgeline grafy
 
 ```{r warning = FALSE, out.width="45%", fig.retina=4}
 library(ggridges)
