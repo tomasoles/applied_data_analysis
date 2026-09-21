@@ -10,6 +10,7 @@ Materials are available in two languages:
 | [`en/`](en) | English version of every deck |
 | [`sk/`](sk) | Slovenská verzia každej prezentácie |
 | [`syllabus/`](syllabus) | Course syllabus (EN + SK), LaTeX sources and PDFs |
+| [`data/`](data) | Datasets used in the home assignments |
 
 Each week folder holds a lecture deck (`_p`) and, where applicable, an exercise
 deck (`_e`), written in [R Markdown](https://rmarkdown.rstudio.com/) with
