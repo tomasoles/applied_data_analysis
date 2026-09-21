@@ -332,6 +332,40 @@ Záverečný dátový projekt je záverom Časti I aj Časti II.
 
 ---
 
+## Práca počas semestra
+
+**Cvičné kvízy** — tri krátke cvičenia s dopĺňaním, na prácu doma. Nehodnotia sa.
+Sú tu na to, aby ste mali syntax v prstoch skôr než zadania.
+
+**Domáce zadanie 1** — *Titanic*: sumarizácia a vizualizácia jedného súboru údajov.
+
+**Domáce zadanie 2** — tri zle naformátované surové súbory pretavené do jednej
+analýzy: čistenie, spájanie, mapy, text a klasifikácia.
+
+**Záverečný dátový projekt** — vlastná otázka, vlastné údaje, prezentované na konci
+semestra. Vychádza z oboch častí predmetu.
+
+---
+
+## Používanie umelej inteligencie
+
+Môžete použiť akýkoľvek nástroj vrátane nástrojov s umelou inteligenciou.
+
+Dve podmienky:
+
+- Každé domáce zadanie vychádza zo vzorky vylosovanej pomocou **vášho čísla
+  študenta**, takže vaše čísla patria len vám. Váš súbor spúšťame znova a
+  kontrolujeme ich.
+
+- Musíte vedieť **vysvetliť každý riadok, ktorý odovzdáte** — a povedať, prečo ste
+  zamietli alternatívy. Budeme sa pýtať a odpoveď sa počíta.
+
+.tip[
+Nástroj, ktorý napíše kód, ktorý neviete obhájiť, vám nijaký čas neušetril.
+]
+
+---
+
 # Kvíz
 Bonusový kvíz
 Prejdite na **kahoot.it** a zadajte poskytnutý kód. Zadajte, prosím, svoje **priezvisko**, keďže kvíz nie je anonymný — inak vám nevieme prideliť **body**.
