@@ -44,7 +44,7 @@ library(emo)
 
 ## Hello world! `r emo::ji('smile')`
 
-- Konzultačné hodiny: streda 13:00 - 15:00 (Prosím, napíšte mi vopred `r emo::ji('calendar')`)
+- Konzultačné hodiny: utorok 10:00 - 11:30 (Prosím, napíšte mi vopred `r emo::ji('calendar')`)
 
 - Miestnosť 4B.40; Stará budova
 

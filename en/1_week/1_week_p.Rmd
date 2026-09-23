@@ -51,7 +51,7 @@ if (!require("mathart")) devtools::install_github("marcusvolz/mathart")
 
 ## Hello world! `r emo::ji('smile')`  
 
-- Office hours: Wednesday 1PM - 3PM (Please write me before  `r emo::ji('calendar')` )
+- Office hours: Tuesday 10:00 - 11:30 (Please write me before  `r emo::ji('calendar')` )
 
 - Room 4B.40; Old Building
 
